@@ -1,0 +1,22 @@
+model: gpt-oss
+op: torch.mul
+
+defaults:
+  dtype: fp16
+  seed: 123
+  atol: 1.0e-2
+  rtol: 1.0e-2
+
+cases:
+  - name: mul_ok
+    op: torch.mul
+    inputs:
+      - tensor: {shape: [1, 64]}
+      - tensor: {shape: [1, 64]}
+
+  - name: mul_ng_broadcast
+    op: torch.mul
+    mark: paddedtensor
+    inputs:
+      - tensor: {shape: [1, 64]}
+      - tensor: {shape: [1, 1]}

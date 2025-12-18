@@ -1,0 +1,60 @@
+model: template
+
+default:
+  dtype: fp16
+  seed: 123
+  rtol: 1.0e-3
+  atol: 1.0e-3
+
+cases:
+  - name: add_basic
+    op: torch.add
+    inputs:
+      - tensor: {shape: [4, 128, 768], init: randn}
+      - tensor: {shape: [4, 128, 768], init: randn}
+
+  - name: mul_tensor_scalar
+    op: torch.mul
+    inputs:
+      - tensor: {shape: [1, 64], init: uniform, init_args: {low: -1.0, high: 1.0}}
+      - value: 3.0
+
+  - name: softmax_lastdim
+    op: torch.nn.functional.softmax
+    attrs: {dim: -1}
+    inputs:
+      - tensor: {shape: [2, 4, 8], init: arange}
+
+  - name: cat_list
+    op: torch.cat
+    attrs: {dim: -1}
+    inputs:
+      - tensor_list:
+          - {shape: [2, 3, 4], init: randn}
+          - {shape: [2, 3, 5], init: randn}
+
+  - name: view_should_error_on_noncontig
+    op: torch.view
+    expects_error: {type: RuntimeError, match: view}
+    inputs:
+      - tensor:
+          shape: [2, 3, 8]
+          preset: noncontig_slice
+          preset_args: {dim: 1, step: 2}
+      - value: [2, 24]
+
+  - name: contiguous_from_transpose_view
+    op: torch.contiguous
+    inputs:
+      - tensor:
+          shape: [2, 3, 8]
+          preset: transpose_view
+          preset_args: {dim0: 1, dim1: 2}
+
+  - name: rsqrt_skip_example
+    op: torch.rsqrt
+    skip_if:
+      - expr: cfg.test_device.type == 'spyre' and dtype_str == 'fp16'
+        reason: Spyre fp16 rsqrt not supported yet
+    inputs:
+      - tensor: {shape: [64, 1024], init: rand}

@@ -13,6 +13,9 @@
 # limitations under the License.
 
 import os
+from pathlib import Path
+import yaml
+import pytest
 
 
 def pytest_sessionstart(session):
@@ -22,3 +25,148 @@ def pytest_sessionstart(session):
     """
     os.environ.setdefault("DTLOG_LEVEL", "error")
     os.environ.setdefault("DT_DEEPRT_VERBOSE", "-1")
+
+    cfg = session.config
+    root = cfg.rootpath
+
+    selected = set(cfg.getoption("--model") or [])
+
+    if cfg.getoption("--list-models"):
+        models = sorted({m for (m, _, __, ___) in _iter_yaml_cases(root)})
+        for m in models:
+            print(m)
+        pytest.exit("listed models", returncode=0)
+
+    if cfg.getoption("--list-cases"):
+        for model, name, op, p in _iter_yaml_cases(root):
+            if selected and model not in selected:
+                continue
+            print(f"{model}::{name}::{op}  ({p})")
+        pytest.exit("listed cases", returncode=0)
+
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--model",
+        action="append",
+        default=[],
+        help="Run only these models (repeatable). Example: --model granite3-speech",
+    )
+    parser.addoption(
+        "--dedupe",
+        dest="dedupe",
+        action="store_true",
+        default=True,  # default ON
+        help="Skip duplicate op+input signatures across models (runtime).",
+    )
+    parser.addoption(
+        "--no-dedupe",
+        action="store_false",
+        dest="dedupe",
+        help="Disable deduplication.",
+    )
+
+    # NEW: inventory modes
+    parser.addoption(
+        "--list-models",
+        action="store_true",
+        default=False,
+        help="List models found in tests/_inductor/models/*.yaml and exit.",
+    )
+    parser.addoption(
+        "--list-cases",
+        action="store_true",
+        default=False,
+        help="List cases found in tests/_inductor/models/*.yaml and exit. Use --model to filter.",
+    )
+    parser.addoption(
+        "--compile-backend",
+        action="store",
+        default=os.environ.get("TEST_COMPILE_BACKEND", "inductor"),
+        help="If set, run test via torch.compile(..., backend=...).",
+    )
+
+
+def _models_dir(rootpath: Path) -> Path:
+    return rootpath / "tests" / "_inductor" / "models"
+
+
+def _iter_yaml_cases(rootpath: Path):
+    """
+    Yields tuples: (model, case_name, op_name, yaml_path)
+    Supports either:
+      - per-case 'op'
+      - or top-level 'op' applied to cases that don't specify 'op'
+    """
+    for p in sorted(_models_dir(rootpath).glob("*.yaml")):
+        if p.name.endswith("template.yaml"):  # skip template.yaml file
+            continue
+        spec = yaml.safe_load(p.read_text())
+        model = spec.get("model", p.stem)
+        top_op = spec.get("op", None)
+        for case in spec.get("cases", []):
+            op = case.get("op", top_op)
+            name = case.get("name", op or "<unnamed>")
+            yield model, name, op, p
+
+
+@pytest.fixture(scope="session")
+def selected_models(pytestconfig):
+    return set(pytestconfig.getoption("--model") or [])
+
+
+@pytest.fixture(scope="session")
+def dedupe_enabled(pytestconfig):
+    return bool(pytestconfig.getoption("dedupe"))
+
+
+@pytest.fixture(scope="session")
+def test_device_str(pytestconfig):
+    return "spyre"
+
+
+@pytest.fixture(scope="session")
+def seen_case_keys():
+    # track which case has been run to avoid rerun again
+    return set()
+
+
+@pytest.fixture(scope="session")
+def compile_backend(pytestconfig):
+    s = str(pytestconfig.getoption("--compile-backend") or "").strip()
+    return s or None
+
+
+def pytest_configure(config):
+    # auto-register model_<name> markers based on YAML files
+    mdir = config.rootpath / "tests" / "_inductor" / "models"
+    for p in mdir.glob("*.yaml"):
+        spec = yaml.safe_load(p.read_text())
+        model = spec.get("model", p.stem)
+        mark = "model_" + "".join(
+            ch if ch.isalnum() or ch == "_" else "_" for ch in model
+        )
+        config.addinivalue_line(
+            "markers", f"{mark}: auto-generated mark for model {model}"
+        )
+
+
+def pytest_collection_modifyitems(config, items):
+    selected_models = config.getoption("--model") or []
+    if not selected_models:
+        return  # normal behavior
+
+    # Keep only model-yaml runner tests
+    keep = []
+    deselect = []
+
+    for item in items:
+        # item.nodeid includes the file path, e.g. "tests/_inductor/test_model_ops.py::test_model_ops[...]"
+        if "tests/_inductor/test_model_ops.py::" in item.nodeid:
+            keep.append(item)
+        else:
+            deselect.append(item)
+
+    if deselect:
+        config.hook.pytest_deselected(items=deselect)
+        items[:] = keep
