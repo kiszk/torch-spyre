@@ -98,6 +98,28 @@ def _maybe_skip_or_xfail(
             pytest.xfail(str(xfail_reason))
 
 
+def parse_py_value(expr: str):
+    """
+    Safely parse a restricted Python literal expression used in YAML.
+    Supports: tuples, None, Ellipsis, slice(None/ints), ints, floats, lists.
+    Disallows function calls and attribute access.
+    """
+    allowed_names = {"None": None, "Ellipsis": Ellipsis, "slice": slice}
+    node = ast.parse(expr, mode="eval")
+
+    for n in ast.walk(node):
+        if isinstance(n, ast.Call):
+            # only allow calling slice(...)
+            if not (isinstance(n.func, ast.Name) and n.func.id == "slice"):
+                raise ValueError(f"Only slice(...) calls are allowed in py: {expr}")
+        if isinstance(n, ast.Attribute):
+            raise ValueError(f"Attributes not allowed in py: {expr}")
+        if isinstance(n, ast.Name) and n.id not in allowed_names:
+            raise ValueError(f"Name {n.id} not allowed in py: {expr}")
+
+    return eval(compile(node, "<py>", "eval"), {"__builtins__": {}}, allowed_names)
+
+
 # ---------- tensor construction (deterministic) ----------
 def _fork_seed(seed: Optional[int]):
     if seed is None:
@@ -343,6 +365,8 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
             cpu_args.append(lst)
         elif "value" in inp:
             cpu_args.append(inp["value"])  # python scalar or list, etc.
+        elif "py" in inp:
+            cpu_args.append(parse_py_value(inp["py"]))
         else:
             raise ValueError(f"Unknown input entry: {inp}")
 
