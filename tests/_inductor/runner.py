@@ -104,7 +104,14 @@ def parse_py_value(expr: str):
     Supports: tuples, None, Ellipsis, slice(None/ints), ints, floats, lists.
     Disallows function calls and attribute access.
     """
-    allowed_names = {"None": None, "Ellipsis": Ellipsis, "slice": slice}
+    allowed_names = {
+        "None": None,
+        "Ellipsis": Ellipsis,
+        "slice": slice,
+        "inf": float("inf"),
+        "-inf": float("-inf"),
+        "nan": float("nan"),
+    }
     node = ast.parse(expr, mode="eval")
 
     for n in ast.walk(node):
@@ -162,7 +169,10 @@ def make_tensor_from_conf(
         with torch.random.fork_rng(devices=[]):
             if seed is not None:
                 torch.manual_seed(int(seed))
-            if init == "rand":
+            if init == "rand" and dtype is torch.bool:
+                threshold = 0.5  # 50% chance of True
+                t = torch.rand(tuple(shape), device="cpu") < threshold
+            elif init == "rand":
                 t = torch.rand(tuple(shape), dtype=dtype, device="cpu")
             elif init == "randn":
                 t = torch.randn(tuple(shape), dtype=dtype, device="cpu")
@@ -174,6 +184,14 @@ def make_tensor_from_conf(
                 t = torch.arange(_numel(shape), dtype=dtype, device="cpu").reshape(
                     shape
                 )
+            elif init == "randint":
+                low = float(init_args.get("low", 0))
+                high = float(init_args.get("high", -1))
+                if high < 0:
+                    raise ValueError(
+                        "Invalid value (high for randint): must be provided (via init_args) and must be positive"
+                    )
+                t = torch.randint(size=tuple(shape), low=low, high=high, device="cpu")
             elif init == "uniform":
                 low = float(init_args.get("low", 0.0))
                 high = float(init_args.get("high", 1.0))
