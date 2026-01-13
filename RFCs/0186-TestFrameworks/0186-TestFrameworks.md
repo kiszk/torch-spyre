@@ -40,6 +40,10 @@ This flexibility makes the framework suitable for future extensions beyond the s
 
 ## Motivation
 
+### Backgroud
+In past, we met problems that the inference results are almost functinally correct but some of torch operations return incorrect results. This behavior is fragile and became obstacles to adding new features such as fine-tuning.
+So, we believe that test cases per operation with actual parameters in models are crucial.
+
 ### Problem
 Current test generation emits one Python file per op+input, leading to:
 - Significant code duplication.
