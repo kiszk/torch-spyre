@@ -1,5 +1,5 @@
 
-# RFC-0186: YAML-driven Torch.ops Test Framework for Spyre/AIU-backed Models
+# RFC-0186: Model-Centric Functional Verification for OpFunc Enablement
 
 **Authors:**
 - Tuan M. Hoang Trong (YKT)
@@ -13,56 +13,79 @@
 ---
 
 ## Summary
+This RFC proposes a **model-centric functional verification** framework built on **pytest** to ensure the correctness of individual **torch operations** used in target models such as GPT-OSS, Granite-4h, Granite-Vision, and Granite-Speech.
+Unlike existing PyTorch tests that rely on synthetic parameters and small tensor shapes, this RFC approach uses actual tensor shapes, parameters, and data types from the target models, delivering realistic and comprehensive coverage.
 
-We propose a YAML-driven test framework (built on `pytest`) to validate functional correctness of `torch.ops` used by Spyre/AIU-supported models.
-Outside the scope of this RFC, there is an existing internal framework to extract per-model sets of `torch.ops` and their inputs via a scanning codegen pass. This internal framework is modified accordingly to emits compact YAML descriptors instead of per-op Python test files.
-This RFC does not propose changes to the scanning logic beyond YAML emission.
-
-The proposed framework:
-
-- Accept the generated YAML files
-- Generates and runs tests from YAML, with optional deduplication across models.
-- Pytest markers & selection: We use pytest.mark (registered in pytest.ini) for flexible selection, skipping, expected failures, etc.
-- Integrates with CI as nightly tests (not every PR), initially focusing on `*-spyre.yaml` variants, then converging to canonical `<model>.yaml` once torch-spyre stabilizes.
-
-This design reduces boilerplate, centralizes test intent, simplifies maintenance, and lets us scale coverage across models with consistent correctness checks.
-
-**Amenability to broader use-cases**:
-While this RFC focuses on validating `torch.ops` for Spyre/AIU-backed models, the proposed YAML-driven framework is generic by design. It can be applied to other scenarios where:
-
-- Hand-written YAML manifests are preferred for custom operator testing.
-- Backend-specific correctness checks are needed outside Spyre/AIU.
-- Debugging workflows require reproducible inputs from .pt files or controlled presets.
-
-This flexibility makes the framework suitable for future extensions beyond the scope of this RFC.
+This framework is essential for **OpFunc enablement**, as it verifies correctness with **model-specific parameters** rather than synthetic test cases.
+By doing so, we eliminate blind spots that existing tests **may not cover**.
 
 ---
 
 ## Motivation
 
-### Backgroud
-In past, we met problems that the inference results are almost functinally correct but some of torch operations return incorrect results. This behavior is fragile and became obstacles to adding new features such as fine-tuning.
-So, we believe that test cases per operation with actual parameters in models are crucial.
+### Background
+We have repeatedly encountered cases where inference results appear mostly
+correct, yet certain **torch operations** produce incorrect outputs. These
+subtle inconsistencies block feature development (e.g., fine-tuning) and
+introduce fragility into the stack. To build a stable foundation and accelerate
+innovation, **model-centric functional verification** using **actual model
+parameters** is critical.
 
-### Problem
-Current test generation emits one Python file per op+input, leading to:
-- Significant code duplication.
-- Large and noisy commits that are hard to review and maintain.
-- Difficulty updating shapes/inputs as models evolve.
+### Problems
+In the past, we observed these issues:
+- Operations with certain **dimensions** work correctly, but operations with
+  other dimensions generate **incorrect results**.
+- Operations with specific **values** in a tensor generate **incorrect results**.
 
-### Goals
-- **Functional correctness:** Validate each `torch.op` against a CPU reference for corresponding shapes and data.
-- **Nightly monitoring:** Continuously track correctness of enabled `opFuncs`.
-- **Maintainability:** Make test intent readable and updatable (shapes, dtypes, tolerances) in YAML.
-- **Scalability:** Support multiple models (Granite-4h, GPT-oss, Granite-vision-3, Granite-speech) with cross-model deduplication.
+These observations lead to the need for verification with **actual parameters**.
+Existing PyTorch tests are insufficient for three critical reasons:
 
-### Non-goals (for now)
-- **Performance tracking:** Only scoped as “N/A” initially (we list future scenarios and metrics below).
-- **Per-PR gating:** Runs in nightly CI/CD, not on every PR.
+- **Unrealistic tensor dimensions**: Current tests use shapes that differ from
+  real-world workloads, failing to reflect deployment scenarios.
+- **Limited coverage of Spyre execution paths**: Small tensor sizes often avoid
+  **Spyre-relevant** multi-core/tiling/scheduling paths, leaving key behaviors
+  untested.
+- **Synthetic data limitations**: Tests do not capture edge cases arising from
+  **actual parameter distributions** in production models.
+
+These gaps can lead to undetected correctness issues that surface only with the
+target models, increasing risk and slowing development.
+
+## Goals
+- **Functional correctness**: Validate each enabled torch operation against a
+  **CPU reference** using **real shapes and data** from target models.
+- **Nightly monitoring**: Continuously track correctness of enabled OpFuncs
+  using the industry-standard **pytest** framework.
+- **Scalability**: Support multiple models (Granite-4h, GPT-OSS,
+  Granite-Vision-3, Granite-Speech) with **cross-model deduplication**.
+- **Maintainability**: Centralize test intent in descriptors (**shapes, dtypes,
+  tolerances**) for easy updates as models evolve.
+
+## Non-Goals (for now)
+- **Performance tracking**: Out of scope initially (future metrics may be
+  added).
+- **Per-PR gating**: Tests run in nightly CI/CD, not on every PR.
 
 ---
 
 ## Proposed Implementation
+
+### Design Concept
+Our framework delivers:
+
+- Leverage **pytest** as the de facto testing standard.
+- **Descriptor-driven** approach (currently **YAML**) to represent actual model
+  parameters for each torch operation.
+- Automated test generation from descriptors, with optional **deduplication
+  across models**.
+- Flexible test selection via **pytest markers** for skipping, expected
+  failures, and targeted runs.
+- CI integration as **nightly tests**, starting with **Spyre/AIU-backed**
+  models and expanding to canonical sets.
+
+This design ensures **realistic**, **maintainable**, and **scalable**
+correctness checks across diverse models—closing the gap between synthetic
+testing and production reality.
 
 ### Overview
 We use two cooperating frameworks:
