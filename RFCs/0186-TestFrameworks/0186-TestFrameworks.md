@@ -126,7 +126,7 @@ We plan per-model YAML, with option for subclasses variants:
 Deduplication is based on normalized op signature and input shapes, not model name.
 - **Disable dedupe:** `--no-dedupe` (explicit).
 - **Selective model runs:** Choose one or many models at runtime (e.g., run only `granite3-speech`).
-- **Select cases**: integrate with pytest.ini design, register custom markers for cleanliness.
+- **Select cases**: integrate with pytest.ini design, register custom markers for cleanliness. **Can skip tests at each input set**.
 Marker usage and registration follow pytest documentation best practices, enabling selection and skip/xfail logic
 
 **CLI Examples**
