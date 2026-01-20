@@ -234,8 +234,11 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.chunk": OpAdapter("torch.chunk", torch.chunk),
     # Basic math / reductions
     "torch.add": OpAdapter("torch.add", torch.add),
+    "operator.__add__": OpAdapter("torch.add", torch.add),
     "torch.sub": OpAdapter("torch.sub", torch.sub),
+    "operator.__sub__": OpAdapter("torch.sub", torch.sub),
     "torch.mul": OpAdapter("torch.mul", torch.mul),
+    "operator.__mul__": OpAdapter("torch.mul", torch.mul),
     "torch.pow": OpAdapter("torch.pow", torch.pow),
     "torch.truediv": OpAdapter("torch.truediv", _torch_truediv),
     "torch.neg": OpAdapter("torch.neg", _torch_neg),
