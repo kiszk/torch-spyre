@@ -65,8 +65,14 @@ def _tensor_contiguous(x: torch.Tensor) -> torch.Tensor:
     return x.contiguous()
 
 
-def _tensor_expand(x: torch.Tensor, shape) -> torch.Tensor:
-    return x.expand(*shape) if isinstance(shape, (list, tuple)) else x.expand(shape)
+def _tensor_expand(x: torch.Tensor, shape, *args) -> torch.Tensor:
+    if isinstance(shape, (list, tuple)):
+        final_shape = list(shape)
+    elif args:
+        final_shape = [shape] + list(args)
+    else:
+        final_shape = [shape]
+    return x.expand(final_shape)
 
 
 def _tensor_expand_as(x: torch.Tensor, other: torch.Tensor) -> torch.Tensor:
@@ -90,12 +96,24 @@ def _tensor_repeat(x: torch.Tensor, reps) -> torch.Tensor:
     return x.repeat(*reps) if isinstance(reps, (list, tuple)) else x.repeat(reps)
 
 
-def _tensor_view(x: torch.Tensor, shape) -> torch.Tensor:
-    return x.view(*shape) if isinstance(shape, (list, tuple)) else x.view(shape)
+def _tensor_view(x: torch.Tensor, shape, *args) -> torch.Tensor:
+    if isinstance(shape, (list, tuple)):
+        final_shape = list(shape)
+    elif args:
+        final_shape = [shape] + list(args)
+    else:
+        final_shape = [shape]
+    return x.view(final_shape)
 
 
-def _tensor_permute(x: torch.Tensor, dims) -> torch.Tensor:
-    return x.permute(*dims) if isinstance(dims, (list, tuple)) else x.permute(dims)
+def _tensor_permute(x: torch.Tensor, dims, *args) -> torch.Tensor:
+    if isinstance(dims, (list, tuple)):
+        final_dims = list(dims)
+    elif args:
+        final_dims = [dims] + list(args)
+    else:
+        final_dims = [dims]
+    return x.permute(final_dims)
 
 
 def _tensor_transpose(x: torch.Tensor, dim0: int, dim1: int) -> torch.Tensor:
@@ -255,6 +273,7 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.where": OpAdapter("torch.where", torch.where),
     # Linear algebra
     "torch.matmul": OpAdapter("torch.matmul", torch.matmul),
+    "operator.__matmul__": OpAdapter("torch.matmul", torch.matmul),
     "torch.bmm": OpAdapter("torch.bmm", torch.bmm),
     "torch.functional.einsum": OpAdapter(
         "torch.functional.einsum", torch.functional.einsum
@@ -262,13 +281,16 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     # Shape / view / layout
     # stride-sensitive ops
     "torch.contiguous": OpAdapter("torch.contiguous", _tensor_contiguous),
+    "torch.Tensor.contiguous": OpAdapter("torch.contiguous", _tensor_contiguous),
     "torch.reshape": OpAdapter("torch.reshape", torch.reshape),
     "torch.view": OpAdapter("torch.view", _tensor_view),
+    "torch.Tensor.view": OpAdapter("torch.view", _tensor_view),
     "torch.transpose": OpAdapter("torch.transpose", _tensor_transpose),
     "torch.permute": OpAdapter("torch.permute", _tensor_permute),
     "torch.unsqueeze": OpAdapter("torch.unsqueeze", _tensor_unsqueeze),
     "torch.flatten": OpAdapter("torch.flatten", torch.flatten),
     "torch.expand": OpAdapter("torch.expand", _tensor_expand),
+    "torch.Tensor.expand": OpAdapter("torch.expand", _tensor_expand),
     "torch.expand_as": OpAdapter("torch.expand_as", _tensor_expand_as),
     "torch.repeat": OpAdapter("torch.repeat", _tensor_repeat),
     "torch.clone": OpAdapter("torch.clone", torch.clone),
@@ -339,6 +361,10 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.nn.linear": OpAdapter(
         "torch.nn.linear",
         getattr(torch.nn, "linear", torch.nn.functional.linear),
+    ),
+    "torch.nn.functional.linear": OpAdapter(
+        "torch.nn.functional.linear",
+        torch.nn.functional.linear
     ),
     "torch.nn.pad": OpAdapter(
         "torch.nn.pad",
