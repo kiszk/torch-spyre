@@ -185,8 +185,8 @@ def make_tensor_from_conf(
                     shape
                 )
             elif init == "randint":
-                low = float(init_args.get("low", 0))
-                high = float(init_args.get("high", -1))
+                low = int(init_args.get("low", 0))
+                high = int(init_args.get("high", -1))
                 if high < 0:
                     raise ValueError(
                         "Invalid value (high for randint): must be provided (via init_args) and must be positive"
@@ -382,7 +382,10 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
             ]
             cpu_args.append(lst)
         elif "value" in inp:
-            cpu_args.append(inp["value"])  # python scalar or list, etc.
+            val = inp["value"]
+            if isinstance(val, str):
+                val = eval(val)
+            cpu_args.append(val)  # python scalar or list, etc.
         elif "py" in inp:
             cpu_args.append(parse_py_value(inp["py"]))
         else:
