@@ -207,7 +207,7 @@ cases:
       match: <substring>
 
     # Test control
-    mark: <pytest marker(s)>
+    marks: <pytest marker(s)>
     skip_if:                  # Conditional skip logic for backend/device)
       expr: <python boolean>  # if True -> skip
       reason: <text>

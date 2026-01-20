@@ -121,10 +121,9 @@ def to_pytest_params(items: Iterable[LoadedCase]) -> List[Any]:
         marks.append(getattr(pytest.mark, f"model_{_slug(it.model)}"))
 
         # case-level marks
-        m = it.case.get("mark", None)
         ms = it.case.get("marks", None)
-        if m:
-            marks.append(getattr(pytest.mark, m))
+        if ms is not None and not isinstance(ms, list):
+            ms = [ms]
         if isinstance(ms, list):
             for mm in ms:
                 marks.append(getattr(pytest.mark, mm))
