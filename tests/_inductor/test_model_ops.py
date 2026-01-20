@@ -61,4 +61,7 @@ def test_model_ops(
         test_device=torch.device(test_device_str),
         compile_backend=compile_backend,
     )
-    run_case(case, defaults, cfg)
+    try:
+        run_case(case, defaults, cfg)
+    finally:
+        torch._dynamo.reset()
