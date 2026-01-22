@@ -92,8 +92,14 @@ def _tensor_to(x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
     return x.to(*args, **kwargs)
 
 
-def _tensor_repeat(x: torch.Tensor, reps) -> torch.Tensor:
-    return x.repeat(*reps) if isinstance(reps, (list, tuple)) else x.repeat(reps)
+def _tensor_repeat(x: torch.Tensor, rep, *args) -> torch.Tensor:
+    if isinstance(rep, (list, tuple)):
+        final_reps = list(rep)
+    elif args:
+        final_reps = [rep] + list(args)
+    else:
+        final_reps = [rep]
+    return x.repeat(final_reps)
 
 
 def _tensor_view(x: torch.Tensor, shape, *args) -> torch.Tensor:
@@ -318,6 +324,7 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.gt": OpAdapter("torch.gt", _torch_gt),
     # Type/device conversions
     "torch.float": OpAdapter("torch.float", _tensor_float),
+    "float": OpAdapter("torch.float", _tensor_float),
     "torch.int": OpAdapter("torch.int", _tensor_int),
     "torch.to": OpAdapter("torch.to", _tensor_to),
     # Creation
