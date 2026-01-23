@@ -89,6 +89,8 @@ def case_key(case: Dict[str, Any], defaults: Dict[str, Any]) -> tuple:
             inputs_sig.append(("tensor_list", tuple(lst)))
         elif "value" in inp:
             inputs_sig.append(("value", freeze(inp["value"])))
+        elif "py" in inp:
+            inputs_sig.append(("py", freeze(inp["py"])))
         else:
             raise ValueError(f"Unknown input entry: {inp}")
 
