@@ -302,6 +302,7 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.clone": OpAdapter("torch.clone", torch.clone),
     # Indexing / getitem / setitem
     "torch.getitem": OpAdapter("torch.getitem", _tensor_getitem),
+    "operator.__getitem__": OpAdapter("torch.getitem", _tensor_getitem),
     "_operator.setitem": OpAdapter(
         "_operator.setitem", _tensor_setitem_, is_inplace=True
     ),
