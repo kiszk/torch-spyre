@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import ast
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
@@ -43,7 +44,10 @@ def freeze(x: Any) -> Any:
     if isinstance(x, (list, tuple)):
         return tuple(freeze(v) for v in x)
     if isinstance(x,str) and "torch." not in x:
-        return eval(x)
+        try:
+            return ast.literal_eval(x)
+        except (ValueError, SyntaxError):
+            return x
     return x
 
 

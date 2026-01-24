@@ -333,6 +333,7 @@ def _maybe_compile_call(
     if compile_backend is None or device.type == "cpu":
         return fn(*args, **attrs)
     mod = _OpModule(fn).to(device)
+    torch._dynamo.reset_code_caches() # kernel caching workaround
     compiled = torch.compile(mod, backend=compile_backend)
     return compiled(*args, **attrs)
 
@@ -384,7 +385,10 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
         elif "value" in inp:
             val = inp["value"]
             if isinstance(val, str):
-                val = eval(val)
+                try:
+                    val = ast.literal_eval(val)
+                except (ValueError, SyntaxError):
+                    pass
             cpu_args.append(val)  # python scalar or list, etc.
         elif "py" in inp:
             cpu_args.append(parse_py_value(inp["py"]))
