@@ -391,6 +391,14 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
         else:
             raise ValueError(f"Unknown input entry: {inp}")
 
+    for key, value in case.get("kwmap", {}).items():
+        if isinstance(value, str):
+            try:
+                value = ast.literal_eval(value)
+            except (ValueError, SyntaxError):
+                pass
+        attrs[key] = value
+
     test_args = []
     for a in cpu_args:
         # also move tensors inside lists (cat)
