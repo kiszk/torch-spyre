@@ -333,7 +333,7 @@ def _maybe_compile_call(
     if compile_backend is None or device.type == "cpu":
         return fn(*args, **attrs)
     mod = _OpModule(fn).to(device)
-    torch._dynamo.reset_code_caches() # kernel caching workaround
+    torch._dynamo.reset_code_caches()  # kernel caching workaround
     compiled = torch.compile(mod, backend=compile_backend)
     return compiled(*args, **attrs)
 

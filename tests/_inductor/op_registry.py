@@ -371,8 +371,7 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
         getattr(torch.nn, "linear", torch.nn.functional.linear),
     ),
     "torch.nn.functional.linear": OpAdapter(
-        "torch.nn.functional.linear",
-        torch.nn.functional.linear
+        "torch.nn.functional.linear", torch.nn.functional.linear
     ),
     "torch.nn.pad": OpAdapter(
         "torch.nn.pad",

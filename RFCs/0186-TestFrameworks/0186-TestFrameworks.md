@@ -146,11 +146,11 @@ pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "torch.add"
 pytest --model gpt_oss tests/
 pytest --model gpt_oss --model granite4h tests/
 
-# Show selected tests based on marks 
-pytest --list-cases-by-mark 
+# Show selected tests based on marks
+pytest --list-cases-by-mark
 pytest --list-cases-by-mark --model gpt-oss
-# Show excluded tests based on marks 
-pytest --list-cases-by-mark --show-excluded 
+# Show excluded tests based on marks
+pytest --list-cases-by-mark --show-excluded
 pytest --list-cases-by-mark --show-excluded --model gpt-oss
 
 ```
