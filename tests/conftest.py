@@ -17,6 +17,25 @@ from pathlib import Path
 import yaml
 import pytest
 
+def _get_case_marks(case: dict) -> set[str]:
+    """
+    Support either:
+      marks: paddedtensor
+      marks: [paddedtensor, fpoperation]
+    """
+    marks = set()
+    m = case.get("marks")
+    if isinstance(m, str) and m.strip():
+        marks.add(m.strip())
+
+    ms = case.get("marks")
+    if isinstance(ms, (list, tuple)):
+        for x in ms:
+            if isinstance(x, str) and x.strip():
+                marks.add(x.strip())
+
+    return marks
+
 
 def pytest_sessionstart(session):
     """
@@ -32,17 +51,59 @@ def pytest_sessionstart(session):
     selected = set(cfg.getoption("--model") or [])
 
     if cfg.getoption("--list-models"):
-        models = sorted({m for (m, _, __, ___) in _iter_yaml_cases(root)})
+        models = sorted({m for (m, _, __, ___, _case) in _iter_yaml_cases(root)})
         for m in models:
             print(m)
         pytest.exit("listed models", returncode=0)
 
     if cfg.getoption("--list-cases"):
-        for model, name, op, p in _iter_yaml_cases(root):
+        for model, name, op, p, _case in _iter_yaml_cases(root):
             if selected and model not in selected:
                 continue
             print(f"{model}::{name}::{op}  ({p})")
         pytest.exit("listed cases", returncode=0)
+
+    opt = cfg.getoption("--list-cases-by-mark")
+    if opt is not None:
+       if opt == "__USE_PYTEST_M__":
+           # This is the *effective* -m expression after addopts + CLI parsing.
+           expr = (cfg.option.markexpr or "").strip()
+           # If no -m anywhere, treat as "select all"
+           if not expr:
+               expr = "True"
+       else:
+           expr = opt.strip()
+       from _pytest.mark.expression import Expression
+       compiled = Expression.compile(expr)
+
+       show_excluded = cfg.getoption("--show-excluded")
+       chosen = []
+       excluded = []
+
+       def case_selected(case: dict) -> bool:
+           marks = _get_case_marks(case)  # set[str]
+           return compiled.evaluate(lambda m: m in marks)
+       for model, name, op, p, case in _iter_yaml_cases(root):
+           if selected and model not in selected:
+               continue
+
+           marks = _get_case_marks(case)
+
+           rec = f"{model}::{name}::{op}  ({p})"
+           if case_selected(case):
+               chosen.append(rec)
+           else:
+               excluded.append(rec)
+
+       if show_excluded:
+           for r in excluded:
+                print(r)
+           pytest.exit(f"listed excluded cases by mark (NOT {expr})", returncode=0)
+       else:
+           for r in chosen:
+                print(r)
+           pytest.exit(f"listed selected cases by mark ({expr})", returncode=0)
+
 
 
 def pytest_addoption(parser):
@@ -85,6 +146,28 @@ def pytest_addoption(parser):
         default=os.environ.get("TEST_COMPILE_BACKEND", "inductor"),
         help="If set, run test via torch.compile(..., backend=...).",
     )
+    group = parser.getgroup("yaml-cases")
+    group.addoption(
+        "--list-cases-by-mark",
+        action="store",
+        const="__USE_PYTEST_M__",
+        default=None,
+        nargs="?",
+        metavar="EXPR",
+        help=(
+            "List YAML test cases whose mark(s) match a pytest -m style expression. "
+            "Examples: paddedtensor | 'paddedtensor and not fpoperation'"
+            "If EXPR is omitted, uses the effective pytest -m expression (including pytest.ini addopts)."
+        ),
+    )
+    group.addoption(
+        "--show-excluded",
+        action="store_true",
+        default=False,
+        help="With --list-cases-by-mark, list cases excluded by the mark expression (i.e., NOT matching).",
+    )
+
+
 
 
 def _models_dir(rootpath: Path) -> Path:
@@ -93,7 +176,7 @@ def _models_dir(rootpath: Path) -> Path:
 
 def _iter_yaml_cases(rootpath: Path):
     """
-    Yields tuples: (model, case_name, op_name, yaml_path)
+    Yields tuples: (model, case_name, op_name, yaml_path, case)
     Supports either:
       - per-case 'op'
       - or top-level 'op' applied to cases that don't specify 'op'
@@ -107,7 +190,7 @@ def _iter_yaml_cases(rootpath: Path):
         for case in spec.get("cases", []):
             op = case.get("op", top_op)
             name = case.get("name", op or "<unnamed>")
-            yield model, name, op, p
+            yield model, name, op, p, case
 
 
 @pytest.fixture(scope="session")
