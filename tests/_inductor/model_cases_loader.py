@@ -43,7 +43,7 @@ def freeze(x: Any) -> Any:
         return tuple(sorted((k, freeze(v)) for k, v in x.items()))
     if isinstance(x, (list, tuple)):
         return tuple(freeze(v) for v in x)
-    if isinstance(x,str) and "torch." not in x:
+    if isinstance(x, str) and "torch." not in x:
         try:
             return ast.literal_eval(x)
         except (ValueError, SyntaxError):
