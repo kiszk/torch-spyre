@@ -17,6 +17,7 @@ from pathlib import Path
 import yaml
 import pytest
 
+
 def _get_case_marks(case: dict) -> set[str]:
     """
     Support either:
@@ -65,45 +66,44 @@ def pytest_sessionstart(session):
 
     opt = cfg.getoption("--list-cases-by-mark")
     if opt is not None:
-       if opt == "__USE_PYTEST_M__":
-           # This is the *effective* -m expression after addopts + CLI parsing.
-           expr = (cfg.option.markexpr or "").strip()
-           # If no -m anywhere, treat as "select all"
-           if not expr:
-               expr = "True"
-       else:
-           expr = opt.strip()
-       from _pytest.mark.expression import Expression
-       compiled = Expression.compile(expr)
+        if opt == "__USE_PYTEST_M__":
+            # This is the *effective* -m expression after addopts + CLI parsing.
+            expr = (cfg.option.markexpr or "").strip()
+            # If no -m anywhere, treat as "select all"
+            if not expr:
+                expr = "True"
+        else:
+            expr = opt.strip()
+        from _pytest.mark.expression import Expression
 
-       show_excluded = cfg.getoption("--show-excluded")
-       chosen = []
-       excluded = []
+        compiled = Expression.compile(expr)
 
-       def case_selected(case: dict) -> bool:
-           marks = _get_case_marks(case)  # set[str]
-           return compiled.evaluate(lambda m: m in marks)
-       for model, name, op, p, case in _iter_yaml_cases(root):
-           if selected and model not in selected:
-               continue
+        show_excluded = cfg.getoption("--show-excluded")
+        chosen = []
+        excluded = []
 
-           marks = _get_case_marks(case)
+        def case_selected(case: dict) -> bool:
+            marks = _get_case_marks(case)  # set[str]
+            return compiled.evaluate(lambda m: m in marks)
 
-           rec = f"{model}::{name}::{op}  ({p})"
-           if case_selected(case):
-               chosen.append(rec)
-           else:
-               excluded.append(rec)
+        for model, name, op, p, case in _iter_yaml_cases(root):
+            if selected and model not in selected:
+                continue
 
-       if show_excluded:
-           for r in excluded:
+            rec = f"{model}::{name}::{op}  ({p})"
+            if case_selected(case):
+                chosen.append(rec)
+            else:
+                excluded.append(rec)
+
+        if show_excluded:
+            for r in excluded:
                 print(r)
-           pytest.exit(f"listed excluded cases by mark (NOT {expr})", returncode=0)
-       else:
-           for r in chosen:
+            pytest.exit(f"listed excluded cases by mark (NOT {expr})", returncode=0)
+        else:
+            for r in chosen:
                 print(r)
-           pytest.exit(f"listed selected cases by mark ({expr})", returncode=0)
-
+            pytest.exit(f"listed selected cases by mark ({expr})", returncode=0)
 
 
 def pytest_addoption(parser):
@@ -171,6 +171,7 @@ def pytest_addoption(parser):
 def _models_dir(rootpath: Path) -> Path:
     return rootpath / "tests" / "_inductor" / "models"
 
+
 def load_yaml_or_fail(path: Path) -> dict:
     text = path.read_text()
     try:
@@ -196,9 +197,9 @@ def load_yaml_or_fail(path: Path) -> dict:
             msg.append("Context:")
             for i in range(start, end):
                 prefix = ">>" if i == mark.line else "  "
-                msg.append(f"{prefix} {i+1:4d}: {lines[i]}")
+                msg.append(f"{prefix} {i + 1:4d}: {lines[i]}")
                 if i == mark.line:
-                    msg.append(f"     {' ' * (col-1)}^")
+                    msg.append(f"     {' ' * (col - 1)}^")
 
         # Include the underlying YAML error message too
         msg.append(f"YAML error: {e}")
