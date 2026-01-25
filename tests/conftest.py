@@ -168,10 +168,43 @@ def pytest_addoption(parser):
     )
 
 
-
-
 def _models_dir(rootpath: Path) -> Path:
     return rootpath / "tests" / "_inductor" / "models"
+
+def load_yaml_or_fail(path: Path) -> dict:
+    text = path.read_text()
+    try:
+        data = yaml.safe_load(text)
+        if data is None:
+            raise pytest.UsageError(f"{path}: YAML is empty")
+        return data
+    except yaml.YAMLError as e:
+        # Build a nice error message with file + location + snippet
+        msg = [f"Invalid YAML in {path}"]
+
+        mark = getattr(e, "problem_mark", None)
+        if mark is not None:
+            # PyYAML lines are 0-based internally; show 1-based to humans
+            line = mark.line + 1
+            col = mark.column + 1
+            msg.append(f"Location: line {line}, column {col}")
+
+            lines = text.splitlines()
+            start = max(0, mark.line - 2)
+            end = min(len(lines), mark.line + 3)
+
+            msg.append("Context:")
+            for i in range(start, end):
+                prefix = ">>" if i == mark.line else "  "
+                msg.append(f"{prefix} {i+1:4d}: {lines[i]}")
+                if i == mark.line:
+                    msg.append(f"     {' ' * (col-1)}^")
+
+        # Include the underlying YAML error message too
+        msg.append(f"YAML error: {e}")
+
+        # Fail pytest configuration cleanly (instead of INTERNALERROR)
+        raise pytest.UsageError("\n".join(msg)) from e
 
 
 def _iter_yaml_cases(rootpath: Path):
@@ -184,7 +217,7 @@ def _iter_yaml_cases(rootpath: Path):
     for p in sorted(_models_dir(rootpath).glob("*.yaml")):
         if p.name.endswith("template.yaml"):  # skip template.yaml file
             continue
-        spec = yaml.safe_load(p.read_text())
+        spec = load_yaml_or_fail(p)
         model = spec.get("model", p.stem)
         top_op = spec.get("op", None)
         for case in spec.get("cases", []):
@@ -224,7 +257,7 @@ def pytest_configure(config):
     # auto-register model_<name> markers based on YAML files
     mdir = config.rootpath / "tests" / "_inductor" / "models"
     for p in mdir.glob("*.yaml"):
-        spec = yaml.safe_load(p.read_text())
+        spec = load_yaml_or_fail(p)
         model = spec.get("model", p.stem)
         mark = "model_" + "".join(
             ch if ch.isalnum() or ch == "_" else "_" for ch in model
