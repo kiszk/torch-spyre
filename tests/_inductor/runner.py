@@ -338,6 +338,40 @@ def _maybe_compile_call(
     return compiled(*args, **attrs)
 
 
+def parse_dtype(spec) -> torch.dtype:
+    # already a torch dtype?
+    if isinstance(spec, torch.dtype):
+        return spec
+
+    if not isinstance(spec, str):
+        raise TypeError(f"dtype must be str or torch.dtype, got {type(spec)}")
+
+    s = spec.strip()
+
+    # allow "torch.float16" (or "Torch.Float16" if you choose lower())
+    if s.startswith("torch."):
+        attr = s.split(".", 1)[1]
+        dt = getattr(torch, attr, None)
+        if isinstance(dt, torch.dtype):
+            return dt
+        raise ValueError(f"Unknown torch dtype: {spec}")
+
+    # allow your aliases (optionally case-insensitive)
+    key = s.lower()
+    if key in DTYPE_MAP:
+        return DTYPE_MAP[key]
+
+    # optionally: allow bare torch attribute names beyond your whitelist
+    # (e.g., "float64") if you want:
+    dt = getattr(torch, s, None) or getattr(torch, key, None)
+    if isinstance(dt, torch.dtype):
+        return dt
+
+    raise ValueError(
+        f"Unsupported dtype: {spec!r}. Supported: {sorted(DTYPE_MAP)} and torch.<dtype>"
+    )
+
+
 # ---------- main entry ----------
 def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> None:
     op_name = case["op"]
@@ -346,7 +380,8 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
     case_name = case.get("name", op_name)
 
     dtype_str = case.get("dtype", defaults.get("dtype", "fp32"))
-    dtype = DTYPE_MAP[dtype_str]
+    dtype = parse_dtype(dtype_str)
+    dtype_str = str(dtype)
     seed = case.get("seed", defaults.get("seed", None))
 
     rtol = float(case.get("rtol", defaults.get("rtol", 1e-3)))
