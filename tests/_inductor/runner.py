@@ -269,9 +269,9 @@ def _assert_same(
         except AssertionError as e:
             diff = (ref_out - test_out).abs()
             raise AssertionError(
-                f"{case_name} FAILED\n"
+                f"{case_name} FAILED since output is not close to an expected result\n"
+                f"{e}\n"
                 f"shape={tuple(ref_out.shape)} dtype={ref_out.dtype}\n"
-                f"atol={atol} rtol={rtol}\n"
                 f"max_abs_diff={diff.max().item()}\n"
             ) from e
         return
