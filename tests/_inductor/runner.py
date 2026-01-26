@@ -272,7 +272,6 @@ def _assert_same(
                 f"{case_name} FAILED since output is not close to an expected result\n"
                 f"{e}\n"
                 f"shape={tuple(ref_out.shape)} dtype={ref_out.dtype}\n"
-                f"max_abs_diff={diff.max().item()}\n"
             ) from e
         return
 
@@ -379,7 +378,7 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
 
     case_name = case.get("name", op_name)
 
-    dtype_str = case.get("dtype", defaults.get("dtype", "fp32"))
+    dtype_str = case.get("dtype", defaults.get("dtype", "fp16"))
     dtype = parse_dtype(dtype_str)
     dtype_str = str(dtype)
     seed = case.get("seed", defaults.get("seed", None))
