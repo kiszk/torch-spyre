@@ -241,6 +241,14 @@ def make_tensor_from_conf(
     return t
 
 
+def confirm_device(x: Any, expected_device: str) -> bool:
+    if torch.is_tensor(x):
+        return expected_device in str(x.device)
+    if isinstance(x, (tuple, list)):
+        return all(confirm_device(item, expected_device) for item in x)
+    return True
+
+
 def to_device(x: Any, device: torch.device) -> Any:
     if torch.is_tensor(x):
         return x.to(device)
@@ -267,7 +275,6 @@ def _assert_same(
         try:
             torch.testing.assert_close(test_out, ref_out, rtol=rtol, atol=atol)
         except AssertionError as e:
-            diff = (ref_out - test_out).abs()
             raise AssertionError(
                 f"{case_name} FAILED since output is not close to an expected result\n"
                 f"{e}\n"
@@ -477,5 +484,7 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
             test_out = test_args[0]
 
     ref_out_cpu = to_device(ref_out, torch.device("cpu"))
+    print(test_out)
+    assert confirm_device(test_out, "spyre"), "this result must be on spyre"
     test_out_cpu = to_device(test_out, torch.device("cpu"))
     _assert_same(ref_out_cpu, test_out_cpu, rtol=rtol, atol=atol, case_name=case_name)
