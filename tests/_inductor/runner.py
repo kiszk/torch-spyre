@@ -410,14 +410,16 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
         inp_seed = None if seed is None else int(seed) + i * 1000
 
         if "tensor" in inp:
+            tensor_conf = inp["tensor"]
+            tensor_dtype = parse_dtype(tensor_conf.get("dtype", dtype_str))
             cpu_args.append(
-                make_tensor_from_conf(inp["tensor"], dtype=dtype, seed=inp_seed)
+                make_tensor_from_conf(tensor_conf, dtype=tensor_dtype, seed=inp_seed)
             )
         elif "tensor_list" in inp:
             lst = [
                 make_tensor_from_conf(
                     t,
-                    dtype=dtype,
+                    dtype=parse_dtype(t.get("dtype", dtype_str)),
                     seed=(None if seed is None else int(seed) + i * 1000 + j),
                 )
                 for j, t in enumerate(inp["tensor_list"])
