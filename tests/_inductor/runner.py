@@ -437,11 +437,14 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
             raise ValueError(f"Unknown input entry: {inp}")
 
     for key, value in case.get("kwmap", {}).items():
-        if isinstance(value, str):
-            try:
-                value = ast.literal_eval(value)
-            except (ValueError, SyntaxError):
-                pass
+        if key == "dtype":
+            value = parse_dtype(value)
+        else:
+            if isinstance(value, str):
+                try:
+                    value = ast.literal_eval(value)
+                except (ValueError, SyntaxError):
+                    pass
         attrs[key] = value
 
     test_args = []
