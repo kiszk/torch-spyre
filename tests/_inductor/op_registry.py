@@ -87,6 +87,10 @@ def _tensor_int(x: torch.Tensor) -> torch.Tensor:
     return x.int()
 
 
+def _tensor_long(x: torch.Tensor) -> torch.Tensor:
+    return x.long()
+
+
 def _tensor_to(x: torch.Tensor, *args, **kwargs) -> torch.Tensor:
     # allow YAML to pass (dtype/device/etc.) via args/kwargs
     return x.to(*args, **kwargs)
@@ -235,6 +239,10 @@ def _tensor_add_(x: torch.Tensor, other, alpha=1):
     return x.add_(other, alpha=alpha)
 
 
+def _tensor_copy_(x: torch.Tensor, source: torch.Tensor):
+    return x.copy_(source)
+
+
 def _tensor_scatter_(x: torch.Tensor, dim: int, index: torch.Tensor, src):
     # src can be tensor or scalar
     return x.scatter_(dim, index, src)
@@ -258,25 +266,33 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.chunk": OpAdapter("torch.chunk", torch.chunk),
     # Basic math / reductions
     "torch.add": OpAdapter("torch.add", torch.add),
+    "torch.Tensor.add": OpAdapter("torch.add", torch.add),
     "operator.__add__": OpAdapter("torch.add", torch.add),
     "torch.sub": OpAdapter("torch.sub", torch.sub),
     "operator.__sub__": OpAdapter("torch.sub", torch.sub),
     "torch.mul": OpAdapter("torch.mul", torch.mul),
+    "torch.Tensor.mul": OpAdapter("torch.mul", torch.mul),
     "operator.__mul__": OpAdapter("torch.mul", torch.mul),
+    "torch.invert": OpAdapter("torch.bitwise_not", torch.bitwise_not),
     "torch.pow": OpAdapter("torch.pow", torch.pow),
     "torch.truediv": OpAdapter("torch.truediv", _torch_truediv),
     "torch.neg": OpAdapter("torch.neg", _torch_neg),
     "torch.sum": OpAdapter("torch.sum", torch.sum),
     "torch.mean": OpAdapter("torch.mean", torch.mean),
     "torch.max": OpAdapter("torch.max", torch.max),
+    "torch.softmax": OpAdapter("torch.softmax", torch.max),
+    "torch.cumsum": OpAdapter("torch.cumsum", torch.cumsum),
     "torch.all": OpAdapter("torch.all", torch.all),
     "torch.numel": OpAdapter("torch.numel", _tensor_numel),
+    "torch.exp": OpAdapter("torch.exp", torch.exp),
     "torch.rsqrt": OpAdapter("torch.rsqrt", torch.rsqrt),
     "torch.sigmoid": OpAdapter("torch.sigmoid", torch.sigmoid),
     "torch.sin": OpAdapter("torch.sin", torch.sin),
     "torch.cos": OpAdapter("torch.cos", torch.cos),
     "torch.clamp": OpAdapter("torch.clamp", torch.clamp),
     "torch.where": OpAdapter("torch.where", torch.where),
+    "torch.tril": OpAdapter("torch.tril", torch.tril),
+    "torch.triu": OpAdapter("torch.triu", torch.triu),
     # Linear algebra
     "torch.matmul": OpAdapter("torch.matmul", torch.matmul),
     "operator.__matmul__": OpAdapter("torch.matmul", torch.matmul),
@@ -300,6 +316,8 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.expand_as": OpAdapter("torch.expand_as", _tensor_expand_as),
     "torch.repeat": OpAdapter("torch.repeat", _tensor_repeat),
     "torch.clone": OpAdapter("torch.clone", torch.clone),
+    "torch.split": OpAdapter("torch.split", torch.split),
+    "torch.Tensor.copy_": OpAdapter("torch.copy_", _tensor_copy_, is_inplace=True),
     # Indexing / getitem / setitem
     "torch.getitem": OpAdapter("torch.getitem", _tensor_getitem),
     "operator.__getitem__": OpAdapter("torch.getitem", _tensor_getitem),
@@ -327,7 +345,9 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.float": OpAdapter("torch.float", _tensor_float),
     "float": OpAdapter("torch.float", _tensor_float),
     "torch.int": OpAdapter("torch.int", _tensor_int),
+    "torch.long": OpAdapter("torch.long", _tensor_long),
     "torch.to": OpAdapter("torch.to", _tensor_to),
+    "torch.type_as": OpAdapter("torch.Tensor.type_as", torch.Tensor.type_as),
     # Creation
     "torch.zeros": OpAdapter("torch.zeros", torch.zeros),
     "torch.zeros_like": OpAdapter("torch.zeros_like", torch.zeros_like),
@@ -354,11 +374,17 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.nn.functional.batch_norm": OpAdapter(
         "torch.nn.functional.batch_norm", torch.nn.functional.batch_norm
     ),
+    "torch.nn.functional.gelu": OpAdapter(
+        "torch.nn.functional.gelu", torch.nn.functional.gelu
+    ),
     "torch.nn.functional.glu": OpAdapter(
         "torch.nn.functional.glu", torch.nn.functional.glu
     ),
     "torch.nn.functional.silu": OpAdapter(
         "torch.nn.functional.silu", torch.nn.functional.silu
+    ),
+    "torch.nn.functional.softplus": OpAdapter(
+        "torch.nn.functional.softplus", torch.nn.functional.softplus
     ),
     # gelu has both torch.nn.functional.gelu and torch.nn.gelu depending on version
     "torch.nn.gelu": OpAdapter(
@@ -385,6 +411,10 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
             "scaled_dot_product_attention",
             torch.nn.functional.scaled_dot_product_attention,
         ),
+    ),
+    "torch.nn.functional.scaled_dot_product_attention": OpAdapter(
+        "torch.nn.functional.scaled_dot_product_attention",
+        torch.nn.functional.scaled_dot_product_attention,
     ),
     "torch.nn.functional.multi_head_attention_forward": OpAdapter(
         "torch.nn.functional.multi_head_attention_forward",
