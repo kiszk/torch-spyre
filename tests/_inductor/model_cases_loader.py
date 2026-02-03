@@ -13,6 +13,7 @@
 # limitations under the License.
 import ast
 from dataclasses import dataclass
+import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
@@ -121,6 +122,7 @@ def load_all_cases(pytest_root: Path) -> List[LoadedCase]:
 
 
 def to_pytest_params(items: Iterable[LoadedCase]) -> List[Any]:
+    seen_test_ids = set()
     params = []
     for it in items:
         marks = []
@@ -137,7 +139,11 @@ def to_pytest_params(items: Iterable[LoadedCase]) -> List[Any]:
                 marks.append(getattr(pytest.mark, mm))
 
         case_name = it.case.get("name", it.case["op"])
-        test_id = f"{it.model}::{case_name}::{it.case['op']}"
+        test_id = f"{it.model}::{case_name}"
+        if test_id in seen_test_ids:
+            basename = os.path.basename(it.source_path)
+            test_id = test_id + "::" + basename
+        seen_test_ids.add(test_id)
 
         params.append(
             pytest.param(
