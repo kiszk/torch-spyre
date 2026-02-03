@@ -317,6 +317,9 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.repeat": OpAdapter("torch.repeat", _tensor_repeat),
     "torch.clone": OpAdapter("torch.clone", torch.clone),
     "torch.split": OpAdapter("torch.split", torch.split),
+    "torch.functional.split": OpAdapter(
+        "torch.functional.split", torch.functional.split
+    ),
     "torch.Tensor.copy_": OpAdapter("torch.copy_", _tensor_copy_, is_inplace=True),
     # Indexing / getitem / setitem
     "torch.getitem": OpAdapter("torch.getitem", _tensor_getitem),
