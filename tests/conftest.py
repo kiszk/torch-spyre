@@ -166,6 +166,12 @@ def pytest_addoption(parser):
         default=False,
         help="With --list-cases-by-mark, list cases excluded by the mark expression (i.e., NOT matching).",
     )
+    group.addoption(
+        "--show-skipped",
+        action="store_true",
+        default=False,
+        help="List cases skipped by model filtering or duplications",
+    )
 
 
 def _models_dir(rootpath: Path) -> Path:
@@ -287,3 +293,15 @@ def pytest_collection_modifyitems(config, items):
     if deselect:
         config.hook.pytest_deselected(items=deselect)
         items[:] = keep
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    if not config.getoption("--show-skipped"):
+        return
+    skipped = terminalreporter.stats.get("skipped", [])
+    if not skipped:
+        return
+
+    terminalreporter.section("Skipped tests (full list)")
+    for rep in skipped:
+        #terminalreporter.write_line(rep)
+        terminalreporter.write_line(rep.nodeid)
