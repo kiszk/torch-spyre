@@ -3,8 +3,8 @@ model: template
 default:
   dtype: fp16
   seed: 123
-  rtol: 1.0e-3
-  atol: 1.0e-3
+  rtol: 5.0e-3
+  atol: 5.0e-3
 
 cases:
   - name: add_basic

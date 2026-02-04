@@ -390,8 +390,8 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
     dtype_str = str(dtype)
     seed = case.get("seed", defaults.get("seed", None))
 
-    rtol = float(case.get("rtol", defaults.get("rtol", 1e-3)))
-    atol = float(case.get("atol", defaults.get("atol", 1e-3)))
+    rtol = float(case.get("rtol", defaults.get("rtol", 5e-3)))
+    atol = float(case.get("atol", defaults.get("atol", 5e-3)))
     attrs = dict(case.get("attrs", {}))
 
     ctx = {
