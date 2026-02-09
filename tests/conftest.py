@@ -307,5 +307,5 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
     terminalreporter.section("Skipped tests (full list)")
     for rep in skipped:
-        #terminalreporter.write_line(rep)
+        # terminalreporter.write_line(rep)
         terminalreporter.write_line(rep.nodeid)
