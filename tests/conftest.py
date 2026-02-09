@@ -298,6 +298,7 @@ def pytest_collection_modifyitems(config, items):
         config.hook.pytest_deselected(items=deselect)
         items[:] = keep
 
+
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     if not config.getoption("--show-skipped"):
         return
