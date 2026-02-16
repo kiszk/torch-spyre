@@ -18,6 +18,9 @@ import yaml
 import pytest
 
 
+import shared_config
+
+
 def _get_case_marks(case: dict) -> set[str]:
     """
     Support either:
@@ -265,6 +268,7 @@ def compile_backend(pytestconfig):
 
 
 def pytest_configure(config):
+    shared_config._PYTEST_CONFIG = config
     # auto-register model_<name> markers based on YAML files
     mdir = config.rootpath / "tests" / "_inductor" / "models"
     for p in mdir.glob("*.yaml"):
