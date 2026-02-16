@@ -10,12 +10,20 @@ cases:
   - name: mul_ok
     op: torch.mul
     inputs:
-      - tensor: {shape: [1, 64]}
-      - tensor: {shape: [1, 64]}
+    - tensor:
+        shape: [1, 64]
+    - tensor:
+        shape: [1, 64]
 
-  - name: mul_ng_broadcast
+  - name: mul_ng_fp32
     op: torch.mul
-    mark: paddedtensor
+    marks:
+    - paddedtensor
+    - fpoperation
     inputs:
-      - tensor: {shape: [1, 64]}
-      - tensor: {shape: [1, 1]}
+    - tensor:
+        shape: [1, 64]
+    - tensor:
+        shape: [1, 1]
+        dtype: torch.float32
+        init: rand
