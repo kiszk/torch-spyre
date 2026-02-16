@@ -106,6 +106,10 @@ def _tensor_repeat(x: torch.Tensor, rep, *args) -> torch.Tensor:
     return x.repeat(final_reps)
 
 
+def _tensor_repeat_interleave(x: torch.Tensor, rep, **kwargs) -> torch.Tensor:
+    return x.repeat_interleave(x, rep, **kwargs)
+
+
 def _tensor_view(x: torch.Tensor, shape, *args) -> torch.Tensor:
     if isinstance(shape, (list, tuple)):
         final_shape = list(shape)
@@ -128,6 +132,10 @@ def _tensor_permute(x: torch.Tensor, dims, *args) -> torch.Tensor:
 
 def _tensor_transpose(x: torch.Tensor, dim0: int, dim1: int) -> torch.Tensor:
     return x.transpose(dim0, dim1)
+
+
+def _tensor_squeeze(x: torch.Tensor, dim: int) -> torch.Tensor:
+    return x.squeeze(dim)
 
 
 def _tensor_unsqueeze(x: torch.Tensor, dim: int) -> torch.Tensor:
@@ -166,6 +174,10 @@ def _torch___and__(a, b):
 
 
 def _torch___eq__(a, b):
+    return a.__eq__(b)
+
+
+def _torch_eq(a, b):
     return a.__eq__(b)
 
 
@@ -275,6 +287,7 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "operator.__mul__": OpAdapter("torch.mul", torch.mul),
     "torch.invert": OpAdapter("torch.bitwise_not", torch.bitwise_not),
     "torch.pow": OpAdapter("torch.pow", torch.pow),
+    "torch.div": OpAdapter("torch.div", torch.div),
     "torch.truediv": OpAdapter("torch.truediv", _torch_truediv),
     "torch.neg": OpAdapter("torch.neg", _torch_neg),
     "torch.sum": OpAdapter("torch.sum", torch.sum),
@@ -307,14 +320,19 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.reshape": OpAdapter("torch.reshape", torch.reshape),
     "torch.view": OpAdapter("torch.view", _tensor_view),
     "torch.Tensor.view": OpAdapter("torch.view", _tensor_view),
+    "torch.aten.view": OpAdapter("torch.view", _tensor_view),
     "torch.transpose": OpAdapter("torch.transpose", _tensor_transpose),
     "torch.permute": OpAdapter("torch.permute", _tensor_permute),
+    "torch.squeeze": OpAdapter("torch.squeeze", _tensor_squeeze),
     "torch.unsqueeze": OpAdapter("torch.unsqueeze", _tensor_unsqueeze),
     "torch.flatten": OpAdapter("torch.flatten", torch.flatten),
     "torch.expand": OpAdapter("torch.expand", _tensor_expand),
     "torch.Tensor.expand": OpAdapter("torch.expand", _tensor_expand),
     "torch.expand_as": OpAdapter("torch.expand_as", _tensor_expand_as),
     "torch.repeat": OpAdapter("torch.repeat", _tensor_repeat),
+    "torch.repeat_interleave": OpAdapter(
+        "torch.repeat_interleave", _tensor_repeat_interleave
+    ),
     "torch.clone": OpAdapter("torch.clone", torch.clone),
     "torch.split": OpAdapter("torch.split", torch.split),
     "torch.functional.split": OpAdapter(
@@ -324,16 +342,19 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     # Indexing / getitem / setitem
     "torch.getitem": OpAdapter("torch.getitem", _tensor_getitem),
     "operator.__getitem__": OpAdapter("torch.getitem", _tensor_getitem),
+    "torch.setitem": OpAdapter("torch.setitem", _tensor_setitem_, is_inplace=True),
     "_operator.setitem": OpAdapter(
         "_operator.setitem", _tensor_setitem_, is_inplace=True
     ),
     "torch.ops.aten.index": OpAdapter("torch.ops.aten.index", _aten_index),
     # Scatter / copy / masking
+    "torch.scatter": OpAdapter("torch.scatter", torch.scatter),
     "torch.scatter_": OpAdapter("torch.scatter_", _tensor_scatter_, is_inplace=True),
     # "torch.scatter_": OpAdapter("torch.scatter_", torch.Tensor.scatter_, is_inplace=True),
     "torch.index_copy_": OpAdapter(
         "torch.index_copy_", _tensor_index_copy_, is_inplace=True
     ),
+    "torch.masked_fill": OpAdapter("torch.masked_fill", torch.masked_fill),
     "torch.masked_fill_": OpAdapter(
         "torch.masked_fill_", _tensor_masked_fill_, is_inplace=True
     ),
@@ -341,9 +362,11 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     # Comparisons / bitwise
     "torch.__and__": OpAdapter("torch.__and__", _torch___and__),
     "torch.__eq__": OpAdapter("torch.__eq__", _torch___eq__),
+    "torch.eq": OpAdapter("torch.le", _torch_eq),
     "torch.le": OpAdapter("torch.le", _torch_le),
     "torch.ne": OpAdapter("torch.ne", _torch_ne),
     "torch.gt": OpAdapter("torch.gt", _torch_gt),
+    "torch.logical_and": OpAdapter("torch.logical_and", torch.logical_and),
     # Type/device conversions
     "torch.float": OpAdapter("torch.float", _tensor_float),
     "float": OpAdapter("torch.float", _tensor_float),
@@ -359,7 +382,9 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.tensor": OpAdapter("torch.tensor", torch.tensor),
     "torch.scalar_tensor": OpAdapter("torch.scalar_tensor", _scalar_tensor),
     "torch.new_ones": OpAdapter("torch.new_ones", _tensor_new_ones),
-    # Topk
+    "torch.full": OpAdapter("torch.full", torch.full),
+    # Sort / Topk
+    "torch.sort": OpAdapter("torch.sort", torch.sort),
     "torch.topk": OpAdapter("torch.topk", torch.topk),
     # NNs / functionals (use F.* where appropriate)
     "torch.nn.functional.dropout": OpAdapter(
@@ -405,6 +430,9 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.nn.pad": OpAdapter(
         "torch.nn.pad",
         getattr(torch.nn, "pad", torch.nn.functional.pad),
+    ),
+    "torch.nn.functional.pad": OpAdapter(
+        "torch.nn.functional.pad", torch.nn.functional.pad
     ),
     # Attention / SDPA
     "torch.nn.scaled_dot_product_attention": OpAdapter(
