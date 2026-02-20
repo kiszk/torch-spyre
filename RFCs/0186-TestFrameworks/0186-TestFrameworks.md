@@ -142,6 +142,9 @@ pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "mul_ok"
 # Run all 'torch.add' ops for GPT-oss
 pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "torch.add"
 
+# Run all tests ignoring default marker filters
+pytest tests/_inductor/test_model_ops.py --model gpt-oss-20b -m ""
+
 # Run for multiple models
 pytest --model gpt_oss tests/
 pytest --model gpt_oss --model granite4h tests/
@@ -228,6 +231,26 @@ cases:
     atol: <float>
 
 ```
+
+---
+
+### pytest.ini Configuration
+
+The `pytest.ini` file contains default marker expressions that filter tests:
+
+```ini
+[pytest]
+markers =
+    paddedtensor: tests for tensors requiring padding
+    largedimtensor: tests for 4D and 5D tensors
+    fp32operation: tests for fp32 operations
+    bf16operation: tests for bfloat16 operations
+    constant: tests for operations with constants
+
+addopts = -m "not largedimtensor and not fp32operation and not bf16operation and not constant"
+```
+
+By default, tests marked with largedimtensor, fp32operation, bf16operation, or constant are excluded. To run all tests regardless of markers, use `-m ""` option.
 
 ---
 

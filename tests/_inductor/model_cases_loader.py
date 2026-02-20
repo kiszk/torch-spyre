@@ -109,7 +109,7 @@ def load_all_cases(pytest_root: Path) -> List[LoadedCase]:
             continue
         spec = yaml.safe_load(p.read_text())
         model = spec.get("model", p.stem)
-        defaults = dict(spec.get("default", {}))
+        defaults = dict(spec.get("defaults", {}))
         for case in spec.get("cases", []):
             # allow "cases" to omit "op" if the YAML provides a top-level op (optional)
             if "op" not in case and "op" in spec:
