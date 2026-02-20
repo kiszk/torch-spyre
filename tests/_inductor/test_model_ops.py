@@ -175,4 +175,4 @@ class TestCommon(TestCase):
 
 # Instantiate device type tests for the TestCommon class
 # This is required for @ops decorator to work properly
-instantiate_device_type_tests(TestCommon, globals(), only_for="privateuse1")
+instantiate_device_type_tests(TestCommon, globals())
