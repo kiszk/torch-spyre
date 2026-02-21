@@ -489,7 +489,6 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
             test_out = test_args[0]
 
     ref_out_cpu = to_device(ref_out, torch.device("cpu"))
-    print(test_out)
     assert confirm_device(test_out, "spyre"), "this result must be on spyre"
     test_out_cpu = to_device(test_out, torch.device("cpu"))
     _assert_same(ref_out_cpu, test_out_cpu, rtol=rtol, atol=atol, case_name=case_name)
