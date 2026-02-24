@@ -119,8 +119,11 @@ class TestSpyre(PrivateUse1TestBase):
         compile_backend = str(
             pytestconfig.getoption("--compile-backend") or "inductor"
         ).strip()
+        allowed_test_names = pytestconfig.getoption("--test-names")
         test_device_str = "spyre"
         seen_case_keys = set()
+
+        method_name = self._testMethodName
 
         loadedCase: LoadedCase = op.loadedCase
         model = loadedCase.model
@@ -131,7 +134,13 @@ class TestSpyre(PrivateUse1TestBase):
         if selected_models and model not in selected_models:
             pytest.skip(f"Filtered out by --model (selected={sorted(selected_models)})")
 
-        # 2) Check pytest -m marker expression
+        # 2) Test names filtering
+        if allowed_test_names:
+            matched = any(test_name in method_name for test_name in allowed_test_names)
+            if not matched:
+                pytest.skip("Filtered out by --test-names list")
+
+        # 3) Check pytest -m marker expression
         mark_expr = pytestconfig.option.markexpr
         if mark_expr:
             from _pytest.mark.expression import Expression
@@ -151,8 +160,7 @@ class TestSpyre(PrivateUse1TestBase):
             # Evaluate if this test should run based on marks
             if not compiled_expr.evaluate(lambda m: m in case_marks):
                 pytest.skip(f"Skipped by marker expression: {mark_expr}")
-
-        # 3) Optional cross-model dedupe (do NOT dedupe at collection time!)
+        # 4) Optional cross-model dedupe (do NOT dedupe at collection time!)
         if dedupe_enabled:
             k = case_key(case, defaults)
             if k in seen_case_keys:

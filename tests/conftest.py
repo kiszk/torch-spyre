@@ -179,6 +179,12 @@ def pytest_addoption(parser):
         default=False,
         help="List cases skipped by model filtering or duplications",
     )
+    parser.addoption(
+        "--test-names",
+        action="append",
+        default=[],
+        help="Run only tests matching these test names",
+    )
 
 
 def _models_dir(rootpath: Path) -> Path:
