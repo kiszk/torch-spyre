@@ -13,12 +13,9 @@
 # limitations under the License.
 import ast
 from dataclasses import dataclass
-import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, List
 
-import pytest
-import regex as re
 import yaml
 
 
@@ -28,10 +25,6 @@ class LoadedCase:
     defaults: Dict[str, Any]
     case: Dict[str, Any]
     source_path: Path
-
-
-def _slug(s: str) -> str:
-    return re.sub(r"[^0-9a-zA-Z_]+", "_", s)
 
 
 def models_dir(pytest_root: Path) -> Path:
@@ -69,11 +62,6 @@ def case_key(case: Dict[str, Any], defaults: Dict[str, Any]) -> tuple:
                     tuple(t["shape"]),
                     t.get("init", "rand"),
                     freeze(t.get("init_args", {})),
-                    freeze(t.get("data", None)),
-                    bool(t.get("contiguous", True)),
-                    t.get("preset", None),
-                    freeze(t.get("preset_args", {})),
-                    freeze(t.get("base_shape", None)),
                 )
             )
         elif "tensor_list" in inp:
@@ -84,11 +72,6 @@ def case_key(case: Dict[str, Any], defaults: Dict[str, Any]) -> tuple:
                         tuple(t["shape"]),
                         t.get("init", "rand"),
                         freeze(t.get("init_args", {})),
-                        freeze(t.get("data", None)),
-                        bool(t.get("contiguous", True)),
-                        t.get("preset", None),
-                        freeze(t.get("preset_args", {})),
-                        freeze(t.get("base_shape", None)),
                     )
                 )
             inputs_sig.append(("tensor_list", tuple(lst)))
@@ -119,35 +102,3 @@ def load_all_cases(pytest_root: Path) -> List[LoadedCase]:
                 LoadedCase(model=model, defaults=defaults, case=case, source_path=p)
             )
     return items
-
-
-def to_pytest_params(items: Iterable[LoadedCase]) -> List[Any]:
-    seen_test_ids = set()
-    params = []
-    for it in items:
-        marks = []
-
-        # auto mark per-model: -m model_granite3_speech
-        marks.append(getattr(pytest.mark, f"model_{_slug(it.model)}"))
-
-        # case-level marks
-        ms = it.case.get("marks", None)
-        if ms is not None and not isinstance(ms, list):
-            ms = [ms]
-        if isinstance(ms, list):
-            for mm in ms:
-                marks.append(getattr(pytest.mark, mm))
-
-        case_name = it.case.get("name", it.case["op"])
-        test_id = f"{it.model}::{case_name}"
-        if test_id in seen_test_ids:
-            basename = os.path.basename(it.source_path)
-            test_id = test_id + "::" + basename
-        seen_test_ids.add(test_id)
-
-        params.append(
-            pytest.param(
-                it.model, it.case, it.defaults, it.source_path, marks=marks, id=test_id
-            )
-        )
-    return params

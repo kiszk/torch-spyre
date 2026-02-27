@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import ast
-from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import torch
 import torch.nn as nn
+
+from torch.testing._internal.opinfo.core import (  # noqa: F401
+    SampleInput,
+)
 
 from op_registry import OP_REGISTRY
 
@@ -30,35 +33,6 @@ DTYPE_MAP = {
     "int64": torch.int64,
     "bool": torch.bool,
 }
-
-
-@dataclass(frozen=True)
-class RunConfig:
-    test_device: torch.device
-    ref_device: torch.device = torch.device("cpu")
-    compile_backend: Optional[str] = None  # if set, run Spyre through torch.compile
-
-
-# ---------- safe skip/xfail condition evaluation ----------
-_ALLOWED_AST = (
-    ast.Expression,
-    ast.BoolOp,
-    ast.UnaryOp,
-    ast.Compare,
-    ast.Name,
-    ast.Load,
-    ast.Attribute,
-    ast.Constant,
-    ast.And,
-    ast.Or,
-    ast.Not,
-    ast.Eq,
-    ast.NotEq,
-    ast.Lt,
-    ast.LtE,
-    ast.Gt,
-    ast.GtE,
-)
 
 
 def parse_py_value(expr: str):
@@ -99,30 +73,33 @@ def make_tensor_from_conf(
     init_args = dict(tconf.get("init_args", {}))
 
     with torch.random.fork_rng(devices=[]):
+        assert init == "rand" or init == "randint", f"Unknown init: {init}"
         if seed is not None:
             torch.manual_seed(int(seed))
-        if init == "rand" and dtype is torch.bool:
-            threshold = 0.5  # 50% chance of True
-            t = torch.rand(tuple(shape), device="cpu") < threshold
-        elif init == "rand":
-            t = torch.rand(tuple(shape), dtype=dtype, device="cpu")
-        elif init == "randint":
+        if init == "rand":
+            low = int(init_args.get("low", 0))
+            high = int(init_args.get("high", 1))
+            if low > high:
+                raise ValueError(
+                    "Invalid value (high for randint): must be larger than low"
+                )
+        if init == "randint":
             low = int(init_args.get("low", 0))
             high = int(init_args.get("high", -1))
             if high < 0:
                 raise ValueError(
                     "Invalid value (high for randint): must be provided (via init_args) and must be positive"
                 )
-            t = torch.randint(size=tuple(shape), low=low, high=high, device="cpu")
-        else:
-            raise ValueError(f"Unknown init: {init}")
+        t = torch.testing.make_tensor(
+            tuple(shape), dtype=dtype, device="cpu", high=high, low=low
+        )
 
     return t
 
 
-def confirm_device(x: Any, expected_device: str) -> bool:
+def confirm_device(x: Any, expected_device: torch.device) -> bool:
     if torch.is_tensor(x):
-        return expected_device in str(x.device)
+        return str(expected_device) in str(x.device)
     if isinstance(x, (tuple, list)):
         return all(confirm_device(item, expected_device) for item in x)
     return True
@@ -165,7 +142,7 @@ def _assert_same(
                 f"{case_name} FAILED since output is not close to an expected result\n"
                 f"{e}\n"
                 f"shape={tuple(ref_out.shape)} dtype={ref_out.dtype}\n"
-                f"position in a model: {description}\n"
+                f"location in a model: {description}\n"
             ) from e
         return
 
@@ -186,21 +163,6 @@ def _assert_same(
     assert test_out == ref_out
 
 
-# ---------- expects_error ----------
-_ERR_NAME_TO_TYPE = {
-    "RuntimeError": RuntimeError,
-    "ValueError": ValueError,
-    "TypeError": TypeError,
-    "AssertionError": AssertionError,
-}
-
-
-def _exc_type(name: Optional[str]):
-    if not name:
-        return Exception
-    return _ERR_NAME_TO_TYPE.get(str(name), Exception)
-
-
 # ---------- optional torch.compile path ----------
 class _OpModule(nn.Module):
     def __init__(self, fn):
@@ -212,14 +174,14 @@ class _OpModule(nn.Module):
 
 
 def _maybe_compile_call(
-    fn, args, attrs, device: torch.device, compile_backend: Optional[str]
+    fn, sample, device: torch.device, compile_backend: Optional[str]
 ):
     if compile_backend is None or device.type == "cpu":
-        return fn(*args, **attrs)
+        return fn(sample.input, *sample.args, **sample.kwargs)
     mod = _OpModule(fn).to(device)
     torch._dynamo.reset_code_caches()  # kernel caching workaround
     compiled = torch.compile(mod, backend=compile_backend)
-    return compiled(*args, **attrs)
+    return compiled(sample.input, *sample.args, **sample.kwargs)
 
 
 def parse_dtype(spec) -> torch.dtype:
@@ -256,9 +218,8 @@ def parse_dtype(spec) -> torch.dtype:
     )
 
 
-def make_inputs(
-    case: Dict[str, Any], seed, dtype_str: str
-) -> tuple[list[Any], dict[Any, Any]]:
+def make_SampleInput(case: Dict[str, Any], seed, dtype: torch.dtype) -> SampleInput:
+    dtype_str = str(dtype)
     cpu_args = []
     for i, inp in enumerate(case.get("inputs", [])):
         # derive per-input seed so tensors differ deterministically
@@ -305,74 +266,50 @@ def make_inputs(
                     pass
         attrs[key] = value
 
-    return cpu_args, attrs
+    args = tuple(cpu_args[1:]) if len(cpu_args) > 1 else None
+    sample_input = SampleInput(cpu_args[0], args=args, kwargs=attrs)
+
+    return sample_input
 
 
 # ---------- main entry ----------
-def run_case(
-    case: Dict[str, Any],
-    defaults: Dict[str, Any],
-    cfg: RunConfig,
-    testCase,
+def run_test(
     op,
-    dtype=None,
+    testCase,
+    cpu_sample: SampleInput,
+    test_sample: SampleInput,
+    device: torch.device,
+    compile_backend: str,
+    rtol: float,
+    atol: float,
+    description: str = "",
 ) -> None:
-    # op_name = case["op"]
     op_name = op.aten_name
     adapter = OP_REGISTRY[op_name]
 
-    # case_name = case.get("name", op_name)
     case_name = testCase._testMethodName
 
-    """
-    if dtype is None:
-        dtype_str = case.get("dtype", defaults.get("dtype", "fp16"))
-    else:
-        dtype_str = str(dtype)
-    """
-    dtype_str = str(dtype)
-
-    seed = case.get("seed", defaults.get("seed", None))
-    rtol = float(case.get("rtol", defaults.get("rtol", 5e-3)))
-    atol = float(case.get("atol", defaults.get("atol", 5e-3)))
-
-    # Build CPU args ONCE, then copy to Spyre (identical values)
-    cpu_args, attrs = make_inputs(case, seed, dtype_str)
-
-    test_args = []
-    for a in cpu_args:
-        # also move tensors inside lists (cat)
-        if isinstance(a, list):
-            test_args.append([to_device(x, cfg.test_device) for x in a])
-        else:
-            test_args.append(to_device(a, cfg.test_device))
-
     if adapter.pre:
-        cpu_args, attrs = adapter.pre(cpu_args, attrs)
-        test_args, _ = adapter.pre(test_args, attrs)
+        cpu_sample = adapter.pre(cpu_sample)
+        test_sample = adapter.pre(test_sample)
 
     # Run
     with torch.no_grad():
-        # ref_out = adapter.fn(*cpu_args, **attrs)
-        ref_out = op(*cpu_args, **attrs)
+        ref_out = op(cpu_sample.input, *cpu_sample.args, **cpu_sample.kwargs)
         test_out = _maybe_compile_call(
-            #    adapter.fn, test_args, attrs, cfg.test_device, cfg.compile_backend
             op,
-            test_args,
-            attrs,
-            cfg.test_device,
-            cfg.compile_backend,
+            test_sample,
+            device,
+            compile_backend,
         )
 
         if adapter.is_inplace:
             # compare mutated arg0
-            ref_out = cpu_args[0]
-            test_out = test_args[0]
-
-    description = case.get("description")
+            ref_out = cpu_sample.input
+            test_out = test_sample.input
 
     ref_out_cpu = to_device(ref_out, torch.device("cpu"))
-    assert confirm_device(test_out, "spyre"), "this result must be on spyre"
+    assert confirm_device(test_out, device), "this result must be on spyre"
     test_out_cpu = to_device(test_out, torch.device("cpu"))
     _assert_same(
         testCase,

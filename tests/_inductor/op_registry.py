@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Optional
 
 import torch
+
+from torch.testing._internal.opinfo.core import (  # noqa: F401
+    SampleInput,
+)
 
 
 @dataclass(frozen=True)
@@ -23,7 +27,7 @@ class OpAdapter:
     fn: Callable[..., Any]
     is_inplace: bool = False
     # pre hook may normalize (args, attrs) (e.g., set dropout(training=False))
-    pre: Optional[Callable[[list, dict], Tuple[list, dict]]] = None
+    pre: Optional[Callable[[SampleInput], SampleInput]] = None
 
 
 # -----------------------------
@@ -51,11 +55,10 @@ def lazy_torch(path: str) -> Callable[..., Any]:
     return _fn
 
 
-def _dropout_pre(args: list, attrs: dict) -> tuple[list, dict]:
+def _dropout_pre(sample: SampleInput) -> SampleInput:
     # default deterministic behavior unless case overrides
-    attrs = dict(attrs)
-    attrs.setdefault("training", False)
-    return args, attrs
+    sample.kwargs.setdefault("training", False)
+    return sample
 
 
 # -----------------------------

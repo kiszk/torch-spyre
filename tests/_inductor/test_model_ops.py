@@ -19,7 +19,7 @@ import pytest
 import torch
 
 from model_cases_loader import LoadedCase, case_key, load_all_cases
-from runner import RunConfig, run_case, DTYPE_MAP
+from runner import run_test, parse_dtype, make_SampleInput
 import shared_config
 
 from typing import Any, Dict, List
@@ -44,8 +44,6 @@ class ModelOpInfo(OpInfo):
         aten_name,
         *,
         dtypes,
-        sample_inputs_func=None,
-        reference_inputs_func=None,
         model="",
         defaults: Dict[str, Any] = {},
         loadedCase: LoadedCase,
@@ -58,8 +56,6 @@ class ModelOpInfo(OpInfo):
             name,
             aten_name=aten_name,
             dtypes=dtypes,
-            sample_inputs_func=sample_inputs_func,
-            reference_inputs_func=reference_inputs_func,
             op=adapter.fn,
             **kwargs,
         )
@@ -84,7 +80,7 @@ def add_model_ops_db(loadedCases: List[LoadedCase]):
 
         defaults = loadedCase.defaults
         dtype_str = loadedCase.case.get("dtype", defaults.get("dtype", "fp16"))
-        dtype = DTYPE_MAP[dtype_str.lower()]
+        dtype = parse_dtype(dtype_str)
 
         model_ops_db.append(
             ModelOpInfo(
@@ -176,14 +172,40 @@ class TestSpyre(PrivateUse1TestBase):
                 )
             seen_case_keys.add(k)
 
-        cfg = RunConfig(
-            test_device=torch.device(
-                re.sub(r":\d+$", "", device)
-            ),  # remove :digit (e.g. :0)
-            compile_backend=compile_backend,
-        )
+        test_device = torch.device(
+            re.sub(r":\d+$", "", device)
+        )  # remove :digit (e.g. :0)
+
+        # load parameters
+        seed = case.get("seed", defaults.get("seed", None))
+        rtol = float(case.get("rtol", defaults.get("rtol", 5e-3)))
+        atol = float(case.get("atol", defaults.get("atol", 5e-3)))
+        description = case.get("description")
+
+        # Build CPU args ONCE, then copy to Spyre (identical values)
+        cpu_sample = make_SampleInput(case, seed, dtype)
+
+        def to_spyre(arg):
+            if isinstance(arg, list):
+                return [x.to(test_device) for x in arg]
+            else:
+                return arg.to(device=test_device)
+
+        test_sample = cpu_sample.transform(to_spyre)
+
+        # run target op
         try:
-            run_case(case, defaults, cfg, self, op, dtype=dtype)
+            run_test(
+                op,
+                self,
+                cpu_sample,
+                test_sample,
+                test_device,
+                compile_backend,
+                rtol,
+                atol,
+                description,
+            )
         finally:
             torch._dynamo.reset()
 
