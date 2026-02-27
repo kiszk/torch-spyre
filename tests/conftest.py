@@ -298,8 +298,8 @@ def pytest_collection_modifyitems(config, items):
     deselect = []
 
     for item in items:
-        # item.nodeid includes the file path, e.g. "tests/_inductor/test_model_ops.py::test_model_ops[...]"
-        if "tests/_inductor/test_model_ops.py::" in item.nodeid:
+        # item.nodeid includes the file path, e.g. "tests/models/test_model_ops.py::test_model_ops[...]"
+        if "tests/models/test_model_ops.py::" in item.nodeid:
             keep.append(item)
         else:
             deselect.append(item)

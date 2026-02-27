@@ -112,9 +112,9 @@ We use two cooperating frameworks:
 ### Models & files
 We plan per-model YAML, with option for subclasses variants:
 
-- `tests/_inductor/models/template.yaml`
-- `tests/_inductor/models/gpt-oss.yaml`
-- `tests/_inductor/models/gpt-oss-spyre.yaml`  
+- `tests/resource/models/template.yaml`
+- `tests/resource/models/gpt-oss.yaml`
+- `tests/resource/models/gpt-oss-spyre.yaml`  
   *Temporary, backend-specific functional correctness checks. May relax original shapes and can be deleted once features are stable.*
 
 **Naming:** (notice to changes in internal scripts) Permanent test cases (e.g., no `_fp16`) reside in files **without** postfixes. Backend-temporary cases use the `-spyre` postfix file.
@@ -137,13 +137,13 @@ pytest --list-models 2>&1 | tee logs_test.txt
 pytest --list-cases  2>&1 | tee logs_test.txt
 
 # Run a single case by name
-pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "mul_ok"
+pytest -q tests/models/test_model_ops.py --model gpt_oss -k "mul_ok"
 
 # Run all 'torch.mul' ops for GPT-oss
-pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "torch_mul"
+pytest -q tests/models/test_model_ops.py --model gpt_oss -k "torch_mul"
 
 # Run all tests ignoring default marker filters
-pytest tests/_inductor/test_model_ops.py --model gpt-oss-20b -m ""
+pytest tests/models/test_model_ops.py --model gpt-oss-20b -m ""
 
 # Run for multiple models
 pytest --model gpt_oss tests/
@@ -156,10 +156,10 @@ pytest --list-cases-by-mark --model gpt-oss-20b
 pytest --list-cases-by-mark --show-excluded
 pytest --list-cases-by-mark --show-excluded --model gpt-oss-20b
 # Show skipped tests
-pytest tests/_inductor/test_model_ops.py --show-skipped --model gpt-oss-20b
+pytest tests/models/test_model_ops.py --show-skipped --model gpt-oss-20b
 
 # Run tests including either "torch_add" or "torch_mul" in test name
-pytest tests/_inductor/test_model_ops.py --test-name torch_add --test-name torch_mul
+pytest tests/models/test_model_ops.py --test-name torch_add --test-name torch_mul
 
 ```
 
@@ -187,13 +187,14 @@ Below is the proposed directory structure for the YAML-driven test framework:
 ```bash
 tests/
 ├── conftest.py
-└── _inductor/
-    ├── init.py
-    ├── test_model_ops.py          # Entry point for pytest-based tests
-    ├── model_cases_loader.py      # Loads and parses YAML files
-    ├── op_registry.py             # Maintains mapping of ops to test logic
-    ├── runner.py                  # Executes tests dynamically from YAML
-    └── models/                    # YAML manifests per model
++── models/
+|   ├── test_model_ops.py          # Entry point for pytest-based tests
+|   ├── model_cases_loader.py      # Loads and parses YAML files
+|   ├── op_registry.py             # Maintains mapping of ops to test logic
+|   ├── runner.py                  # Executes tests dynamically from YAML
+|
++---resource/                       # YAML manifests per model
+    +── models/
         ├── gpt_oss.yaml
         └── granite3_speech.yaml
 ```

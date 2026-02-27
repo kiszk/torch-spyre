@@ -29,7 +29,7 @@ class LoadedCase:
 
 def models_dir(pytest_root: Path) -> Path:
     # adjust if needed; this is robust regardless of current working directory
-    return pytest_root / "tests" / "_inductor" / "models"
+    return pytest_root / "tests" / "resource" / "models"
 
 
 def freeze(x: Any) -> Any:
@@ -52,7 +52,7 @@ def case_key(case: Dict[str, Any], defaults: Dict[str, Any]) -> tuple:
     seed = case.get("seed", defaults.get("seed", None))
     attrs = freeze(case.get("attrs", {}))
 
-    inputs_sig = []
+    inputs_sig: List[tuple[Any, ...]] = []
     for inp in case.get("inputs", []):
         if "tensor" in inp:
             t = inp["tensor"]
@@ -88,6 +88,7 @@ def case_key(case: Dict[str, Any], defaults: Dict[str, Any]) -> tuple:
 def load_all_cases(pytest_root: Path) -> List[LoadedCase]:
     items: List[LoadedCase] = []
     for p in sorted(models_dir(pytest_root).glob("*.yaml")):
+        print(p)
         if p.name.endswith("template.yaml"):  # skip template.yaml file
             continue
         try:
