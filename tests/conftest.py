@@ -180,7 +180,7 @@ def pytest_addoption(parser):
         help="List cases skipped by model filtering or duplications",
     )
     parser.addoption(
-        "--test-names",
+        "--test-name",
         action="append",
         default=[],
         help="Run only tests matching these test names",

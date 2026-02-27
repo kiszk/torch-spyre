@@ -119,7 +119,7 @@ class TestSpyre(PrivateUse1TestBase):
         compile_backend = str(
             pytestconfig.getoption("--compile-backend") or "inductor"
         ).strip()
-        allowed_test_names = pytestconfig.getoption("--test-names")
+        allowed_test_names = pytestconfig.getoption("--test-name")
         test_device_str = "spyre"
         seen_case_keys = set()
 
@@ -138,7 +138,7 @@ class TestSpyre(PrivateUse1TestBase):
         if allowed_test_names:
             matched = any(test_name in method_name for test_name in allowed_test_names)
             if not matched:
-                pytest.skip("Filtered out by --test-names list")
+                pytest.skip("Filtered out by --test-name list")
 
         # 3) Check pytest -m marker expression
         mark_expr = pytestconfig.option.markexpr

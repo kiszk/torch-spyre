@@ -156,6 +156,8 @@ pytest --list-cases-by-mark --model gpt-oss
 pytest --list-cases-by-mark --show-excluded
 pytest --list-cases-by-mark --show-excluded --model gpt-oss
 
+# Run tests including either "torch_add" or "torch_mul" in test name
+pytest tests/_inductor/test_model_ops.py --test-name torch_add --test-name torch_mul
 ```
 
 **Full argument list**
@@ -170,6 +172,7 @@ pytest \
   --compile-backend "inductor"
     TEST_COMPILE_BACKEND: env. variable to change the default backend “inductor”
   --list-cases-by-mark [marks] [--show-excluded]
+  --test-name <name1>　--test-name <name2>
 ```
 
 ---
