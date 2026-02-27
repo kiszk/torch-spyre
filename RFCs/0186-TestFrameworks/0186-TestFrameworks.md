@@ -139,25 +139,28 @@ pytest --list-cases  2>&1 | tee logs_test.txt
 # Run a single case by name
 pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "mul_ok"
 
-# Run all 'torch.add' ops for GPT-oss
-pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "torch.add"
+# Run all 'torch.mul' ops for GPT-oss
+pytest -q tests/_inductor/test_model_ops.py --model gpt_oss -k "torch_mul"
 
 # Run all tests ignoring default marker filters
 pytest tests/_inductor/test_model_ops.py --model gpt-oss-20b -m ""
 
 # Run for multiple models
 pytest --model gpt_oss tests/
-pytest --model gpt_oss --model granite4h tests/
+pytest --model gpt-oss-20b --model granite-4-h tests/
 
 # Show selected tests based on marks
 pytest --list-cases-by-mark
-pytest --list-cases-by-mark --model gpt-oss
+pytest --list-cases-by-mark --model gpt-oss-20b
 # Show excluded tests based on marks
 pytest --list-cases-by-mark --show-excluded
-pytest --list-cases-by-mark --show-excluded --model gpt-oss
+pytest --list-cases-by-mark --show-excluded --model gpt-oss-20b
+# Show skipped tests
+pytest tests/_inductor/test_model_ops.py --show-skipped --model gpt-oss-20b
 
 # Run tests including either "torch_add" or "torch_mul" in test name
 pytest tests/_inductor/test_model_ops.py --test-name torch_add --test-name torch_mul
+
 ```
 
 **Full argument list**
@@ -170,8 +173,8 @@ pytest \
   --dedupe / --no-dedupe
   --list-models, --list-cases
   --compile-backend "inductor"
-    TEST_COMPILE_BACKEND: env. variable to change the default backend “inductor”
-  --list-cases-by-mark [marks] [--show-excluded]
+    TEST_COMPILE_BACKEND: env. variable to change the default backend "inductor"
+  --list-cases-by-mark [marks] [--show-excluded] [--show-skipeed]
   --test-name <name1>　--test-name <name2>
 ```
 
@@ -217,15 +220,9 @@ cases:
       tensor_list:            # sequences (list/tuple) of tensors
       file:                   # .pt file holding values for a tensor
     description: <text>       # e.g., trace where the op was extracted
-    expects_error:            # expected error (optional) - expected error type and message substring
-      type: <ExceptionType>
-      match: <substring>
 
     # Test control
     marks: <pytest marker(s)>
-    skip_if:                  # Conditional skip logic for backend/device)
-      expr: <python boolean>  # if True -> skip
-      reason: <text>
 
     # Per-case overrides of defaults
     dtype: <DTYPE_MAP value>
@@ -250,10 +247,10 @@ markers =
     bf16operation: tests for bfloat16 operations
     constant: tests for operations with constants
 
-addopts = -m "not largedimtensor and not fp32operation and not bf16operation and not constant"
+addopts = -m "not fp32operation and not bf16operation and not constant"
 ```
 
-By default, tests marked with largedimtensor, fp32operation, bf16operation, or constant are excluded. To run all tests regardless of markers, use `-m ""` option.
+By default, tests marked with fp32operation, bf16operation, or constant are excluded. To run all tests regardless of markers, use `-m ""` option.
 
 ---
 
@@ -274,15 +271,11 @@ Rationale: Debugging error-sensitive bugs often requires specific tensor values,
 
 tensor:
   shape: [dim0, dim1, ...]
-  init: rand | zeros | ones | arange | randint | uniform | data   # optional
+  init: rand | randint   # optional
   dtype: <optional dtype>
-  preset: <optional preset for non-contiguous/layout-sensitive ops>
-  preset_args: <optional args for preset>
 
   # init_args specify bounds for random generation
   # If 'randint': allow 'low' (default 0), 'high'
-  # If 'uniform': allow 'low' (default 0), 'high' (default 1)
-  # If 'data': pass exact values as list(s)
 ```
 
 ---
@@ -307,19 +300,6 @@ DTYPE_MAP = {
 }
 ```
 
-##### Error type
-
-The value in `expected_errors` is a string which is mapped to Python exception classes based on the following map:
-
-```python
-_ERR_NAME_TO_TYPE = {
-    "RuntimeError": RuntimeError,
-    "ValueError": ValueError,
-    "TypeError": TypeError,
-    "AssertionError": AssertionError,
-}
-```
-
 ---
 
 ### Example YAML File
@@ -335,11 +315,11 @@ default:
   atol: 1.0e-3       # Default absolute tolerance
 
 cases:
-  - name: add_basic
-    op: torch.add
+  - name: mul_basic
+    op: torch.mul
     inputs:
-      - tensor: {shape: [4, 128, 768], init: randn}
-      - tensor: {shape: [4, 128, 768], init: randn}
+      - tensor: {shape: [4, 128, 768], init: rand}
+      - tensor: {shape: [4, 128, 768], init: rand}
     description: |
       Example from GPT-oss forward path:
       File: site-packages/transformers/models/gpt_oss/modeling_gpt_oss.py:138
@@ -356,7 +336,7 @@ cases:
   - name: op_different_dtypes
     op: torch.add
     inputs:
-      - tensor: {shape: [11, 6], dtype: fp32, init: randn}
+      - tensor: {shape: [11, 6], dtype: fp32, init: rand}
       - tensor: {shape: [11, 6], dtype: int64, init: randint, init_args: {high: 100}}
     description: |
       Ops with args of different dtypes
@@ -364,7 +344,7 @@ cases:
   - name: mul_tensor_scalar
     op: torch.mul
     inputs:
-      - tensor: {shape: [1, 64], init: uniform, init_args: {low: -1.0, high: 1.0}}
+      - tensor: {shape: [1, 64], init: rand, init_args: {low: -1.0, high: 1.0}}
       - value: 3.0
     description: |
       Ops with tensor and scalar as args
@@ -396,46 +376,8 @@ cases:
     attrs: {dim: -1}
     inputs:
       - tensor_list:
-          - {shape: [2, 3, 4], init: randn}
-          - {shape: [2, 3, 5], init: randn}
-
-  - name: view_should_error_on_noncontig
-    op: torch.view
-    expects_error: {type: RuntimeError, match: view}
-    inputs:
-      - tensor:
-          shape: [2, 3, 8]
-          preset: noncontig_slice
-          preset_args: {dim: 1, step: 2}
-      - value: [2, 24]
-
-  - name: view_should_error_on_noncontig_167
-    op: torch.view
-    expects_error: {type: RuntimeError, match: view}
-    inputs:
-      - tensor:
-          shape: [2, 3, 8]
-          preset: noncontig_slice
-          preset_args: {dim: 1, step: 2}
-      - value: 32
-      - value: -1
-      - value: 2880
-
-  - name: contiguous_from_transpose_view
-    op: torch.contiguous
-    inputs:
-      - tensor:
-          shape: [2, 3, 8]
-          preset: transpose_view
-          preset_args: {dim0: 1, dim1: 2}
-
-  - name: rsqrt_skip_example
-    op: torch.rsqrt
-    skip_if:
-      - expr: cfg.test_device.type == 'spyre' and dtype_str == 'fp16'
-        reason: Spyre fp16 rsqrt not supported yet
-    inputs:
-      - tensor: {shape: [64, 1024], init: rand}
+          - {shape: [2, 3, 4], init: rand}
+          - {shape: [2, 3, 5], init: rand}
 
   - name: getitem_ellipsis_none_fullslice
     op: torch.getitem

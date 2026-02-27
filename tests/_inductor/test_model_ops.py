@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import regex as re
 import sys
 
 import pytest
 import torch
 
 from model_cases_loader import LoadedCase, case_key, load_all_cases
-from runner import RunConfig, run_case
+from runner import RunConfig, run_case, DTYPE_MAP
 import shared_config
 
 from typing import Any, Dict, List
@@ -40,6 +41,7 @@ class ModelOpInfo(OpInfo):
     def __init__(
         self,
         name,
+        aten_name,
         *,
         dtypes,
         sample_inputs_func=None,
@@ -54,6 +56,7 @@ class ModelOpInfo(OpInfo):
     ):
         super().__init__(
             name,
+            aten_name=aten_name,
             dtypes=dtypes,
             sample_inputs_func=sample_inputs_func,
             reference_inputs_func=reference_inputs_func,
@@ -61,7 +64,6 @@ class ModelOpInfo(OpInfo):
             **kwargs,
         )
         self.loadedCase = loadedCase
-        self.adapter = adapter
         self.defaults = defaults
         self.description = description
 
@@ -79,11 +81,16 @@ def add_model_ops_db(loadedCases: List[LoadedCase]):
         test_name = f"{test_name}__{basename}_"
         assert test_name not in seen_test_names
         seen_test_names.add(test_name)
+
+        defaults = loadedCase.defaults
+        dtype_str = loadedCase.case.get("dtype", defaults.get("dtype", "fp16"))
+        dtype = DTYPE_MAP[dtype_str.lower()]
+
         model_ops_db.append(
             ModelOpInfo(
                 test_name,
-                # variant_test_name="",
-                dtypes=(torch.float16,),
+                aten_name=op_name,
+                dtypes=(dtype,),
                 loadedCase=loadedCase,
                 adapter=adapter,
             )
@@ -120,7 +127,6 @@ class TestSpyre(PrivateUse1TestBase):
             pytestconfig.getoption("--compile-backend") or "inductor"
         ).strip()
         allowed_test_names = pytestconfig.getoption("--test-name")
-        test_device_str = "spyre"
         seen_case_keys = set()
 
         method_name = self._testMethodName
@@ -160,6 +166,7 @@ class TestSpyre(PrivateUse1TestBase):
             # Evaluate if this test should run based on marks
             if not compiled_expr.evaluate(lambda m: m in case_marks):
                 pytest.skip(f"Skipped by marker expression: {mark_expr}")
+
         # 4) Optional cross-model dedupe (do NOT dedupe at collection time!)
         if dedupe_enabled:
             k = case_key(case, defaults)
@@ -170,11 +177,13 @@ class TestSpyre(PrivateUse1TestBase):
             seen_case_keys.add(k)
 
         cfg = RunConfig(
-            test_device=torch.device(test_device_str),
+            test_device=torch.device(
+                re.sub(r":\d+$", "", device)
+            ),  # remove :digit (e.g. :0)
             compile_backend=compile_backend,
         )
         try:
-            run_case(case, defaults, cfg)
+            run_case(case, defaults, cfg, self, op, dtype=dtype)
         finally:
             torch._dynamo.reset()
 

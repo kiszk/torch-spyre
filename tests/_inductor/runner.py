@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import ast
-import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
-import pytest
-import regex as re
 import torch
 import torch.nn as nn
 
@@ -64,40 +61,6 @@ _ALLOWED_AST = (
 )
 
 
-def _safe_eval_bool(expr: str, ctx: dict) -> bool:
-    tree = ast.parse(expr, mode="eval")
-    for node in ast.walk(tree):
-        if not isinstance(node, _ALLOWED_AST):
-            raise ValueError(
-                f"Disallowed syntax in expr: {expr} (node={type(node).__name__})"
-            )
-        if isinstance(node, ast.Attribute) and node.attr.startswith("__"):
-            raise ValueError("Dunder attribute access is not allowed")
-    return bool(eval(compile(tree, "<expr>", "eval"), {"__builtins__": {}}, ctx))
-
-
-def _maybe_skip_or_xfail(
-    case: Dict[str, Any], defaults: Dict[str, Any], ctx: dict
-) -> None:
-    skip_if = case.get("skip_if", defaults.get("skip_if", None))
-    if skip_if:
-        if isinstance(skip_if, str):
-            if _safe_eval_bool(skip_if, ctx):
-                pytest.skip("skip_if matched")
-        elif isinstance(skip_if, list):
-            for item in skip_if:
-                expr = item["expr"]
-                reason = item.get("reason", "skip_if matched")
-                if _safe_eval_bool(expr, ctx):
-                    pytest.skip(reason)
-
-    xfail_reason = case.get("xfail_reason", defaults.get("xfail_reason", None))
-    if xfail_reason:
-        xfail_if = case.get("xfail_if", defaults.get("xfail_if", None))
-        if xfail_if is None or _safe_eval_bool(str(xfail_if), ctx):
-            pytest.xfail(str(xfail_reason))
-
-
 def parse_py_value(expr: str):
     """
     Safely parse a restricted Python literal expression used in YAML.
@@ -128,116 +91,32 @@ def parse_py_value(expr: str):
 
 
 # ---------- tensor construction (deterministic) ----------
-def _fork_seed(seed: Optional[int]):
-    if seed is None:
-        return torch.random.fork_rng(devices=[])
-    # fork_rng keeps global RNG clean
-    ctx = torch.random.fork_rng(devices=[])
-    ctx.__enter__()
-    torch.manual_seed(int(seed))
-    return ctx
-
-
-def _numel(shape) -> int:
-    if len(shape) == 0:
-        return 1
-    n = 1
-    for d in shape:
-        n *= int(d)
-    return n
-
-
-def _make_base(shape, dtype, seed):
-    with torch.random.fork_rng(devices=[]):
-        if seed is not None:
-            torch.manual_seed(int(seed))
-        return torch.randn(tuple(shape), device="cpu", dtype=dtype)
-
-
 def make_tensor_from_conf(
     tconf: Dict[str, Any], *, dtype: torch.dtype, seed: Optional[int]
 ) -> torch.Tensor:
     shape = list(tconf["shape"])
     init = tconf.get("init", "rand")
     init_args = dict(tconf.get("init_args", {}))
-    preset = tconf.get("preset", None)
-    preset_args = dict(tconf.get("preset_args", {}))
-    base_shape = tconf.get("base_shape", None)
 
-    # presets create noncontig/aliasing views
-    if preset is None:
-        with torch.random.fork_rng(devices=[]):
-            if seed is not None:
-                torch.manual_seed(int(seed))
-            if init == "rand" and dtype is torch.bool:
-                threshold = 0.5  # 50% chance of True
-                t = torch.rand(tuple(shape), device="cpu") < threshold
-            elif init == "rand":
-                t = torch.rand(tuple(shape), dtype=dtype, device="cpu")
-            elif init == "randn":
-                t = torch.randn(tuple(shape), dtype=dtype, device="cpu")
-            elif init == "zeros":
-                t = torch.zeros(tuple(shape), dtype=dtype, device="cpu")
-            elif init == "ones":
-                t = torch.ones(tuple(shape), dtype=dtype, device="cpu")
-            elif init == "arange":
-                t = torch.arange(_numel(shape), dtype=dtype, device="cpu").reshape(
-                    shape
+    with torch.random.fork_rng(devices=[]):
+        if seed is not None:
+            torch.manual_seed(int(seed))
+        if init == "rand" and dtype is torch.bool:
+            threshold = 0.5  # 50% chance of True
+            t = torch.rand(tuple(shape), device="cpu") < threshold
+        elif init == "rand":
+            t = torch.rand(tuple(shape), dtype=dtype, device="cpu")
+        elif init == "randint":
+            low = int(init_args.get("low", 0))
+            high = int(init_args.get("high", -1))
+            if high < 0:
+                raise ValueError(
+                    "Invalid value (high for randint): must be provided (via init_args) and must be positive"
                 )
-            elif init == "randint":
-                low = int(init_args.get("low", 0))
-                high = int(init_args.get("high", -1))
-                if high < 0:
-                    raise ValueError(
-                        "Invalid value (high for randint): must be provided (via init_args) and must be positive"
-                    )
-                t = torch.randint(size=tuple(shape), low=low, high=high, device="cpu")
-            elif init == "uniform":
-                low = float(init_args.get("low", 0.0))
-                high = float(init_args.get("high", 1.0))
-                t = torch.empty(tuple(shape), dtype=dtype, device="cpu").uniform_(
-                    low, high
-                )
-            elif init == "data":
-                data = tconf["data"]
-                t = torch.tensor(data, dtype=dtype, device="cpu").reshape(shape)
-            else:
-                raise ValueError(f"Unknown init: {init}")
-    else:
-        # build a base then view it
-        if preset == "noncontig_slice":
-            dim = int(preset_args.get("dim", 1 if len(shape) > 1 else 0))
-            step = int(preset_args.get("step", 2))
-            if base_shape is None:
-                base_shape = shape[:]
-                base_shape[dim] = shape[dim] * step
-            base = _make_base(base_shape, dtype, seed)
-            slc = [slice(None)] * base.ndim
-            slc[dim] = slice(0, base.shape[dim], step)
-            t = base[tuple(slc)]
-        elif preset == "transpose_view":
-            dim0 = int(preset_args.get("dim0", 0))
-            dim1 = int(preset_args.get("dim1", 1))
-            if base_shape is None:
-                base_shape = shape[:]
-                base_shape[dim0], base_shape[dim1] = shape[dim1], shape[dim0]
-            base = _make_base(base_shape, dtype, seed)
-            t = base.transpose(dim0, dim1)
-        elif preset == "expand_view0":
-            if base_shape is None:
-                raise ValueError("expand_view0 requires base_shape")
-            base = _make_base(base_shape, dtype, seed)
-            t = base.expand(*shape)
+            t = torch.randint(size=tuple(shape), low=low, high=high, device="cpu")
         else:
-            raise ValueError(f"Unknown preset: {preset}")
+            raise ValueError(f"Unknown init: {init}")
 
-        if list(t.shape) != shape:
-            raise ValueError(
-                f"Preset {preset} produced shape {list(t.shape)} != expected {shape}"
-            )
-
-    if tconf.get("contiguous", True):
-        t = t.contiguous()
     return t
 
 
@@ -266,26 +145,42 @@ def _normalize_out(out: Any) -> Any:
 
 
 def _assert_same(
-    ref_out: Any, test_out: Any, *, rtol: float, atol: float, case_name: str
+    testCase,
+    ref_out: Any,
+    test_out: Any,
+    *,
+    rtol: float,
+    atol: float,
+    case_name: str,
+    description,
 ) -> None:
     ref_out = _normalize_out(ref_out)
     test_out = _normalize_out(test_out)
 
     if torch.is_tensor(ref_out):
         try:
-            torch.testing.assert_close(test_out, ref_out, rtol=rtol, atol=atol)
+            testCase.assertEqual(test_out, ref_out, atol=atol, rtol=rtol)
         except AssertionError as e:
             raise AssertionError(
                 f"{case_name} FAILED since output is not close to an expected result\n"
                 f"{e}\n"
                 f"shape={tuple(ref_out.shape)} dtype={ref_out.dtype}\n"
+                f"position in a model: {description}\n"
             ) from e
         return
 
     if isinstance(ref_out, tuple):
         assert isinstance(test_out, tuple) and len(test_out) == len(ref_out)
         for r, d in zip(ref_out, test_out):
-            _assert_same(r, d, rtol=rtol, atol=atol, case_name=case_name)
+            _assert_same(
+                testCase,
+                r,
+                d,
+                rtol=rtol,
+                atol=atol,
+                case_name=case_name,
+                description=description,
+            )
         return
 
     assert test_out == ref_out
@@ -304,23 +199,6 @@ def _exc_type(name: Optional[str]):
     if not name:
         return Exception
     return _ERR_NAME_TO_TYPE.get(str(name), Exception)
-
-
-def _run_and_capture(fn, args, attrs):
-    try:
-        out = fn(*args, **attrs)
-        return False, None, out
-    except BaseException as e:
-        return True, e, None
-
-
-def _assert_raised(label: str, raised: bool, exc: BaseException, spec: dict):
-    assert raised, f"{label} expected to raise but did not"
-    want_t = _exc_type(spec.get("type", "RuntimeError"))
-    assert isinstance(exc, want_t), f"{label} raised {type(exc)} expected {want_t}"
-    m = spec.get("match", None)
-    if m:
-        assert re.search(m, str(exc)), f"{label} message did not match /{m}/. msg={exc}"
 
 
 # ---------- optional torch.compile path ----------
@@ -378,32 +256,9 @@ def parse_dtype(spec) -> torch.dtype:
     )
 
 
-# ---------- main entry ----------
-def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> None:
-    op_name = case["op"]
-    adapter = OP_REGISTRY[op_name]
-
-    case_name = case.get("name", op_name)
-
-    dtype_str = case.get("dtype", defaults.get("dtype", "fp16"))
-    dtype = parse_dtype(dtype_str)
-    dtype_str = str(dtype)
-    seed = case.get("seed", defaults.get("seed", None))
-
-    rtol = float(case.get("rtol", defaults.get("rtol", 5e-3)))
-    atol = float(case.get("atol", defaults.get("atol", 5e-3)))
-    attrs = dict(case.get("attrs", {}))
-
-    ctx = {
-        "cfg": cfg,
-        "op_name": op_name,
-        "dtype_str": dtype_str,
-        "env": dict(os.environ),
-        "torch": torch,
-    }
-    _maybe_skip_or_xfail(case, defaults, ctx)
-
-    # Build CPU args ONCE, then copy to Spyre (identical values)
+def make_inputs(
+    case: Dict[str, Any], seed, dtype_str: str
+) -> tuple[list[Any], dict[Any, Any]]:
     cpu_args = []
     for i, inp in enumerate(case.get("inputs", [])):
         # derive per-input seed so tensors differ deterministically
@@ -438,6 +293,7 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
         else:
             raise ValueError(f"Unknown input entry: {inp}")
 
+    attrs: dict[Any, Any] = dict(case.get("attrs", {}))
     for key, value in case.get("kwmap", {}).items():
         if key == "dtype":
             value = parse_dtype(value)
@@ -448,6 +304,40 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
                 except (ValueError, SyntaxError):
                     pass
         attrs[key] = value
+
+    return cpu_args, attrs
+
+
+# ---------- main entry ----------
+def run_case(
+    case: Dict[str, Any],
+    defaults: Dict[str, Any],
+    cfg: RunConfig,
+    testCase,
+    op,
+    dtype=None,
+) -> None:
+    # op_name = case["op"]
+    op_name = op.aten_name
+    adapter = OP_REGISTRY[op_name]
+
+    # case_name = case.get("name", op_name)
+    case_name = testCase._testMethodName
+
+    """
+    if dtype is None:
+        dtype_str = case.get("dtype", defaults.get("dtype", "fp16"))
+    else:
+        dtype_str = str(dtype)
+    """
+    dtype_str = str(dtype)
+
+    seed = case.get("seed", defaults.get("seed", None))
+    rtol = float(case.get("rtol", defaults.get("rtol", 5e-3)))
+    atol = float(case.get("atol", defaults.get("atol", 5e-3)))
+
+    # Build CPU args ONCE, then copy to Spyre (identical values)
+    cpu_args, attrs = make_inputs(case, seed, dtype_str)
 
     test_args = []
     for a in cpu_args:
@@ -461,26 +351,17 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
         cpu_args, attrs = adapter.pre(cpu_args, attrs)
         test_args, _ = adapter.pre(test_args, attrs)
 
-    # expects_error: both must raise
-    expects_error = case.get("expects_error", None)
-    if expects_error:
-        if "ref" in expects_error or "spyre" in expects_error:
-            ref_spec = expects_error.get("ref", {})
-            test_spec = expects_error.get("spyre", {})
-        else:
-            ref_spec = test_spec = expects_error
-
-        ref_raised, ref_exc, _ = _run_and_capture(adapter.fn, cpu_args, attrs)
-        test_raised, test_exc, _ = _run_and_capture(adapter.fn, test_args, attrs)
-        _assert_raised("CPU", ref_raised, ref_exc, ref_spec)
-        _assert_raised("Spyre", test_raised, test_exc, test_spec)
-        return
-
     # Run
     with torch.no_grad():
-        ref_out = adapter.fn(*cpu_args, **attrs)
+        # ref_out = adapter.fn(*cpu_args, **attrs)
+        ref_out = op(*cpu_args, **attrs)
         test_out = _maybe_compile_call(
-            adapter.fn, test_args, attrs, cfg.test_device, cfg.compile_backend
+            #    adapter.fn, test_args, attrs, cfg.test_device, cfg.compile_backend
+            op,
+            test_args,
+            attrs,
+            cfg.test_device,
+            cfg.compile_backend,
         )
 
         if adapter.is_inplace:
@@ -488,7 +369,17 @@ def run_case(case: Dict[str, Any], defaults: Dict[str, Any], cfg: RunConfig) -> 
             ref_out = cpu_args[0]
             test_out = test_args[0]
 
+    description = case.get("description")
+
     ref_out_cpu = to_device(ref_out, torch.device("cpu"))
     assert confirm_device(test_out, "spyre"), "this result must be on spyre"
     test_out_cpu = to_device(test_out, torch.device("cpu"))
-    _assert_same(ref_out_cpu, test_out_cpu, rtol=rtol, atol=atol, case_name=case_name)
+    _assert_same(
+        testCase,
+        ref_out_cpu,
+        test_out_cpu,
+        rtol=rtol,
+        atol=atol,
+        case_name=case_name,
+        description=description,
+    )
