@@ -90,7 +90,10 @@ def load_all_cases(pytest_root: Path) -> List[LoadedCase]:
     for p in sorted(models_dir(pytest_root).glob("*.yaml")):
         if p.name.endswith("template.yaml"):  # skip template.yaml file
             continue
-        spec = yaml.safe_load(p.read_text())
+        try:
+            spec = yaml.safe_load(p.read_text())
+        except yaml.YAMLError as e:
+            raise ValueError(f"Failed to parse YAML file: {p}") from e
         model = spec.get("model", p.stem)
         defaults = dict(spec.get("defaults", {}))
         for case in spec.get("cases", []):

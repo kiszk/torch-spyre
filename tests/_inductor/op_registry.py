@@ -110,7 +110,7 @@ def _tensor_repeat(x: torch.Tensor, rep, *args) -> torch.Tensor:
 
 
 def _tensor_repeat_interleave(x: torch.Tensor, rep, **kwargs) -> torch.Tensor:
-    return x.repeat_interleave(x, rep, **kwargs)
+    return x.repeat_interleave(rep, **kwargs)
 
 
 def _tensor_view(x: torch.Tensor, shape, *args) -> torch.Tensor:
@@ -296,7 +296,7 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.sum": OpAdapter("torch.sum", torch.sum),
     "torch.mean": OpAdapter("torch.mean", torch.mean),
     "torch.max": OpAdapter("torch.max", torch.max),
-    "torch.softmax": OpAdapter("torch.softmax", torch.max),
+    "torch.softmax": OpAdapter("torch.softmax", torch.softmax),
     "torch.cumsum": OpAdapter("torch.cumsum", torch.cumsum),
     "torch.all": OpAdapter("torch.all", torch.all),
     "torch.numel": OpAdapter("torch.numel", _tensor_numel),
@@ -365,7 +365,7 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     # Comparisons / bitwise
     "torch.__and__": OpAdapter("torch.__and__", _torch___and__),
     "torch.__eq__": OpAdapter("torch.__eq__", _torch___eq__),
-    "torch.eq": OpAdapter("torch.le", _torch_eq),
+    "torch.eq": OpAdapter("torch.eq", _torch_eq),
     "torch.le": OpAdapter("torch.le", _torch_le),
     "torch.ne": OpAdapter("torch.ne", _torch_ne),
     "torch.gt": OpAdapter("torch.gt", _torch_gt),

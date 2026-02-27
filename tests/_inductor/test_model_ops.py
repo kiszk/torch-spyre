@@ -107,6 +107,8 @@ def _init_model_ops_db():
 
 _init_model_ops_db()
 
+seen_case_keys = set()
+
 
 class TestSpyre(PrivateUse1TestBase):
     @ops(model_ops_db)
@@ -118,12 +120,11 @@ class TestSpyre(PrivateUse1TestBase):
     ):
         pytestconfig = shared_config._PYTEST_CONFIG
         selected_models = set(pytestconfig.getoption("--model") or [])
-        dedupe_enabled = bool(pytestconfig.getoption("dedupe", True))
+        dedupe_enabled = bool(pytestconfig.getoption("--dedupe", default=True))
         compile_backend = str(
             pytestconfig.getoption("--compile-backend") or "inductor"
         ).strip()
         allowed_test_names = pytestconfig.getoption("--test-name")
-        seen_case_keys = set()
 
         method_name = self._testMethodName
 
@@ -165,6 +166,7 @@ class TestSpyre(PrivateUse1TestBase):
 
         # 4) Optional cross-model dedupe (do NOT dedupe at collection time!)
         if dedupe_enabled:
+            global seen_case_keys
             k = case_key(case, defaults)
             if k in seen_case_keys:
                 pytest.skip(

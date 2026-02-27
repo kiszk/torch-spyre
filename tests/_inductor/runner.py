@@ -83,13 +83,15 @@ def make_tensor_from_conf(
                 raise ValueError(
                     "Invalid value (high for randint): must be larger than low"
                 )
-        if init == "randint":
+        elif init == "randint":
             low = int(init_args.get("low", 0))
             high = int(init_args.get("high", -1))
             if high < 0:
                 raise ValueError(
                     "Invalid value (high for randint): must be provided (via init_args) and must be positive"
                 )
+        else:
+            raise ValueError(f"Unknown init: {init}")
         t = torch.testing.make_tensor(
             tuple(shape), dtype=dtype, device="cpu", high=high, low=low
         )
