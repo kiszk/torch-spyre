@@ -24,10 +24,20 @@ cases:
       - value: false
       - value: false
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:492 in forward, code: inputs_embeds = self.get_input_embeddings()(input_ids)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.getitem.1
+    op: torch.getitem
+    inputs:
+      - tensor:
+          shape: [1, 2]
+          dtype: torch.int64
+          init: randint
+          init_args:
+            high: 1000
+      - value: 0
+    description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:385 in get_image_features, code: image_num_patches = ['
+    marks: constant
+  - name: torch.getitem.2
     op: torch.getitem
     inputs:
       - tensor:
@@ -39,6 +49,44 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:95 in image_size_to_num_patches, code: image_size = image_size.tolist()'
     marks: constant
+  - name: torch.getitem.3
+    op: torch.getitem
+    inputs:
+      - tensor:
+          shape: [1, 10, 3, 384, 384]
+          dtype: torch.float32
+          init: rand
+      - value: 0
+    description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:395 in torch_dynamo_resume_in_get_image_features_at_385, code: _pixel_values_list
+      = [pix_val[:num_patch] for pix_val, num_patch in zip(pixel_values, image_num_patches)]'
+    marks:
+      - fp32operation
+      - constant
+  - name: torch.getitem.4
+    op: torch.getitem
+    inputs:
+      - tensor:
+          shape: [10, 3, 384, 384]
+          dtype: torch.float32
+          init: rand
+      - value: slice(None, 10, None)
+    description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:395 in <listcomp>, code: _pixel_values_list = [pix_val[:num_patch]
+      for pix_val, num_patch in zip(pixel_values, image_num_patches)]'
+    marks:
+      - fp32operation
+      - constant
+  - name: torch.cat.1
+    op: torch.cat
+    inputs:
+      - tensor:
+          shape: [10, 3, 384, 384]
+          dtype: torch.float32
+          init: rand
+    description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:396 in torch_dynamo_resume_in_get_image_features_at_385, code: pixel_values
+      = torch.cat(_pixel_values_list, dim=0)'
+    marks: fp32operation
+    kwmap:
+      dim: 0
   - name: torch.to.1
     op: torch.to
     inputs:
@@ -48,9 +96,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/siglip/modeling_siglip.py:278 in forward, code: patch_embeds = self.patch_embedding(pixel_values.to(dtype=target_dtype))  #
       shape = [*, width, grid, grid]'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dtype: torch.float16
   - name: torch.conv2d.1
@@ -84,9 +130,7 @@ cases:
           init: rand
       - value: 2
     description: 'site-packages/transformers/models/siglip/modeling_siglip.py:279 in forward, code: embeddings = patch_embeds.flatten(2).transpose(1, 2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.transpose.1
     op: torch.transpose
     inputs:
@@ -117,9 +161,7 @@ cases:
       - value: false
       - value: false
     description: 'site-packages/transformers/models/siglip/modeling_siglip.py:284 in forward, code: embeddings = embeddings + self.position_embedding(self.position_ids)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.add.1
     op: torch.add
     inputs:
@@ -192,9 +234,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/models/siglip/modeling_siglip.py:389 in forward, code: queries = queries.view(batch_size, seq_length, self.num_heads,
       self.head_dim).transpose(1, 2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.1
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -211,7 +251,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.11785113019775792
@@ -227,9 +266,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.contiguous.1
     op: torch.Tensor.contiguous
     inputs:
@@ -239,7 +276,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks: largedimtensor
   - name: torch.reshape.1
     op: torch.reshape
     inputs:
@@ -250,9 +286,7 @@ cases:
       - value: (10, 729, 1152)
     description: 'site-packages/transformers/models/siglip/modeling_siglip.py:408 in forward, code: attn_output = attn_output.reshape(batch_size, seq_length,
       embed_dim).contiguous()'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.contiguous.2
     op: torch.Tensor.contiguous
     inputs:
@@ -395,7 +429,7 @@ cases:
       need_weights: true
       average_attn_weights: true
       is_causal: false
-  - name: torch.getitem.2
+  - name: torch.getitem.5
     op: torch.getitem
     inputs:
       - tensor_list:
@@ -407,9 +441,7 @@ cases:
             init: rand
       - value: 0
     description: 'site-packages/transformers/models/siglip/modeling_siglip.py:731 in forward, code: hidden_state = self.attention(probe, hidden_state, hidden_state)[0]'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.transpose.6
     op: torch.transpose
     inputs:
@@ -494,16 +526,26 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/siglip/modeling_siglip.py:735 in forward, code: hidden_state = residual + self.mlp(hidden_state)'
-  - name: torch.getitem.3
-    op: torch.getitem
+  - name: torch.cat.2
+    op: torch.cat
     inputs:
-      - tensor:
-          shape: [10, 1, 1152]
-          dtype: torch.float16
-          init: rand
-      - py: (0,)
-    description: 'site-packages/transformers/models/siglip/modeling_siglip.py:737 in forward, code: return hidden_state[:, 0]'
-    marks: constant
+      - tensor_list:
+          - shape: [10, 729, 1152]
+            dtype: torch.float16
+            init: rand
+          - shape: [10, 729, 1152]
+            dtype: torch.float16
+            init: rand
+          - shape: [10, 729, 1152]
+            dtype: torch.float16
+            init: rand
+          - shape: [10, 729, 1152]
+            dtype: torch.float16
+            init: rand
+    description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:408 in torch_dynamo_resume_in_get_image_features_at_385, code: selected_image_feature
+      = torch.cat(hs_pool, dim=-1)'
+    kwmap:
+      dim: -1
   - name: torch.nn.functional.linear.6
     op: torch.nn.functional.linear
     inputs:
@@ -544,7 +586,30 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:218 in forward, code: hidden_states = self.linear_2(hidden_states)'
-  - name: torch.cat.1
+  - name: torch.functional.split.1
+    op: torch.functional.split
+    inputs:
+      - tensor:
+          shape: [10, 729, 2048]
+          dtype: torch.float16
+          init: rand
+      - value: [10]
+    description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:414 in torch_dynamo_resume_in_get_image_features_at_385, code: image_features
+      = torch.split(image_features, image_num_patches, dim=0)'
+    kwmap:
+      dim: 0
+  - name: torch.getitem.6
+    op: torch.getitem
+    inputs:
+      - tensor_list:
+          - shape: [10, 729, 2048]
+            dtype: torch.float16
+            init: rand
+      - value: 0
+    description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:414 in torch_dynamo_resume_in_get_image_features_at_385, code: image_features
+      = torch.split(image_features, image_num_patches, dim=0)'
+    marks: constant
+  - name: torch.cat.3
     op: torch.cat
     inputs:
       - tensor:
@@ -553,11 +618,10 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:501 in torch_dynamo_resume_in_forward_at_495, code: image_features
       = torch.cat(image_features, dim=0).to(inputs_embeds.device, inputs_embeds.dtype)'
-    marks: paddedtensor
     kwmap:
       dim: 0
-  - name: torch.__eq__.1
-    op: torch.__eq__
+  - name: torch.eq.1
+    op: torch.eq
     inputs:
       - tensor:
           shape: [1, 6301]
@@ -568,9 +632,7 @@ cases:
       - value: 49155
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:438 in get_placeholder_mask, code: special_image_mask = input_ids
       == self.config.image_token_id'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.sum.1
     op: torch.sum
     inputs:
@@ -578,7 +640,6 @@ cases:
           shape: [1, 6301]
           dtype: torch.bool
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:440 in get_placeholder_mask, code: n_image_tokens = special_image_mask.sum()'
-    marks: paddedtensor
   - name: torch.unsqueeze.1
     op: torch.unsqueeze
     inputs:
@@ -587,9 +648,7 @@ cases:
           dtype: torch.bool
       - value: -1
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:441 in get_placeholder_mask, code: special_image_mask = special_image_mask.unsqueeze(-1).expand_as(inputs_embeds).to(inputs_embeds.device)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.expand_as.1
     op: torch.expand_as
     inputs:
@@ -626,7 +685,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:505 in torch_dynamo_resume_in_forward_at_502, code: inputs_embeds
       = inputs_embeds.masked_scatter(special_image_mask, image_features)'
-    marks: paddedtensor
   - name: torch.mul.1
     op: torch.mul
     inputs:
@@ -649,7 +707,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/masking_utils.py:723 in _preprocess_mask_arguments, code: attention_mask = attention_mask.to(device=cache_position.device,
       dtype=torch.bool)'
-    marks: paddedtensor
     kwmap:
       device: cuda:0
       dtype: torch.bool
@@ -691,7 +748,7 @@ cases:
             high: 1000
       - value: 0
       - value: 1
-    description: 'site-packages/torch/_functorch/vmap.py:159 in _create_batched_inputs, code: arg if in_dim is None else _add_batch_dim(arg, in_dim, vmap_level)'
+    description: 'site-packages/torch/_functorch/vmap.py:159 in <listcomp>, code: arg if in_dim is None else _add_batch_dim(arg, in_dim, vmap_level)'
     marks: constant
   - name: torch._C._functorch._add_batch_dim.2
     op: torch._C._functorch._add_batch_dim
@@ -704,7 +761,7 @@ cases:
             high: 1000
       - value: 0
       - value: 3
-    description: 'site-packages/torch/_functorch/vmap.py:159 in _create_batched_inputs, code: arg if in_dim is None else _add_batch_dim(arg, in_dim, vmap_level)'
+    description: 'site-packages/torch/_functorch/vmap.py:159 in <listcomp>, code: arg if in_dim is None else _add_batch_dim(arg, in_dim, vmap_level)'
     marks: constant
   - name: torch.new_ones.1
     op: torch.new_ones
@@ -808,9 +865,7 @@ cases:
       - value: 0
     description: 'site-packages/torch/_functorch/vmap.py:184 in _maybe_remove_batch_dim, code: return _remove_batch_dim(batched_output, vmap_level, batch_size,
       out_dim)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch._C._functorch._remove_batch_dim.4
     op: torch._C._functorch._remove_batch_dim
     inputs:
@@ -823,7 +878,7 @@ cases:
     description: 'site-packages/torch/_functorch/vmap.py:184 in _maybe_remove_batch_dim, code: return _remove_batch_dim(batched_output, vmap_level, batch_size,
       out_dim)'
     marks: constant
-  - name: torch.getitem.4
+  - name: torch.getitem.7
     op: torch.getitem
     inputs:
       - tensor:
@@ -874,7 +929,7 @@ cases:
     marks:
       - fp32operation
       - constant
-  - name: torch.getitem.5
+  - name: torch.getitem.8
     op: torch.getitem
     inputs:
       - tensor:
@@ -885,9 +940,7 @@ cases:
             high: 1000
       - py: (slice(None, None, None), None, slice(None, None, None))
     description: 'site-packages/transformers/models/granite/modeling_granite.py:347 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.float.2
     op: torch.float
     inputs:
@@ -945,7 +998,7 @@ cases:
     marks:
       - fp32operation
       - constant
-  - name: torch.cat.2
+  - name: torch.cat.4
     op: torch.cat
     inputs:
       - tensor_list:
@@ -1091,9 +1144,7 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/granite/modeling_granite.py:157 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1,
       2)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.view.2
     op: torch.Tensor.view
     inputs:
@@ -1116,9 +1167,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/models/granite/modeling_granite.py:157 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1,
       2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.linear.9
     op: torch.nn.functional.linear
     inputs:
@@ -1133,9 +1182,7 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/granite/modeling_granite.py:158 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1,
       2)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.view.3
     op: torch.Tensor.view
     inputs:
@@ -1158,9 +1205,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/models/granite/modeling_granite.py:158 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1,
       2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.unsqueeze.2
     op: torch.unsqueeze
     inputs:
@@ -1184,8 +1229,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:75 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q)
       * sin)'
-    marks: largedimtensor
-  - name: torch.getitem.6
+  - name: torch.getitem.9
     op: torch.getitem
     inputs:
       - tensor:
@@ -1194,9 +1238,7 @@ cases:
           init: rand
       - py: (Ellipsis, slice(None, 32, None))
     description: 'site-packages/transformers/models/granite/modeling_granite.py:48 in rotate_half, code: x1 = x[..., : x.shape[-1] // 2]'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.neg.1
     op: torch.neg
     inputs:
@@ -1205,8 +1247,7 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:50 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
-    marks: largedimtensor
-  - name: torch.cat.3
+  - name: torch.cat.5
     op: torch.cat
     inputs:
       - tensor_list:
@@ -1217,9 +1258,7 @@ cases:
             dtype: torch.float16
             init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:50 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
     kwmap:
       dim: -1
   - name: torch.add.5
@@ -1235,7 +1274,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:75 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q)
       * sin)'
-    marks: largedimtensor
   - name: torch.mul.6
     op: torch.mul
     inputs:
@@ -1249,8 +1287,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:76 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k)
       * sin)'
-    marks: largedimtensor
-  - name: torch.getitem.7
+  - name: torch.getitem.10
     op: torch.getitem
     inputs:
       - tensor:
@@ -1259,9 +1296,7 @@ cases:
           init: rand
       - py: (Ellipsis, slice(None, 32, None))
     description: 'site-packages/transformers/models/granite/modeling_granite.py:48 in rotate_half, code: x1 = x[..., : x.shape[-1] // 2]'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.neg.2
     op: torch.neg
     inputs:
@@ -1270,8 +1305,7 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:50 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
-    marks: largedimtensor
-  - name: torch.cat.4
+  - name: torch.cat.6
     op: torch.cat
     inputs:
       - tensor_list:
@@ -1282,9 +1316,7 @@ cases:
             dtype: torch.float16
             init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:50 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
     kwmap:
       dim: -1
   - name: torch.add.6
@@ -1300,7 +1332,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granite/modeling_granite.py:76 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k)
       * sin)'
-    marks: largedimtensor
   - name: torch.tensor.1
     op: torch.tensor
     inputs:
@@ -1309,7 +1340,7 @@ cases:
     kwmap:
       dtype: torch.float16
       device: cuda:0
-  - name: torch.cat.5
+  - name: torch.cat.7
     op: torch.cat
     inputs:
       - tensor_list:
@@ -1320,7 +1351,6 @@ cases:
             dtype: torch.float16
             init: rand
     description: 'site-packages/transformers/cache_utils.py:119 in update, code: self.keys = torch.cat([self.keys, key_states], dim=-2)'
-    marks: largedimtensor
     kwmap:
       dim: -2
   - name: torch.Tensor.expand.2
@@ -1337,9 +1367,7 @@ cases:
       - value: 64
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.2
     op: torch.reshape
     inputs:
@@ -1350,10 +1378,8 @@ cases:
       - value: (1, 32, 6301, 64)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
-  - name: torch.getitem.8
+    marks: constant
+  - name: torch.getitem.11
     op: torch.getitem
     inputs:
       - tensor:
@@ -1362,9 +1388,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), slice(None, None, None), slice(None, 6301, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:73 in sdpa_attention_forward, code: attention_mask = attention_mask[:, :, :,
       : key.shape[-2]]'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.2
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -1381,7 +1405,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1397,9 +1420,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.contiguous.3
     op: torch.Tensor.contiguous
     inputs:
@@ -1409,7 +1430,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks: largedimtensor
   - name: torch.reshape.3
     op: torch.reshape
     inputs:
@@ -1419,9 +1439,7 @@ cases:
           init: rand
       - value: (1, 6301, -1)
     description: 'site-packages/transformers/models/granite/modeling_granite.py:184 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.contiguous.4
     op: torch.Tensor.contiguous
     inputs:
@@ -1456,9 +1474,7 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/granite/modeling_granite.py:222 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x))
       * self.up_proj(x))'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.silu.1
     op: torch.nn.functional.silu
     inputs:
@@ -1494,9 +1510,7 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/granite/modeling_granite.py:222 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x))
       * self.up_proj(x))'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.3
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -1513,7 +1527,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1534,7 +1547,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1555,7 +1567,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1576,7 +1587,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1597,7 +1607,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1618,7 +1627,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1639,7 +1647,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1660,7 +1667,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1681,7 +1687,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1702,7 +1707,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1723,7 +1727,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1744,7 +1747,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1765,7 +1767,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1786,7 +1787,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1807,7 +1807,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1828,7 +1827,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1849,7 +1847,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1870,7 +1867,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1891,7 +1887,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1912,7 +1907,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1933,7 +1927,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1954,7 +1947,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1975,7 +1967,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -1996,7 +1987,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2017,7 +2007,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2038,7 +2027,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2059,7 +2047,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2080,7 +2067,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2101,7 +2087,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2122,7 +2107,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2143,7 +2127,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2164,7 +2147,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2185,7 +2167,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2206,7 +2187,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2227,7 +2207,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2248,7 +2227,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2269,7 +2247,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2290,7 +2267,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
@@ -2311,12 +2287,11 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.015625
       is_causal: false
-  - name: torch.getitem.9
+  - name: torch.getitem.12
     op: torch.getitem
     inputs:
       - tensor:
@@ -2341,6 +2316,4 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/llava_next/modeling_llava_next.py:687 in torch_dynamo_resume_in_forward_at_666, code: logits = self.lm_head(hidden_states[:,
       slice_indices, :])'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant

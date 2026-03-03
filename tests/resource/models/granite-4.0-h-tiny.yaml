@@ -24,9 +24,7 @@ cases:
       - value: false
       - value: false
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1345 in forward, code: inputs_embeds = self.embed_tokens(input_ids)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.mul.1
     op: torch.mul
     inputs:
@@ -58,7 +56,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1537 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = torch.triu(causal_mask, diagonal=1)'
-    marks: paddedtensor
     kwmap:
       diagonal: 1
   - name: torch.arange.1
@@ -100,7 +97,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.1
     op: torch.Tensor.mul
     inputs:
@@ -113,7 +109,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.1
     op: torch.getitem
     inputs:
@@ -124,9 +119,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.1
     op: torch.Tensor.expand
     inputs:
@@ -140,9 +133,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.1
     op: torch.clone
     inputs:
@@ -152,7 +143,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.2
     op: torch.getitem
     inputs:
@@ -163,9 +153,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), slice(None, None, None), slice(None, 11, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.getitem.3
     op: torch.getitem
     inputs:
@@ -178,9 +166,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.1
     op: torch.to
     inputs:
@@ -193,9 +179,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.1
     op: torch.add
     inputs:
@@ -211,7 +195,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.1
     op: torch.eq
     inputs:
@@ -222,9 +205,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.1
     op: torch.masked_fill
     inputs:
@@ -238,9 +219,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.setitem.1
     op: torch.setitem
     inputs:
@@ -255,9 +234,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.2
     op: torch.eq
     inputs:
@@ -268,9 +245,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.1
     op: torch.all
     inputs:
@@ -279,7 +254,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -291,7 +265,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.mul.2
     op: torch.mul
     inputs:
@@ -304,7 +277,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.4
     op: torch.getitem
     inputs:
@@ -343,9 +315,7 @@ cases:
       - value: 1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1560 in torch_dynamo_resume_in__update_mamba_mask_at_1560,
       code: if cache_position[0] > 0 or (attention_mask is not None and torch.all(attention_mask == 1)):'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.all.2
     op: torch.all
     inputs:
@@ -354,7 +324,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1560 in torch_dynamo_resume_in__update_mamba_mask_at_1560,
       code: if cache_position[0] > 0 or (attention_mask is not None and torch.all(attention_mask == 1)):'
-    marks: paddedtensor
   - name: torch.pow.1
     op: torch.pow
     inputs:
@@ -445,9 +414,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:650 in torch_forward, code: projected_states = self.in_proj(input_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.split.1
     op: torch.split
     inputs:
@@ -476,9 +443,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:651 in torch_forward, code: gate, hidden_states_B_C, dt
       = projected_states.split('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.transpose.1
     op: torch.transpose
     inputs:
@@ -594,9 +559,7 @@ cases:
             init: rand
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:692 in torch_forward, code: hidden_states, B, C = torch.split('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.float.1
     op: torch.float
     inputs:
@@ -680,7 +643,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:761 in torch_forward, code: hidden_states = hidden_states.reshape(batch_size,
       seq_len, -1, self.head_dim).float()'
-    marks: largedimtensor
   - name: torch.reshape.3
     op: torch.reshape
     inputs:
@@ -701,7 +663,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:762 in torch_forward, code: B = B.reshape(batch_size,
       seq_len, -1, self.ssm_state_size).float()'
-    marks: largedimtensor
   - name: torch.repeat_interleave.1
     op: torch.repeat_interleave
     inputs:
@@ -714,7 +675,6 @@ cases:
       // self.n_groups, dim=2, output_size=self.num_heads)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
     kwmap:
       dim: 2
@@ -743,7 +703,6 @@ cases:
     description: 'site-packages/torch/nn/functional.py:5209 in pad, code: return torch._C._nn.pad(input, pad, mode, value)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.5
     op: torch.mul
@@ -758,9 +717,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:768 in torch_forward, code: D_residual = self.D[..., None]
       * pad_tensor_by_size(hidden_states, pad_size)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.getitem.9
     op: torch.getitem
     inputs:
@@ -785,7 +742,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:771 in torch_forward, code: hidden_states = hidden_states
       * dt[..., None]'
-    marks: largedimtensor
   - name: torch.mul.7
     op: torch.mul
     inputs:
@@ -810,7 +766,6 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:349 in reshape_into_chunks, code: return input_tensor.reshape('
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.nn.functional.pad.3
     op: torch.nn.functional.pad
@@ -852,7 +807,6 @@ cases:
     description: 'site-packages/torch/nn/functional.py:5209 in pad, code: return torch._C._nn.pad(input, pad, mode, value)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.reshape.6
     op: torch.reshape
@@ -865,7 +819,6 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:349 in reshape_into_chunks, code: return input_tensor.reshape('
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.permute.1
     op: torch.permute
@@ -878,7 +831,6 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:778 in torch_forward, code: A = A.permute(0, 3, 1, 2)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.cumsum.1
     op: torch.cumsum
@@ -889,9 +841,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:779 in torch_forward, code: A_cumsum = torch.cumsum(A,
       dim=-1)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: -1
   - name: torch.getitem.10
@@ -906,7 +856,6 @@ cases:
       None].expand(*input_tensor.size(), chunk_size)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.Tensor.expand.2
     op: torch.Tensor.expand
@@ -924,7 +873,6 @@ cases:
       None].expand(*input_tensor.size(), chunk_size)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.ones.1
     op: torch.ones
@@ -945,7 +893,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:363 in segment_sum, code: mask = torch.tril(torch.ones(chunk_size,
       chunk_size, device=input_tensor.device, dtype=torch.bool), diagonal=-1)'
-    marks: paddedtensor
     kwmap:
       diagonal: -1
   - name: torch.invert.2
@@ -956,7 +903,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:364 in segment_sum, code: input_tensor = input_tensor.masked_fill(~mask,
       0)'
-    marks: paddedtensor
   - name: torch.masked_fill.2
     op: torch.masked_fill
     inputs:
@@ -970,9 +916,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:364 in segment_sum, code: input_tensor = input_tensor.masked_fill(~mask,
       0)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.cumsum.2
     op: torch.cumsum
     inputs:
@@ -982,9 +926,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:366 in segment_sum, code: tensor_segsum = torch.cumsum(input_tensor,
       dim=-2)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: -2
   - name: torch.tril.2
@@ -995,7 +937,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:369 in segment_sum, code: mask = torch.tril(torch.ones(chunk_size,
       chunk_size, device=input_tensor.device, dtype=torch.bool), diagonal=0)'
-    marks: paddedtensor
     kwmap:
       diagonal: 0
   - name: torch.masked_fill.3
@@ -1011,9 +952,7 @@ cases:
       - value: -.inf
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:370 in segment_sum, code: tensor_segsum = tensor_segsum.masked_fill(~mask,
       -torch.inf)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.exp.2
     op: torch.exp
     inputs:
@@ -1022,9 +961,7 @@ cases:
           dtype: torch.float32
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:783 in torch_forward, code: L = torch.exp(segment_sum(A))'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.getitem.11
     op: torch.getitem
     inputs:
@@ -1037,7 +974,6 @@ cases:
       None, :, :] * B[:, :, None, :, :, :]  # shape: (b, c, l, s, h, n)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.8
     op: torch.mul
@@ -1052,9 +988,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:786 in torch_forward, code: G_intermediate = C[:, :, :,
       None, :, :] * B[:, :, None, :, :, :]  # shape: (b, c, l, s, h, n)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.sum.1
     op: torch.sum
     inputs:
@@ -1064,9 +998,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:787 in torch_forward, code: G = G_intermediate.sum(dim=-1)  #
       shape: (b, c, l, s, h)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: -1
   - name: torch.getitem.12
@@ -1081,7 +1013,6 @@ cases:
       * L.permute(0, 2, 3, 4, 1)[..., None]'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.permute.2
     op: torch.permute
@@ -1095,7 +1026,6 @@ cases:
       * L.permute(0, 2, 3, 4, 1)[..., None]'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.9
     op: torch.mul
@@ -1110,9 +1040,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:790 in torch_forward, code: M_intermediate = G[..., None]
       * L.permute(0, 2, 3, 4, 1)[..., None]'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.sum.2
     op: torch.sum
     inputs:
@@ -1121,9 +1049,7 @@ cases:
           dtype: torch.float32
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:791 in torch_forward, code: M = M_intermediate.sum(dim=-1)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: -1
   - name: torch.getitem.13
@@ -1138,7 +1064,6 @@ cases:
       :, None]).sum(dim=3)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.10
     op: torch.mul
@@ -1153,9 +1078,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:794 in torch_forward, code: Y_diag = (M[..., None] * hidden_states[:,
       :, None]).sum(dim=3)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.sum.3
     op: torch.sum
     inputs:
@@ -1165,9 +1088,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:794 in torch_forward, code: Y_diag = (M[..., None] * hidden_states[:,
       :, None]).sum(dim=3)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: 3
   - name: torch.sub.1
@@ -1183,9 +1104,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:798 in torch_forward, code: decay_states = torch.exp(A_cumsum[:,
       :, :, -1:] - A_cumsum)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.exp.3
     op: torch.exp
     inputs:
@@ -1195,9 +1114,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:798 in torch_forward, code: decay_states = torch.exp(A_cumsum[:,
       :, :, -1:] - A_cumsum)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.permute.3
     op: torch.permute
     inputs:
@@ -1210,7 +1127,6 @@ cases:
       -2, -1, 1)[..., None]'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.getitem.14
     op: torch.getitem
@@ -1224,7 +1140,6 @@ cases:
       -2, -1, 1)[..., None]'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.11
     op: torch.mul
@@ -1239,9 +1154,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:799 in torch_forward, code: B_decay = B * decay_states.permute(0,
       -2, -1, 1)[..., None]'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.mul.12
     op: torch.mul
     inputs:
@@ -1255,9 +1168,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:800 in torch_forward, code: states = (B_decay[..., None,
       :] * hidden_states[..., None]).sum(dim=2)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.sum.4
     op: torch.sum
     inputs:
@@ -1267,9 +1178,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:800 in torch_forward, code: states = (B_decay[..., None,
       :] * hidden_states[..., None]).sum(dim=2)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: 2
   - name: torch.getitem.15
@@ -1284,7 +1193,6 @@ cases:
       :1])'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.zeros_like.1
     op: torch.zeros_like
@@ -1295,9 +1203,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:807 in torch_forward, code: previous_states = torch.zeros_like(states[:,
       :1])'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.cat.1
     op: torch.cat
     inputs:
@@ -1310,9 +1216,7 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:808 in torch_forward, code: states = torch.cat([previous_states,
       states], dim=1)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: 1
   - name: torch.getitem.16
@@ -1327,7 +1231,6 @@ cases:
       :, :, -1], (1, 0))))'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.nn.functional.pad.5
     op: torch.nn.functional.pad
@@ -1371,7 +1274,6 @@ cases:
       None].expand(*input_tensor.size(), chunk_size)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.tril.3
     op: torch.tril
@@ -1381,7 +1283,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:363 in segment_sum, code: mask = torch.tril(torch.ones(chunk_size,
       chunk_size, device=input_tensor.device, dtype=torch.bool), diagonal=-1)'
-    marks: paddedtensor
     kwmap:
       diagonal: -1
   - name: torch.invert.3
@@ -1392,7 +1293,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:364 in segment_sum, code: input_tensor = input_tensor.masked_fill(~mask,
       0)'
-    marks: paddedtensor
   - name: torch.masked_fill.4
     op: torch.masked_fill
     inputs:
@@ -1406,9 +1306,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:364 in segment_sum, code: input_tensor = input_tensor.masked_fill(~mask,
       0)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.cumsum.3
     op: torch.cumsum
     inputs:
@@ -1418,9 +1316,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:366 in segment_sum, code: tensor_segsum = torch.cumsum(input_tensor,
       dim=-2)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: -2
   - name: torch.tril.4
@@ -1431,7 +1327,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:369 in segment_sum, code: mask = torch.tril(torch.ones(chunk_size,
       chunk_size, device=input_tensor.device, dtype=torch.bool), diagonal=0)'
-    marks: paddedtensor
     kwmap:
       diagonal: 0
   - name: torch.masked_fill.5
@@ -1447,9 +1342,7 @@ cases:
       - value: -.inf
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:370 in segment_sum, code: tensor_segsum = tensor_segsum.masked_fill(~mask,
       -torch.inf)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.exp.4
     op: torch.exp
     inputs:
@@ -1459,9 +1352,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:809 in torch_forward, code: decay_chunk = torch.exp(segment_sum(nn.functional.pad(A_cumsum[:,
       :, :, -1], (1, 0))))'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.transpose.3
     op: torch.transpose
     inputs:
@@ -1475,7 +1366,6 @@ cases:
       3)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.getitem.18
     op: torch.getitem
@@ -1489,7 +1379,6 @@ cases:
       None, None] * states[:, :, None, ...]).sum(dim=1)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.getitem.19
     op: torch.getitem
@@ -1503,7 +1392,6 @@ cases:
       None, None] * states[:, :, None, ...]).sum(dim=1)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.13
     op: torch.mul
@@ -1518,9 +1406,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:811 in torch_forward, code: new_states = (decay_chunk[...,
       None, None] * states[:, :, None, ...]).sum(dim=1)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.sum.5
     op: torch.sum
     inputs:
@@ -1530,9 +1416,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:811 in torch_forward, code: new_states = (decay_chunk[...,
       None, None] * states[:, :, None, ...]).sum(dim=1)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
     kwmap:
       dim: 1
   - name: torch.getitem.20
@@ -1547,7 +1431,6 @@ cases:
       :-1], new_states[:, -1]'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.14
     op: torch.mul
@@ -1562,9 +1445,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:817 in torch_forward, code: C_times_states = (C[..., None,
       :] * states[:, :, None, ...])'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.sum.6
     op: torch.sum
     inputs:
@@ -1577,7 +1458,6 @@ cases:
       * state_decay_out_permuted[..., None])'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.mul.15
     op: torch.mul
@@ -1592,9 +1472,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:819 in torch_forward, code: Y_off = (C_times_states.sum(-1)
       * state_decay_out_permuted[..., None])'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.add.4
     op: torch.add
     inputs:
@@ -1607,9 +1485,7 @@ cases:
           dtype: torch.float32
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:822 in torch_forward, code: y = Y_diag + Y_off'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.reshape.7
     op: torch.reshape
     inputs:
@@ -1622,7 +1498,6 @@ cases:
       -1, self.num_heads, self.head_dim)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.add.5
     op: torch.add
@@ -1636,9 +1511,7 @@ cases:
           dtype: torch.float32
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:826 in torch_forward, code: y = y + D_residual'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.getitem.21
     op: torch.getitem
     inputs:
@@ -1650,7 +1523,6 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:829 in torch_forward, code: y = y[:, :seq_len, :, :]'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.reshape.8
     op: torch.reshape
@@ -1664,7 +1536,6 @@ cases:
       seq_len, -1)'
     marks:
       - fp32operation
-      - largedimtensor
       - constant
   - name: torch.Tensor.copy_.2
     op: torch.Tensor.copy_
@@ -1678,9 +1549,7 @@ cases:
           dtype: torch.float32
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:834 in torch_forward, code: cache_params.ssm_states[self.layer_idx].copy_(ssm_state)'
-    marks:
-      - fp32operation
-      - largedimtensor
+    marks: fp32operation
   - name: torch.nn.functional.silu.2
     op: torch.nn.functional.silu
     inputs:
@@ -1774,9 +1643,7 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:841 in torch_forward, code: contextualized_states = self.out_proj(scan_output.to(dtype))  #
       [batch, seq_len, hidden_size]'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.mul.19
     op: torch.mul
     inputs:
@@ -1826,9 +1693,7 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1024 in forward, code: logits = self.layer(hidden_states).float()  #
       [batch_size x seq_len, num_experts]'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.float.4
     op: torch.float
     inputs:
@@ -1838,7 +1703,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1024 in forward, code: logits = self.layer(hidden_states).float()  #
       [batch_size x seq_len, num_experts]'
-    marks: paddedtensor
   - name: torch.topk.1
     op: torch.topk
     inputs:
@@ -1850,7 +1714,6 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1025 in forward, code: top_k_logits, top_k_indices = logits.topk(self.top_k,
       dim=1)  # [num_tokens, top_k]'
     marks:
-      - paddedtensor
       - fp32operation
       - constant
     kwmap:
@@ -1870,9 +1733,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1025 in forward, code: top_k_logits, top_k_indices = logits.topk(self.top_k,
       dim=1)  # [num_tokens, top_k]'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.softmax.1
     op: torch.softmax
     inputs:
@@ -1882,9 +1743,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1026 in forward, code: top_k_gates = torch.softmax(top_k_logits,
       dim=1).type_as(hidden_states)  # [num_tokens, top_k]'
-    marks:
-      - paddedtensor
-      - fp32operation
+    marks: fp32operation
     kwmap:
       dim: 1
   - name: torch.type_as.1
@@ -1900,7 +1759,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1026 in forward, code: top_k_gates = torch.softmax(top_k_logits,
       dim=1).type_as(hidden_states)  # [num_tokens, top_k]'
-    marks: paddedtensor
   - name: torch.zeros.1
     op: torch.zeros
     inputs:
@@ -1926,9 +1784,7 @@ cases:
       - value: 1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1032 in forward, code: gates = zeros.scatter(1, top_k_indices,
       1)  # [num_tokens, num_experts]'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.long.1
     op: torch.long
     inputs:
@@ -1938,7 +1794,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1033 in forward, code: expert_size = gates.long().sum(0)  #
       [num_experts,]'
-    marks: paddedtensor
   - name: torch.sum.7
     op: torch.sum
     inputs:
@@ -1951,9 +1806,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1033 in forward, code: expert_size = gates.long().sum(0)  #
       [num_experts,]'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.getitem.23
     op: torch.getitem
     inputs:
@@ -1977,7 +1830,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1039 in forward, code: top_k_experts = top_k_indices.flatten()  #
       [num_tokens * top_k]'
-    marks: paddedtensor
   - name: torch.sort.1
     op: torch.sort
     inputs:
@@ -2008,9 +1860,7 @@ cases:
       - value: 1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1040 in forward, code: _, index_sorted_experts = top_k_experts.sort(0)  #
       [num_tokens * top_k]'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.div.1
     op: torch.div
     inputs:
@@ -2035,7 +1885,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1044 in forward, code: top_k_gates = top_k_gates.flatten()  #
       [num_tokens * top_k]'
-    marks: paddedtensor
   - name: torch.getitem.25
     op: torch.getitem
     inputs:
@@ -2120,9 +1969,7 @@ cases:
       - value: 1536
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1106 in forward, code: layer_output = layer_output.view(bsz,
       length, self.input_size)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.linear.4
     op: torch.nn.functional.linear
     inputs:
@@ -2136,9 +1983,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:905 in forward, code: hidden_states = self.input_linear(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.chunk.1
     op: torch.chunk
     inputs:
@@ -2165,9 +2010,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:906 in forward, code: chunked_hidden_states = hidden_states.chunk(2,
       dim=-1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.silu.3
     op: torch.nn.functional.silu
     inputs:
@@ -2202,9 +2045,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:908 in forward, code: hidden_states = self.output_linear(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.linear.6
     op: torch.nn.functional.linear
     inputs:
@@ -2218,9 +2059,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:189 in forward, code: query_states = self.q_proj(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.linear.7
     op: torch.nn.functional.linear
     inputs:
@@ -2234,9 +2073,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:190 in forward, code: key_states = self.k_proj(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.view.2
     op: torch.Tensor.view
     inputs:
@@ -2262,9 +2099,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:193 in forward, code: query_states = query_states.view(bsz,
       q_len, self.num_heads, self.head_dim).transpose(1, 2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.view.3
     op: torch.Tensor.view
     inputs:
@@ -2290,9 +2125,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:194 in forward, code: key_states = key_states.view(bsz,
       q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.getitem.31
     op: torch.getitem
     inputs:
@@ -2303,9 +2136,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.4
     op: torch.Tensor.expand
     inputs:
@@ -2320,9 +2151,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.10
     op: torch.reshape
     inputs:
@@ -2333,9 +2162,7 @@ cases:
       - value: (1, 12, 11, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.1
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -2352,7 +2179,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2368,9 +2194,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.contiguous.1
     op: torch.Tensor.contiguous
     inputs:
@@ -2380,7 +2204,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks: largedimtensor
   - name: torch.Tensor.view.4
     op: torch.Tensor.view
     inputs:
@@ -2393,9 +2216,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:221 in forward, code: attn_output = attn_output.view(bsz,
       q_len, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.2
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -2412,7 +2233,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2433,7 +2253,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2454,7 +2273,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2475,7 +2293,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2496,7 +2313,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2517,7 +2333,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2538,7 +2353,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -2554,7 +2368,6 @@ cases:
           0, 2, 0, 1, 1, 0, 0, 0, 2, 5, 0, 2, 3, 0, 0, 1, 1, 2]
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:994 in forward, code: input_list = inputs.split(expert_size,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.getitem.32
@@ -2756,9 +2569,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:994 in forward, code: input_list = inputs.split(expert_size,
       dim=0)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.linear.8
     op: torch.nn.functional.linear
     inputs:
@@ -2772,7 +2583,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.9
     op: torch.nn.functional.linear
     inputs:
@@ -2786,7 +2596,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.10
     op: torch.nn.functional.linear
     inputs:
@@ -2800,7 +2609,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.11
     op: torch.nn.functional.linear
     inputs:
@@ -2814,7 +2622,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.12
     op: torch.nn.functional.linear
     inputs:
@@ -2828,7 +2635,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.13
     op: torch.nn.functional.linear
     inputs:
@@ -2842,7 +2648,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.cat.2
     op: torch.cat
     inputs:
@@ -3041,7 +2846,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.nn.functional.silu.4
@@ -3052,7 +2856,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/activations.py:99 in forward, code: return nn.functional.silu(input)'
-    marks: paddedtensor
   - name: torch.split.3
     op: torch.split
     inputs:
@@ -3064,7 +2867,6 @@ cases:
           0, 2, 0, 1, 1, 0, 0, 0, 2, 5, 0, 2, 3, 0, 0, 1, 1, 2]
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:994 in forward, code: input_list = inputs.split(expert_size,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.nn.functional.linear.14
@@ -3080,7 +2882,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.15
     op: torch.nn.functional.linear
     inputs:
@@ -3094,7 +2895,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.16
     op: torch.nn.functional.linear
     inputs:
@@ -3108,7 +2908,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.17
     op: torch.nn.functional.linear
     inputs:
@@ -3122,7 +2921,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.18
     op: torch.nn.functional.linear
     inputs:
@@ -3136,7 +2934,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.19
     op: torch.nn.functional.linear
     inputs:
@@ -3150,7 +2947,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.cat.3
     op: torch.cat
     inputs:
@@ -3349,7 +3145,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.nn.functional.linear.20
@@ -3365,7 +3160,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.21
     op: torch.nn.functional.linear
     inputs:
@@ -3379,7 +3173,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.cat.4
     op: torch.cat
     inputs:
@@ -3578,7 +3371,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.nn.functional.linear.22
@@ -3594,7 +3386,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.23
     op: torch.nn.functional.linear
     inputs:
@@ -3608,7 +3399,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.cat.5
     op: torch.cat
     inputs:
@@ -3807,7 +3597,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.nn.functional.linear.24
@@ -3823,7 +3612,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.cat.6
     op: torch.cat
     inputs:
@@ -4022,7 +3810,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.nn.functional.linear.25
@@ -4038,7 +3825,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-    marks: paddedtensor
   - name: torch.cat.7
     op: torch.cat
     inputs:
@@ -4237,7 +4023,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.cat.8
@@ -4438,7 +4223,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.cat.9
@@ -4639,7 +4423,6 @@ cases:
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:998 in forward, code: results = torch.cat(output_list,
       dim=0)'
-    marks: paddedtensor
     kwmap:
       dim: 0
   - name: torch.nn.functional.scaled_dot_product_attention.9
@@ -4658,7 +4441,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -4679,7 +4461,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -4709,9 +4490,7 @@ cases:
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1735 in torch_dynamo_resume_in_forward_at_1717, code:
       logits = self.lm_head(hidden_states[:, slice_indices, :])'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.truediv.1
     op: torch.truediv
     inputs:
@@ -4742,9 +4521,7 @@ cases:
       - value: false
       - value: false
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1345 in forward, code: inputs_embeds = self.embed_tokens(input_ids)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.mul.21
     op: torch.mul
     inputs:
@@ -4806,7 +4583,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.2
     op: torch.Tensor.mul
     inputs:
@@ -4819,7 +4595,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.345
     op: torch.getitem
     inputs:
@@ -4830,9 +4605,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.5
     op: torch.Tensor.expand
     inputs:
@@ -4846,9 +4619,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.2
     op: torch.clone
     inputs:
@@ -4858,7 +4629,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.346
     op: torch.getitem
     inputs:
@@ -4871,9 +4641,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.7
     op: torch.to
     inputs:
@@ -4886,9 +4654,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.7
     op: torch.add
     inputs:
@@ -4904,7 +4670,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.4
     op: torch.eq
     inputs:
@@ -4915,9 +4680,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.6
     op: torch.masked_fill
     inputs:
@@ -4931,9 +4694,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.5
     op: torch.eq
     inputs:
@@ -4944,9 +4705,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.3
     op: torch.all
     inputs:
@@ -4955,7 +4714,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -4967,7 +4725,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.mul.22
     op: torch.mul
     inputs:
@@ -4980,7 +4737,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.347
     op: torch.getitem
     inputs:
@@ -5079,7 +4835,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/activations.py:99 in forward, code: return nn.functional.silu(input)'
-    marks: paddedtensor
   - name: torch.nn.functional.linear.27
     op: torch.nn.functional.linear
     inputs:
@@ -5093,9 +4848,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:905 in forward, code: hidden_states = self.input_linear(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.chunk.2
     op: torch.chunk
     inputs:
@@ -5122,9 +4875,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:906 in forward, code: chunked_hidden_states = hidden_states.chunk(2,
       dim=-1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.silu.6
     op: torch.nn.functional.silu
     inputs:
@@ -5159,9 +4910,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:908 in forward, code: hidden_states = self.output_linear(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.linear.29
     op: torch.nn.functional.linear
     inputs:
@@ -5175,9 +4924,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:189 in forward, code: query_states = self.q_proj(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.linear.30
     op: torch.nn.functional.linear
     inputs:
@@ -5191,9 +4938,7 @@ cases:
           init: rand
       - value: null
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:190 in forward, code: key_states = self.k_proj(hidden_states)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.view.5
     op: torch.Tensor.view
     inputs:
@@ -5219,9 +4964,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:193 in forward, code: query_states = query_states.view(bsz,
       q_len, self.num_heads, self.head_dim).transpose(1, 2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.view.6
     op: torch.Tensor.view
     inputs:
@@ -5247,9 +4990,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:194 in forward, code: key_states = key_states.view(bsz,
       q_len, self.num_key_value_heads, self.head_dim).transpose(1, 2)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.getitem.349
     op: torch.getitem
     inputs:
@@ -5260,9 +5001,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.6
     op: torch.Tensor.expand
     inputs:
@@ -5277,9 +5016,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.12
     op: torch.reshape
     inputs:
@@ -5290,9 +5027,7 @@ cases:
       - value: (1, 12, 12, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.11
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -5309,7 +5044,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -5325,9 +5059,7 @@ cases:
       - value: 2
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.contiguous.2
     op: torch.Tensor.contiguous
     inputs:
@@ -5337,7 +5069,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
-    marks: largedimtensor
   - name: torch.Tensor.view.7
     op: torch.Tensor.view
     inputs:
@@ -5350,9 +5081,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:221 in torch_dynamo_resume_in_forward_at_204, code: attn_output
       = attn_output.view(bsz, q_len, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.getitem.350
     op: torch.getitem
     inputs:
@@ -5401,7 +5130,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.3
     op: torch.Tensor.mul
     inputs:
@@ -5414,7 +5142,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.351
     op: torch.getitem
     inputs:
@@ -5425,9 +5152,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.7
     op: torch.Tensor.expand
     inputs:
@@ -5441,9 +5166,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.3
     op: torch.clone
     inputs:
@@ -5453,7 +5176,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.352
     op: torch.getitem
     inputs:
@@ -5466,9 +5188,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.10
     op: torch.to
     inputs:
@@ -5481,9 +5201,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.9
     op: torch.add
     inputs:
@@ -5499,7 +5217,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.6
     op: torch.eq
     inputs:
@@ -5510,9 +5227,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.7
     op: torch.masked_fill
     inputs:
@@ -5526,9 +5241,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.7
     op: torch.eq
     inputs:
@@ -5539,9 +5252,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.4
     op: torch.all
     inputs:
@@ -5550,7 +5261,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -5566,7 +5276,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.353
     op: torch.getitem
     inputs:
@@ -5577,9 +5286,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.8
     op: torch.Tensor.expand
     inputs:
@@ -5594,9 +5301,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.13
     op: torch.reshape
     inputs:
@@ -5607,9 +5312,7 @@ cases:
       - value: (1, 12, 13, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.12
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -5626,7 +5329,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -5668,7 +5370,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.4
     op: torch.Tensor.mul
     inputs:
@@ -5681,7 +5382,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.354
     op: torch.getitem
     inputs:
@@ -5692,9 +5392,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.9
     op: torch.Tensor.expand
     inputs:
@@ -5708,9 +5406,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.4
     op: torch.clone
     inputs:
@@ -5720,7 +5416,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.355
     op: torch.getitem
     inputs:
@@ -5733,9 +5428,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.11
     op: torch.to
     inputs:
@@ -5748,9 +5441,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.10
     op: torch.add
     inputs:
@@ -5766,7 +5457,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.8
     op: torch.eq
     inputs:
@@ -5777,9 +5467,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.8
     op: torch.masked_fill
     inputs:
@@ -5793,9 +5481,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.9
     op: torch.eq
     inputs:
@@ -5806,9 +5492,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.5
     op: torch.all
     inputs:
@@ -5817,7 +5501,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -5833,7 +5516,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.356
     op: torch.getitem
     inputs:
@@ -5844,9 +5526,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.10
     op: torch.Tensor.expand
     inputs:
@@ -5861,9 +5541,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.14
     op: torch.reshape
     inputs:
@@ -5874,9 +5552,7 @@ cases:
       - value: (1, 12, 14, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.13
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -5893,7 +5569,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -5935,7 +5610,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.5
     op: torch.Tensor.mul
     inputs:
@@ -5948,7 +5622,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.357
     op: torch.getitem
     inputs:
@@ -5959,9 +5632,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.11
     op: torch.Tensor.expand
     inputs:
@@ -5975,9 +5646,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.5
     op: torch.clone
     inputs:
@@ -5987,7 +5656,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.358
     op: torch.getitem
     inputs:
@@ -6000,9 +5668,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.12
     op: torch.to
     inputs:
@@ -6015,9 +5681,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.11
     op: torch.add
     inputs:
@@ -6033,7 +5697,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.10
     op: torch.eq
     inputs:
@@ -6044,9 +5707,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.9
     op: torch.masked_fill
     inputs:
@@ -6060,9 +5721,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.11
     op: torch.eq
     inputs:
@@ -6073,9 +5732,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.6
     op: torch.all
     inputs:
@@ -6084,7 +5741,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -6100,7 +5756,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.359
     op: torch.getitem
     inputs:
@@ -6111,9 +5766,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.12
     op: torch.Tensor.expand
     inputs:
@@ -6128,9 +5781,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.15
     op: torch.reshape
     inputs:
@@ -6141,9 +5792,7 @@ cases:
       - value: (1, 12, 15, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.14
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -6160,7 +5809,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -6202,7 +5850,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.6
     op: torch.Tensor.mul
     inputs:
@@ -6215,7 +5862,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.360
     op: torch.getitem
     inputs:
@@ -6226,9 +5872,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.13
     op: torch.Tensor.expand
     inputs:
@@ -6242,9 +5886,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.6
     op: torch.clone
     inputs:
@@ -6254,7 +5896,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.361
     op: torch.getitem
     inputs:
@@ -6267,9 +5908,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.13
     op: torch.to
     inputs:
@@ -6282,9 +5921,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.12
     op: torch.add
     inputs:
@@ -6300,7 +5937,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.12
     op: torch.eq
     inputs:
@@ -6311,9 +5947,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.10
     op: torch.masked_fill
     inputs:
@@ -6327,9 +5961,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.13
     op: torch.eq
     inputs:
@@ -6340,9 +5972,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.7
     op: torch.all
     inputs:
@@ -6351,7 +5981,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -6367,7 +5996,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.362
     op: torch.getitem
     inputs:
@@ -6378,9 +6006,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.14
     op: torch.Tensor.expand
     inputs:
@@ -6395,9 +6021,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.16
     op: torch.reshape
     inputs:
@@ -6408,9 +6032,7 @@ cases:
       - value: (1, 12, 16, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.15
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -6427,7 +6049,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -6469,7 +6090,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.7
     op: torch.Tensor.mul
     inputs:
@@ -6482,7 +6102,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.363
     op: torch.getitem
     inputs:
@@ -6493,9 +6112,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.15
     op: torch.Tensor.expand
     inputs:
@@ -6509,9 +6126,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.7
     op: torch.clone
     inputs:
@@ -6521,7 +6136,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.364
     op: torch.getitem
     inputs:
@@ -6534,9 +6148,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.14
     op: torch.to
     inputs:
@@ -6549,9 +6161,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.13
     op: torch.add
     inputs:
@@ -6567,7 +6177,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.14
     op: torch.eq
     inputs:
@@ -6578,9 +6187,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.11
     op: torch.masked_fill
     inputs:
@@ -6594,9 +6201,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.15
     op: torch.eq
     inputs:
@@ -6607,9 +6212,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.8
     op: torch.all
     inputs:
@@ -6618,7 +6221,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -6634,7 +6236,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.365
     op: torch.getitem
     inputs:
@@ -6645,9 +6246,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.16
     op: torch.Tensor.expand
     inputs:
@@ -6662,9 +6261,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.17
     op: torch.reshape
     inputs:
@@ -6675,9 +6272,7 @@ cases:
       - value: (1, 12, 17, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.16
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -6694,7 +6289,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125
@@ -6736,7 +6330,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.Tensor.mul.8
     op: torch.Tensor.mul
     inputs:
@@ -6749,7 +6342,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-    marks: paddedtensor
   - name: torch.getitem.366
     op: torch.getitem
     inputs:
@@ -6760,9 +6352,7 @@ cases:
       - py: (None, None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.17
     op: torch.Tensor.expand
     inputs:
@@ -6776,9 +6366,7 @@ cases:
       - value: -1
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.clone.8
     op: torch.clone
     inputs:
@@ -6788,7 +6376,6 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask.clone()  # copy to contiguous memory for in-place edit'
-    marks: largedimtensor
   - name: torch.getitem.367
     op: torch.getitem
     inputs:
@@ -6801,9 +6388,7 @@ cases:
       - py: (slice(None, None, None), None, None, slice(None, None, None))
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - paddedtensor
-      - constant
+    marks: constant
   - name: torch.to.15
     op: torch.to
     inputs:
@@ -6816,9 +6401,7 @@ cases:
       - value: cuda:0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.add.14
     op: torch.add
     inputs:
@@ -6834,7 +6417,6 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
-    marks: largedimtensor
   - name: torch.eq.16
     op: torch.eq
     inputs:
@@ -6845,9 +6427,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1546 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = padding_mask == 0'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.masked_fill.12
     op: torch.masked_fill
     inputs:
@@ -6861,9 +6441,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask[:, :, :, :mask_length] = causal_mask[:, :, :, :mask_length].masked_fill('
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.eq.17
     op: torch.eq
     inputs:
@@ -6874,9 +6452,7 @@ cases:
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.all.9
     op: torch.all
     inputs:
@@ -6885,7 +6461,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
     kwmap:
       dim: -1
       keepdim: true
@@ -6901,7 +6476,6 @@ cases:
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-    marks: largedimtensor
   - name: torch.getitem.368
     op: torch.getitem
     inputs:
@@ -6912,9 +6486,7 @@ cases:
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.Tensor.expand.18
     op: torch.Tensor.expand
     inputs:
@@ -6929,9 +6501,7 @@ cases:
       - value: 128
     description: 'site-packages/transformers/integrations/sdpa_attention.py:26 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch,
       num_key_value_heads, n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.reshape.18
     op: torch.reshape
     inputs:
@@ -6942,9 +6512,7 @@ cases:
       - value: (1, 12, 18, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
-    marks:
-      - largedimtensor
-      - constant
+    marks: constant
   - name: torch.nn.functional.scaled_dot_product_attention.17
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
@@ -6961,7 +6529,6 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
-    marks: largedimtensor
     kwmap:
       dropout_p: 0.0
       scale: 0.0078125

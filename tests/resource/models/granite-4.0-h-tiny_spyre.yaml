@@ -47,7 +47,7 @@ cases:
       fill_value: -65504.0
       dtype: torch.float16
       device: cuda:0
-  - name: torch.triu.1_spyre
+  - name: torch.triu.1
     op: torch.triu
     inputs:
       - tensor:
@@ -80,7 +80,7 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
     marks: constant
-  - name: torch.gt.1_spyre
+  - name: torch.gt.1
     op: torch.gt
     inputs:
       - tensor:
@@ -97,7 +97,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.1_spyre
+  - name: torch.Tensor.mul.1
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -124,7 +124,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -134,11 +134,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.1_spyre
+  - name: torch.clone.1
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -147,7 +147,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), slice(None, None, None), slice(None, 11, None))
@@ -171,7 +171,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 11]
+          shape: [1, 1, 1, 11]
           dtype: torch.int64
           init: randint
           init_args:
@@ -180,15 +180,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.1_spyre
+  - name: torch.add.1
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 11]
+          shape: [1, 1, 1, 11]
           dtype: torch.int64
           init: randint
           init_args:
@@ -199,7 +199,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -210,11 +210,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -224,12 +224,12 @@ cases:
     op: torch.setitem
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), slice(None, None, None), slice(None, 11, None))
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -239,41 +239,41 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.1_spyre
+  - name: torch.all.1
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.invert.1_spyre
+  - name: torch.invert.1
     op: torch.invert
     inputs:
       - tensor:
-          shape: [1, 11, 1]
+          shape: [1, 1, 11, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-  - name: torch.mul.2_spyre
+  - name: torch.mul.2
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 11, 11]
+          shape: [1, 1, 11, 11]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 11, 1]
+          shape: [1, 1, 11, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -316,7 +316,7 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1560 in torch_dynamo_resume_in__update_mamba_mask_at_1560,
       code: if cache_position[0] > 0 or (attention_mask is not None and torch.all(attention_mask == 1)):'
     marks: constant
-  - name: torch.all.2_spyre
+  - name: torch.all.2
     op: torch.all
     inputs:
       - tensor:
@@ -624,11 +624,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:761 in torch_forward, code: hidden_states = hidden_states.reshape(batch_size,
       seq_len, -1, self.head_dim).float()'
     marks: constant
-  - name: torch.float.2_spyre
+  - name: torch.float.2
     op: torch.float
     inputs:
       - tensor:
-          shape: [11, 48, 64]
+          shape: [1, 11, 48, 64]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:761 in torch_forward, code: hidden_states = hidden_states.reshape(batch_size,
@@ -644,11 +644,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:762 in torch_forward, code: B = B.reshape(batch_size,
       seq_len, -1, self.ssm_state_size).float()'
     marks: constant
-  - name: torch.float.3_spyre
+  - name: torch.float.3
     op: torch.float
     inputs:
       - tensor:
-          shape: [11, 1, 128]
+          shape: [1, 11, 1, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:762 in torch_forward, code: B = B.reshape(batch_size,
@@ -657,7 +657,7 @@ cases:
     op: torch.repeat_interleave
     inputs:
       - tensor:
-          shape: [11, 1, 128]
+          shape: [1, 11, 1, 128]
           dtype: torch.float16
           init: rand
       - value: 48
@@ -682,7 +682,7 @@ cases:
     op: torch.nn.functional.pad
     inputs:
       - tensor:
-          shape: [11, 48, 64]
+          shape: [1, 11, 48, 64]
           dtype: torch.float16
           init: rand
       - value: (0, 0, 0, 0, 0, 245, 0, 0)
@@ -698,7 +698,7 @@ cases:
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 256, 48, 64]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:768 in torch_forward, code: D_residual = self.D[..., None]
@@ -714,15 +714,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:771 in torch_forward, code: hidden_states = hidden_states
       * dt[..., None]'
     marks: constant
-  - name: torch.mul.6_spyre
+  - name: torch.mul.6
     op: torch.mul
     inputs:
       - tensor:
-          shape: [11, 48, 64]
-          dtype: torch.float16
+          shape: [1, 11, 48, 64]
+          dtype: torch.float32
           init: rand
       - tensor:
-          shape: [11, 48, 1]
+          shape: [1, 11, 48, 1]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:771 in torch_forward, code: hidden_states = hidden_states
@@ -744,10 +744,10 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 256, 48, 64]
           dtype: torch.float16
           init: rand
-      - value: (-1, 256, 48, 64)
+      - value: (1, -1, 256, 48, 64)
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:349 in reshape_into_chunks, code: return input_tensor.reshape('
     marks: constant
   - name: torch.nn.functional.pad.3_spyre
@@ -777,7 +777,7 @@ cases:
     op: torch.nn.functional.pad
     inputs:
       - tensor:
-          shape: [11, 48, 128]
+          shape: [1, 11, 48, 128]
           dtype: torch.float16
           init: rand
       - value: (0, 0, 0, 0, 0, 245, 0, 0)
@@ -789,27 +789,27 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [256, 48, 128]
+          shape: [1, 256, 48, 128]
           dtype: torch.float16
           init: rand
-      - value: (-1, 256, 48, 128)
+      - value: (1, -1, 256, 48, 128)
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:349 in reshape_into_chunks, code: return input_tensor.reshape('
     marks: constant
   - name: torch.permute.1_spyre
     op: torch.permute
     inputs:
       - tensor:
-          shape: [1, 256, 48]
+          shape: [1, 1, 256, 48]
           dtype: torch.float16
           init: rand
-      - value: (0, 1, 2)
+      - value: (0, 3, 1, 2)
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:778 in torch_forward, code: A = A.permute(0, 3, 1, 2)'
     marks: constant
   - name: torch.cumsum.1_spyre
     op: torch.cumsum
     inputs:
       - tensor:
-          shape: [48, 1, 256]
+          shape: [1, 48, 1, 256]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:779 in torch_forward, code: A_cumsum = torch.cumsum(A,
@@ -820,7 +820,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [48, 1, 256]
+          shape: [1, 48, 1, 256]
           dtype: torch.float16
           init: rand
       - value: (Ellipsis, None)
@@ -831,7 +831,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 256, 1]
+          shape: [1, 48, 1, 256, 1]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -853,7 +853,7 @@ cases:
     kwmap:
       device: cuda:0
       dtype: torch.bool
-  - name: torch.tril.1_spyre
+  - name: torch.tril.1
     op: torch.tril
     inputs:
       - tensor:
@@ -863,7 +863,7 @@ cases:
       chunk_size, device=input_tensor.device, dtype=torch.bool), diagonal=-1)'
     kwmap:
       diagonal: -1
-  - name: torch.invert.2_spyre
+  - name: torch.invert.2
     op: torch.invert
     inputs:
       - tensor:
@@ -875,7 +875,7 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 256, 256]
+          shape: [1, 48, 1, 256, 256]
           dtype: torch.float16
           init: rand
       - tensor:
@@ -889,14 +889,14 @@ cases:
     op: torch.cumsum
     inputs:
       - tensor:
-          shape: [1, 256, 256]
+          shape: [1, 48, 1, 256, 256]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:366 in segment_sum, code: tensor_segsum = torch.cumsum(input_tensor,
       dim=-2)'
     kwmap:
       dim: -2
-  - name: torch.tril.2_spyre
+  - name: torch.tril.2
     op: torch.tril
     inputs:
       - tensor:
@@ -910,7 +910,7 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 256, 256]
+          shape: [1, 48, 1, 256, 256]
           dtype: torch.float16
           init: rand
       - tensor:
@@ -924,7 +924,7 @@ cases:
     op: torch.exp
     inputs:
       - tensor:
-          shape: [1, 256, 256]
+          shape: [1, 48, 1, 256, 256]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:783 in torch_forward, code: L = torch.exp(segment_sum(A))'
@@ -932,7 +932,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [256, 48, 128]
+          shape: [1, 1, 256, 48, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -943,11 +943,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 48, 128]
+          shape: [1, 1, 256, 1, 48, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 128]
+          shape: [1, 1, 1, 256, 48, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:786 in torch_forward, code: G_intermediate = C[:, :, :,
@@ -956,7 +956,7 @@ cases:
     op: torch.sum
     inputs:
       - tensor:
-          shape: [256, 48, 128]
+          shape: [1, 1, 256, 256, 48, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:787 in torch_forward, code: G = G_intermediate.sum(dim=-1)  #
@@ -967,7 +967,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [256, 256, 48]
+          shape: [1, 1, 256, 256, 48]
           dtype: torch.float16
           init: rand
       - value: (Ellipsis, None)
@@ -978,10 +978,10 @@ cases:
     op: torch.permute
     inputs:
       - tensor:
-          shape: [1, 256, 256]
+          shape: [1, 48, 1, 256, 256]
           dtype: torch.float16
           init: rand
-      - value: (0, 2, 1)
+      - value: (0, 2, 3, 4, 1)
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:790 in torch_forward, code: M_intermediate = G[..., None]
       * L.permute(0, 2, 3, 4, 1)[..., None]'
     marks: constant
@@ -989,11 +989,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [256, 48, 1]
+          shape: [1, 1, 256, 256, 48, 1]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 1]
+          shape: [1, 1, 256, 256, 48, 1]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:790 in torch_forward, code: M_intermediate = G[..., None]
@@ -1002,7 +1002,7 @@ cases:
     op: torch.sum
     inputs:
       - tensor:
-          shape: [256, 48, 1]
+          shape: [1, 1, 256, 256, 48, 1]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:791 in torch_forward, code: M = M_intermediate.sum(dim=-1)'
@@ -1012,7 +1012,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 1, 256, 48, 64]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None)
@@ -1023,11 +1023,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [256, 48, 1]
+          shape: [1, 1, 256, 256, 48, 1]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 1, 1, 256, 48, 64]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:794 in torch_forward, code: Y_diag = (M[..., None] * hidden_states[:,
@@ -1036,7 +1036,7 @@ cases:
     op: torch.sum
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 1, 256, 256, 48, 64]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:794 in torch_forward, code: Y_diag = (M[..., None] * hidden_states[:,
@@ -1047,11 +1047,11 @@ cases:
     op: torch.sub
     inputs:
       - tensor:
-          shape: [48, 1, 1]
+          shape: [1, 48, 1, 1]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [48, 1, 256]
+          shape: [1, 48, 1, 256]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:798 in torch_forward, code: decay_states = torch.exp(A_cumsum[:,
@@ -1060,7 +1060,7 @@ cases:
     op: torch.exp
     inputs:
       - tensor:
-          shape: [48, 1, 256]
+          shape: [1, 48, 1, 256]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:798 in torch_forward, code: decay_states = torch.exp(A_cumsum[:,
@@ -1069,10 +1069,10 @@ cases:
     op: torch.permute
     inputs:
       - tensor:
-          shape: [48, 1, 256]
+          shape: [1, 48, 1, 256]
           dtype: torch.float16
           init: rand
-      - value: (0, -1, 1)
+      - value: (0, -2, -1, 1)
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:799 in torch_forward, code: B_decay = B * decay_states.permute(0,
       -2, -1, 1)[..., None]'
     marks: constant
@@ -1080,7 +1080,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [1, 256, 48]
+          shape: [1, 1, 256, 48]
           dtype: torch.float16
           init: rand
       - value: (Ellipsis, None)
@@ -1091,11 +1091,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [256, 48, 128]
+          shape: [1, 1, 256, 48, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 1]
+          shape: [1, 1, 256, 48, 1]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:799 in torch_forward, code: B_decay = B * decay_states.permute(0,
@@ -1104,11 +1104,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [48, 1, 128]
+          shape: [1, 1, 256, 48, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [48, 64, 1]
+          shape: [1, 1, 256, 48, 64, 1]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:800 in torch_forward, code: states = (B_decay[..., None,
@@ -1117,7 +1117,7 @@ cases:
     op: torch.sum
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 1, 256, 48, 64, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:800 in torch_forward, code: states = (B_decay[..., None,
@@ -1128,7 +1128,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 1, 48, 64, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, 1, None))
@@ -1139,7 +1139,7 @@ cases:
     op: torch.zeros_like
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 1, 48, 64, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:807 in torch_forward, code: previous_states = torch.zeros_like(states[:,
@@ -1148,10 +1148,10 @@ cases:
     op: torch.cat
     inputs:
       - tensor_list:
-          - shape: [48, 64, 128]
+          - shape: [1, 1, 48, 64, 128]
             dtype: torch.float16
             init: rand
-          - shape: [48, 64, 128]
+          - shape: [1, 1, 48, 64, 128]
             dtype: torch.float16
             init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:808 in torch_forward, code: states = torch.cat([previous_states,
@@ -1162,7 +1162,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [48, 1, 256]
+          shape: [1, 48, 1, 256]
           dtype: torch.float16
           init: rand
       - py: (-1,)
@@ -1196,7 +1196,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [48, 2, 1]
+          shape: [1, 48, 2, 1]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -1206,7 +1206,7 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:361 in segment_sum, code: input_tensor = input_tensor[...,
       None].expand(*input_tensor.size(), chunk_size)'
     marks: constant
-  - name: torch.tril.3_spyre
+  - name: torch.tril.3
     op: torch.tril
     inputs:
       - tensor:
@@ -1216,7 +1216,7 @@ cases:
       chunk_size, device=input_tensor.device, dtype=torch.bool), diagonal=-1)'
     kwmap:
       diagonal: -1
-  - name: torch.invert.3_spyre
+  - name: torch.invert.3
     op: torch.invert
     inputs:
       - tensor:
@@ -1228,7 +1228,7 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [48, 2, 2]
+          shape: [1, 48, 2, 2]
           dtype: torch.float16
           init: rand
       - tensor:
@@ -1242,14 +1242,14 @@ cases:
     op: torch.cumsum
     inputs:
       - tensor:
-          shape: [48, 2, 2]
+          shape: [1, 48, 2, 2]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:366 in segment_sum, code: tensor_segsum = torch.cumsum(input_tensor,
       dim=-2)'
     kwmap:
       dim: -2
-  - name: torch.tril.4_spyre
+  - name: torch.tril.4
     op: torch.tril
     inputs:
       - tensor:
@@ -1263,7 +1263,7 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [48, 2, 2]
+          shape: [1, 48, 2, 2]
           dtype: torch.float16
           init: rand
       - tensor:
@@ -1277,7 +1277,7 @@ cases:
     op: torch.exp
     inputs:
       - tensor:
-          shape: [48, 2, 2]
+          shape: [1, 48, 2, 2]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:809 in torch_forward, code: decay_chunk = torch.exp(segment_sum(nn.functional.pad(A_cumsum[:,
@@ -1286,7 +1286,7 @@ cases:
     op: torch.transpose
     inputs:
       - tensor:
-          shape: [48, 2, 2]
+          shape: [1, 48, 2, 2]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -1298,7 +1298,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [2, 2, 48]
+          shape: [1, 2, 2, 48]
           dtype: torch.float16
           init: rand
       - value: (Ellipsis, None, None)
@@ -1309,7 +1309,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 2, 48, 64, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, Ellipsis)
@@ -1320,11 +1320,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [48, 1, 1]
+          shape: [1, 2, 2, 48, 1, 1]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 2, 1, 48, 64, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:811 in torch_forward, code: new_states = (decay_chunk[...,
@@ -1333,7 +1333,7 @@ cases:
     op: torch.sum
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 2, 2, 48, 64, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:811 in torch_forward, code: new_states = (decay_chunk[...,
@@ -1344,7 +1344,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 2, 48, 64, 128]
           dtype: torch.float16
           init: rand
       - py: (-1,)
@@ -1355,11 +1355,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [48, 1, 128]
+          shape: [1, 1, 256, 48, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 1, 1, 48, 64, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:817 in torch_forward, code: C_times_states = (C[..., None,
@@ -1368,7 +1368,7 @@ cases:
     op: torch.sum
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 1, 256, 48, 64, 128]
           dtype: torch.float16
           init: rand
       - value: -1
@@ -1379,11 +1379,11 @@ cases:
     op: torch.mul
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 1, 256, 48, 64]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 1]
+          shape: [1, 1, 256, 48, 1]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:819 in torch_forward, code: Y_off = (C_times_states.sum(-1)
@@ -1392,11 +1392,11 @@ cases:
     op: torch.add
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 1, 256, 48, 64]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 1, 256, 48, 64]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:822 in torch_forward, code: y = Y_diag + Y_off'
@@ -1404,10 +1404,10 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 1, 256, 48, 64]
           dtype: torch.float16
           init: rand
-      - value: (12288, 64)
+      - value: (1, -1, 48, 64)
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:824 in torch_forward, code: y = y.reshape(batch_size,
       -1, self.num_heads, self.head_dim)'
     marks: constant
@@ -1415,11 +1415,11 @@ cases:
     op: torch.add
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 256, 48, 64]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 256, 48, 64]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:826 in torch_forward, code: y = y + D_residual'
@@ -1427,7 +1427,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [256, 48, 64]
+          shape: [1, 256, 48, 64]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, 11, None), slice(None, None, None), slice(None, None, None))
@@ -1437,10 +1437,10 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [11, 48, 64]
+          shape: [1, 11, 48, 64]
           dtype: torch.float16
           init: rand
-      - value: (11, -1)
+      - value: (1, 11, -1)
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:830 in torch_forward, code: y = y.reshape(batch_size,
       seq_len, -1)'
     marks: constant
@@ -1448,11 +1448,11 @@ cases:
     op: torch.Tensor.copy_
     inputs:
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 48, 64, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [48, 64, 128]
+          shape: [1, 48, 64, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:834 in torch_forward, code: cache_params.ssm_states[self.layer_idx].copy_(ssm_state)'
@@ -1592,7 +1592,7 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1024 in forward, code: logits = self.layer(hidden_states).float()  #
       [batch_size x seq_len, num_experts]'
     marks: constant
-  - name: torch.float.4_spyre
+  - name: torch.float.4
     op: torch.float
     inputs:
       - tensor:
@@ -1638,12 +1638,12 @@ cases:
       dim=1).type_as(hidden_states)  # [num_tokens, top_k]'
     kwmap:
       dim: 1
-  - name: torch.type_as.1_spyre
+  - name: torch.type_as.1
     op: torch.type_as
     inputs:
       - tensor:
           shape: [11, 6]
-          dtype: torch.float16
+          dtype: torch.float32
           init: rand
       - tensor:
           shape: [11, 1536]
@@ -1677,7 +1677,7 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1032 in forward, code: gates = zeros.scatter(1, top_k_indices,
       1)  # [num_tokens, num_experts]'
     marks: constant
-  - name: torch.long.1_spyre
+  - name: torch.long.1
     op: torch.long
     inputs:
       - tensor:
@@ -1711,7 +1711,7 @@ cases:
       - value: 0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1036 in forward, code: expert_size = expert_size.tolist()'
     marks: constant
-  - name: torch.flatten.1_spyre
+  - name: torch.flatten.1
     op: torch.flatten
     inputs:
       - tensor:
@@ -1763,7 +1763,7 @@ cases:
     marks: constant
     kwmap:
       rounding_mode: trunc
-  - name: torch.flatten.2_spyre
+  - name: torch.flatten.2
     op: torch.flatten
     inputs:
       - tensor:
@@ -1976,7 +1976,7 @@ cases:
     op: torch.transpose
     inputs:
       - tensor:
-          shape: [11, 12, 128]
+          shape: [1, 11, 12, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -2002,7 +2002,7 @@ cases:
     op: torch.transpose
     inputs:
       - tensor:
-          shape: [11, 4, 128]
+          shape: [1, 11, 4, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -2014,7 +2014,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 11, 128]
+          shape: [1, 4, 11, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -2025,7 +2025,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 11, 128]
+          shape: [1, 4, 1, 11, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -2040,26 +2040,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 11, 128]
+          shape: [1, 4, 3, 11, 128]
           dtype: torch.float16
           init: rand
-      - value: (33, 128)
+      - value: (1, 12, 11, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.1_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.1
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2071,7 +2071,7 @@ cases:
     op: torch.transpose
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -2079,11 +2079,11 @@ cases:
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
     marks: constant
-  - name: torch.Tensor.contiguous.1_spyre
+  - name: torch.Tensor.contiguous.1
     op: torch.Tensor.contiguous
     inputs:
       - tensor:
-          shape: [11, 12, 128]
+          shape: [1, 11, 12, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
@@ -2092,7 +2092,7 @@ cases:
     op: torch.Tensor.view
     inputs:
       - tensor:
-          shape: [11, 12, 128]
+          shape: [1, 11, 12, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -2101,19 +2101,19 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:221 in forward, code: attn_output = attn_output.view(bsz,
       q_len, -1)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.2_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.2
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2121,19 +2121,19 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.nn.functional.scaled_dot_product_attention.3_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.3
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2141,19 +2141,19 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.nn.functional.scaled_dot_product_attention.4_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.4
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2161,19 +2161,19 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.nn.functional.scaled_dot_product_attention.5_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.5
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2181,19 +2181,19 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.nn.functional.scaled_dot_product_attention.6_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.6
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2201,19 +2201,19 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.nn.functional.scaled_dot_product_attention.7_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.7
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2221,19 +2221,19 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.nn.functional.scaled_dot_product_attention.8_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.8
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -2241,7 +2241,7 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.split.2_spyre
+  - name: torch.split.2
     op: torch.split
     inputs:
       - tensor:
@@ -2271,7 +2271,7 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:994 in forward, code: input_list = inputs.split(expert_size,
       dim=0)'
     marks: constant
-  - name: torch.nn.functional.linear.8_spyre
+  - name: torch.nn.functional.linear.8
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2284,7 +2284,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.9_spyre
+  - name: torch.nn.functional.linear.9
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2297,7 +2297,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.10_spyre
+  - name: torch.nn.functional.linear.10
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2310,7 +2310,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.11_spyre
+  - name: torch.nn.functional.linear.11
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2323,7 +2323,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.12_spyre
+  - name: torch.nn.functional.linear.12
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2336,7 +2336,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.13_spyre
+  - name: torch.nn.functional.linear.13
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2349,7 +2349,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.cat.2_spyre
+  - name: torch.cat.2
     op: torch.cat
     inputs:
       - tensor_list:
@@ -2549,7 +2549,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.nn.functional.silu.4_spyre
+  - name: torch.nn.functional.silu.4
     op: torch.nn.functional.silu
     inputs:
       - tensor:
@@ -2557,7 +2557,7 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/activations.py:99 in forward, code: return nn.functional.silu(input)'
-  - name: torch.split.3_spyre
+  - name: torch.split.3
     op: torch.split
     inputs:
       - tensor:
@@ -2570,7 +2570,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.nn.functional.linear.14_spyre
+  - name: torch.nn.functional.linear.14
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2583,7 +2583,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.15_spyre
+  - name: torch.nn.functional.linear.15
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2596,7 +2596,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.16_spyre
+  - name: torch.nn.functional.linear.16
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2609,7 +2609,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.17_spyre
+  - name: torch.nn.functional.linear.17
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2622,7 +2622,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.18_spyre
+  - name: torch.nn.functional.linear.18
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2635,7 +2635,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.19_spyre
+  - name: torch.nn.functional.linear.19
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2648,7 +2648,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.cat.3_spyre
+  - name: torch.cat.3
     op: torch.cat
     inputs:
       - tensor_list:
@@ -2848,7 +2848,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.nn.functional.linear.20_spyre
+  - name: torch.nn.functional.linear.20
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2861,7 +2861,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.21_spyre
+  - name: torch.nn.functional.linear.21
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -2874,7 +2874,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.cat.4_spyre
+  - name: torch.cat.4
     op: torch.cat
     inputs:
       - tensor_list:
@@ -3074,7 +3074,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.nn.functional.linear.22_spyre
+  - name: torch.nn.functional.linear.22
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -3087,7 +3087,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.nn.functional.linear.23_spyre
+  - name: torch.nn.functional.linear.23
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -3100,7 +3100,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.cat.5_spyre
+  - name: torch.cat.5
     op: torch.cat
     inputs:
       - tensor_list:
@@ -3300,7 +3300,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.nn.functional.linear.24_spyre
+  - name: torch.nn.functional.linear.24
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -3313,7 +3313,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.cat.6_spyre
+  - name: torch.cat.6
     op: torch.cat
     inputs:
       - tensor_list:
@@ -3513,7 +3513,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.nn.functional.linear.25_spyre
+  - name: torch.nn.functional.linear.25
     op: torch.nn.functional.linear
     inputs:
       - tensor:
@@ -3526,7 +3526,7 @@ cases:
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:997 in forward, code: output_list.append(F.linear(input_list[i],
       self.weight[i]))'
-  - name: torch.cat.7_spyre
+  - name: torch.cat.7
     op: torch.cat
     inputs:
       - tensor_list:
@@ -3726,7 +3726,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.cat.8_spyre
+  - name: torch.cat.8
     op: torch.cat
     inputs:
       - tensor_list:
@@ -3926,7 +3926,7 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.cat.9_spyre
+  - name: torch.cat.9
     op: torch.cat
     inputs:
       - tensor_list:
@@ -4126,19 +4126,19 @@ cases:
       dim=0)'
     kwmap:
       dim: 0
-  - name: torch.nn.functional.scaled_dot_product_attention.9_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.9
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -4146,19 +4146,19 @@ cases:
       dropout_p: 0.0
       scale: 0.0078125
       is_causal: false
-  - name: torch.nn.functional.scaled_dot_product_attention.10_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.10
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 11, 128]
+          shape: [1, 12, 11, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -4267,7 +4267,7 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
     marks: constant
-  - name: torch.gt.3_spyre
+  - name: torch.gt.3
     op: torch.gt
     inputs:
       - tensor:
@@ -4284,7 +4284,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.2_spyre
+  - name: torch.Tensor.mul.2
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -4311,7 +4311,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4321,11 +4321,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.2_spyre
+  - name: torch.clone.2
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -4347,7 +4347,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.int64
           init: randint
           init_args:
@@ -4356,15 +4356,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.7_spyre
+  - name: torch.add.7
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.int64
           init: randint
           init_args:
@@ -4375,7 +4375,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -4386,11 +4386,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -4400,41 +4400,41 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.3_spyre
+  - name: torch.all.3
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.invert.4_spyre
+  - name: torch.invert.4
     op: torch.invert
     inputs:
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
-  - name: torch.mul.22_spyre
+  - name: torch.mul.22
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 1, 12]
+          shape: [1, 1, 1, 12]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -4520,7 +4520,7 @@ cases:
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:951 in forward, code: return self.weight * hidden_states.to(input_dtype)'
-  - name: torch.nn.functional.silu.5_spyre
+  - name: torch.nn.functional.silu.5
     op: torch.nn.functional.silu
     inputs:
       - tensor:
@@ -4647,7 +4647,7 @@ cases:
     op: torch.transpose
     inputs:
       - tensor:
-          shape: [1, 12, 128]
+          shape: [1, 1, 12, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4673,7 +4673,7 @@ cases:
     op: torch.transpose
     inputs:
       - tensor:
-          shape: [1, 4, 128]
+          shape: [1, 1, 4, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4685,7 +4685,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 12, 128]
+          shape: [1, 4, 12, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -4696,7 +4696,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 12, 128]
+          shape: [1, 4, 1, 12, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4711,26 +4711,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 12, 128]
+          shape: [1, 4, 3, 12, 128]
           dtype: torch.float16
           init: rand
-      - value: (36, 128)
+      - value: (1, 12, 12, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.11_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.11
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 12, 128]
+          shape: [1, 12, 12, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 12, 128]
+          shape: [1, 12, 12, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -4742,7 +4742,7 @@ cases:
     op: torch.transpose
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4750,11 +4750,11 @@ cases:
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
       2).contiguous()'
     marks: constant
-  - name: torch.Tensor.contiguous.2_spyre
+  - name: torch.Tensor.contiguous.2
     op: torch.Tensor.contiguous
     inputs:
       - tensor:
-          shape: [1, 12, 128]
+          shape: [1, 1, 12, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:106 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1,
@@ -4763,7 +4763,7 @@ cases:
     op: torch.Tensor.view
     inputs:
       - tensor:
-          shape: [1, 12, 128]
+          shape: [1, 1, 12, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4803,7 +4803,7 @@ cases:
     marks: constant
     kwmap:
       device: cuda:0
-  - name: torch.gt.4_spyre
+  - name: torch.gt.4
     op: torch.gt
     inputs:
       - tensor:
@@ -4820,7 +4820,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.3_spyre
+  - name: torch.Tensor.mul.3
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -4847,7 +4847,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4857,11 +4857,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.3_spyre
+  - name: torch.clone.3
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -4883,7 +4883,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.int64
           init: randint
           init_args:
@@ -4892,15 +4892,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.9_spyre
+  - name: torch.add.9
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.int64
           init: randint
           init_args:
@@ -4911,7 +4911,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -4922,11 +4922,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -4936,33 +4936,33 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.4_spyre
+  - name: torch.all.4
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.mul.26_spyre
+  - name: torch.mul.26
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 1, 13]
+          shape: [1, 1, 1, 13]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -4970,7 +4970,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 13, 128]
+          shape: [1, 4, 13, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -4981,7 +4981,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 13, 128]
+          shape: [1, 4, 1, 13, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -4996,26 +4996,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 13, 128]
+          shape: [1, 4, 3, 13, 128]
           dtype: torch.float16
           init: rand
-      - value: (39, 128)
+      - value: (1, 12, 13, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.12_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.12
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 13, 128]
+          shape: [1, 12, 13, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 13, 128]
+          shape: [1, 12, 13, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -5043,7 +5043,7 @@ cases:
     marks: constant
     kwmap:
       device: cuda:0
-  - name: torch.gt.5_spyre
+  - name: torch.gt.5
     op: torch.gt
     inputs:
       - tensor:
@@ -5060,7 +5060,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.4_spyre
+  - name: torch.Tensor.mul.4
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -5087,7 +5087,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5097,11 +5097,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.4_spyre
+  - name: torch.clone.4
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5123,7 +5123,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5132,15 +5132,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.10_spyre
+  - name: torch.add.10
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5151,7 +5151,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -5162,11 +5162,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5176,33 +5176,33 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.5_spyre
+  - name: torch.all.5
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.mul.27_spyre
+  - name: torch.mul.27
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 1, 14]
+          shape: [1, 1, 1, 14]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -5210,7 +5210,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 14, 128]
+          shape: [1, 4, 14, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -5221,7 +5221,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 14, 128]
+          shape: [1, 4, 1, 14, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5236,26 +5236,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 14, 128]
+          shape: [1, 4, 3, 14, 128]
           dtype: torch.float16
           init: rand
-      - value: (42, 128)
+      - value: (1, 12, 14, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.13_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.13
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 14, 128]
+          shape: [1, 12, 14, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 14, 128]
+          shape: [1, 12, 14, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -5283,7 +5283,7 @@ cases:
     marks: constant
     kwmap:
       device: cuda:0
-  - name: torch.gt.6_spyre
+  - name: torch.gt.6
     op: torch.gt
     inputs:
       - tensor:
@@ -5300,7 +5300,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.5_spyre
+  - name: torch.Tensor.mul.5
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -5327,7 +5327,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5337,11 +5337,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.5_spyre
+  - name: torch.clone.5
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5363,7 +5363,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5372,15 +5372,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.11_spyre
+  - name: torch.add.11
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5391,7 +5391,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -5402,11 +5402,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5416,33 +5416,33 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.6_spyre
+  - name: torch.all.6
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.mul.28_spyre
+  - name: torch.mul.28
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 1, 15]
+          shape: [1, 1, 1, 15]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -5450,7 +5450,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 15, 128]
+          shape: [1, 4, 15, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -5461,7 +5461,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 15, 128]
+          shape: [1, 4, 1, 15, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5476,26 +5476,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 15, 128]
+          shape: [1, 4, 3, 15, 128]
           dtype: torch.float16
           init: rand
-      - value: (45, 128)
+      - value: (1, 12, 15, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.14_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.14
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 15, 128]
+          shape: [1, 12, 15, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 15, 128]
+          shape: [1, 12, 15, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -5523,7 +5523,7 @@ cases:
     marks: constant
     kwmap:
       device: cuda:0
-  - name: torch.gt.7_spyre
+  - name: torch.gt.7
     op: torch.gt
     inputs:
       - tensor:
@@ -5540,7 +5540,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.6_spyre
+  - name: torch.Tensor.mul.6
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -5567,7 +5567,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5577,11 +5577,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.6_spyre
+  - name: torch.clone.6
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5603,7 +5603,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5612,15 +5612,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.12_spyre
+  - name: torch.add.12
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5631,7 +5631,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -5642,11 +5642,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5656,33 +5656,33 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.7_spyre
+  - name: torch.all.7
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.mul.29_spyre
+  - name: torch.mul.29
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 1, 16]
+          shape: [1, 1, 1, 16]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -5690,7 +5690,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 16, 128]
+          shape: [1, 4, 16, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -5701,7 +5701,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 16, 128]
+          shape: [1, 4, 1, 16, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5716,26 +5716,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 16, 128]
+          shape: [1, 4, 3, 16, 128]
           dtype: torch.float16
           init: rand
-      - value: (48, 128)
+      - value: (1, 12, 16, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.15_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.15
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 16, 128]
+          shape: [1, 12, 16, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 16, 128]
+          shape: [1, 12, 16, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -5763,7 +5763,7 @@ cases:
     marks: constant
     kwmap:
       device: cuda:0
-  - name: torch.gt.8_spyre
+  - name: torch.gt.8
     op: torch.gt
     inputs:
       - tensor:
@@ -5780,7 +5780,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.7_spyre
+  - name: torch.Tensor.mul.7
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -5807,7 +5807,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5817,11 +5817,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.7_spyre
+  - name: torch.clone.7
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5843,7 +5843,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5852,15 +5852,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.13_spyre
+  - name: torch.add.13
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.int64
           init: randint
           init_args:
@@ -5871,7 +5871,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -5882,11 +5882,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -5896,33 +5896,33 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.8_spyre
+  - name: torch.all.8
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.mul.30_spyre
+  - name: torch.mul.30
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 1, 17]
+          shape: [1, 1, 1, 17]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -5930,7 +5930,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 17, 128]
+          shape: [1, 4, 17, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -5941,7 +5941,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 17, 128]
+          shape: [1, 4, 1, 17, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -5956,26 +5956,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 17, 128]
+          shape: [1, 4, 3, 17, 128]
           dtype: torch.float16
           init: rand
-      - value: (51, 128)
+      - value: (1, 12, 17, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.16_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.16
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 17, 128]
+          shape: [1, 12, 17, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 17, 128]
+          shape: [1, 12, 17, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
@@ -6003,7 +6003,7 @@ cases:
     marks: constant
     kwmap:
       device: cuda:0
-  - name: torch.gt.9_spyre
+  - name: torch.gt.9
     op: torch.gt
     inputs:
       - tensor:
@@ -6020,7 +6020,7 @@ cases:
             high: 1000
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1538 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask *= torch.arange(target_length, device=cache_position.device) > cache_position.reshape(-1, 1)'
-  - name: torch.Tensor.mul.8_spyre
+  - name: torch.Tensor.mul.8
     op: torch.Tensor.mul
     inputs:
       - tensor:
@@ -6047,7 +6047,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -6057,11 +6057,11 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1539 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: causal_mask = causal_mask[None, None, :, :].expand(batch_size, 1, -1, -1)'
     marks: constant
-  - name: torch.clone.8_spyre
+  - name: torch.clone.8
     op: torch.clone
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1541 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -6083,7 +6083,7 @@ cases:
     op: torch.to
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.int64
           init: randint
           init_args:
@@ -6092,15 +6092,15 @@ cases:
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1543 in _prepare_4d_causal_attention_mask_with_cache_position,
       code: padding_mask = causal_mask[:, :, :, :mask_length] + attention_mask[:, None, None, :].to('
     marks: constant
-  - name: torch.add.14_spyre
+  - name: torch.add.14
     op: torch.add
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.int64
           init: randint
           init_args:
@@ -6111,7 +6111,7 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.float16
           init: rand
       - value: 0
@@ -6122,11 +6122,11 @@ cases:
     op: torch.masked_fill
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.bool
       - value: -65504.0
     description: 'site-packages/transformers/models/granitemoehybrid/modeling_granitemoehybrid.py:1547 in _prepare_4d_causal_attention_mask_with_cache_position,
@@ -6136,33 +6136,33 @@ cases:
     op: torch.eq
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.float16
           init: rand
       - value: -65504.0
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     marks: constant
-  - name: torch.all.9_spyre
+  - name: torch.all.9
     op: torch.all
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
     kwmap:
       dim: -1
       keepdim: true
-  - name: torch.mul.31_spyre
+  - name: torch.mul.31
     op: torch.mul
     inputs:
       - tensor:
-          shape: [1, 1, 18]
+          shape: [1, 1, 1, 18]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [1, 1, 1]
+          shape: [1, 1, 1, 1]
           dtype: torch.bool
     description: 'site-packages/transformers/modeling_attn_mask_utils.py:247 in _unmask_unattended, code: return expanded_mask.mul(~torch.all(expanded_mask
       == min_dtype, dim=-1, keepdim=True))'
@@ -6170,7 +6170,7 @@ cases:
     op: torch.getitem
     inputs:
       - tensor:
-          shape: [4, 18, 128]
+          shape: [1, 4, 18, 128]
           dtype: torch.float16
           init: rand
       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
@@ -6181,7 +6181,7 @@ cases:
     op: torch.Tensor.expand
     inputs:
       - tensor:
-          shape: [1, 18, 128]
+          shape: [1, 4, 1, 18, 128]
           dtype: torch.float16
           init: rand
       - value: 1
@@ -6196,26 +6196,26 @@ cases:
     op: torch.reshape
     inputs:
       - tensor:
-          shape: [3, 18, 128]
+          shape: [1, 4, 3, 18, 128]
           dtype: torch.float16
           init: rand
-      - value: (54, 128)
+      - value: (1, 12, 18, 128)
     description: 'site-packages/transformers/integrations/sdpa_attention.py:27 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads
       * n_rep, slen, head_dim)'
     marks: constant
-  - name: torch.nn.functional.scaled_dot_product_attention.17_spyre
+  - name: torch.nn.functional.scaled_dot_product_attention.17
     op: torch.nn.functional.scaled_dot_product_attention
     inputs:
       - tensor:
-          shape: [12, 1, 128]
+          shape: [1, 12, 1, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 18, 128]
+          shape: [1, 12, 18, 128]
           dtype: torch.float16
           init: rand
       - tensor:
-          shape: [12, 18, 128]
+          shape: [1, 12, 18, 128]
           dtype: torch.float16
           init: rand
     description: 'site-packages/transformers/integrations/sdpa_attention.py:96 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
