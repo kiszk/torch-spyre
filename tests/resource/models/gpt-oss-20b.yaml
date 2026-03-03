@@ -556,7 +556,7 @@ cases:
           dtype: torch.int64
           init: randint
           init_args:
-            high: 1000
+            high: 128
       - tensor:
           shape: [1, 8, 11, 64]
           dtype: torch.bfloat16
@@ -987,7 +987,7 @@ cases:
           dtype: torch.int64
           init: randint
           init_args:
-            high: 1000
+            high: 32
       - tensor:
           shape: [11, 4]
           dtype: torch.bfloat16
@@ -1294,7 +1294,7 @@ cases:
           dtype: torch.int64
           init: randint
           init_args:
-            high: 1000
+            high: 2048
       - tensor:
           shape: [1, 8, 11, 64]
           dtype: torch.bfloat16
@@ -2020,7 +2020,7 @@ cases:
           dtype: torch.int64
           init: randint
           init_args:
-            high: 1000
+            high: 128
       - tensor:
           shape: [1, 8, 1, 64]
           dtype: torch.bfloat16
@@ -2365,7 +2365,7 @@ cases:
           dtype: torch.int64
           init: randint
           init_args:
-            high: 1000
+            high: 32
       - tensor:
           shape: [1, 4]
           dtype: torch.bfloat16
@@ -2637,7 +2637,7 @@ cases:
           dtype: torch.int64
           init: randint
           init_args:
-            high: 1000
+            high: 2048
       - tensor:
           shape: [1, 8, 1, 64]
           dtype: torch.bfloat16
