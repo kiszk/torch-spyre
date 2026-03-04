@@ -1,4 +1,4 @@
-model: gpt-oss
+model: gpt-oss-sample
 
 defaults:
   dtype: fp16
