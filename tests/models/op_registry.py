@@ -23,10 +23,24 @@ from torch.testing._internal.opinfo.core import (  # noqa: F401
 
 @dataclass(frozen=True)
 class OpAdapter:
+    """
+    Adapter for torch operations used in model-centric testing.
+
+    An OpAdapter wraps a torch operation (function or method) and provides
+    metadata for test execution. It maps operation names from YAML test cases
+    to their actual implementations, handling variations like tensor methods,
+    functional APIs, and operator overloads.
+
+    Attributes:
+        name: Canonical name for the operation (e.g., "torch.mul")
+        fn: The actual callable to execute (e.g., torch.mul or a wrapper function)
+        is_inplace: Whether this operation modifies tensors in-place
+        pre: Optional preprocessing hook to normalize SampleInput before execution
+    """
+
     name: str
     fn: Callable[..., Any]
     is_inplace: bool = False
-    # pre hook may normalize (args, attrs) (e.g., set dropout(training=False))
     pre: Optional[Callable[[SampleInput], SampleInput]] = None
 
 

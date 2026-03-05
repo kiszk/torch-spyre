@@ -39,8 +39,21 @@ def parse_py_value(expr: str):
     """
     Safely parse a restricted Python literal expression used in YAML.
     Supports: tuples, None, Ellipsis, slice(None/ints), ints, floats, lists.
-    Disallows function calls and attribute access.
+    Disallows function calls (except slice) and attribute access.
     """
+    ALLOWED_NODES = {
+        ast.Expression,
+        ast.Constant,
+        ast.Tuple,
+        ast.List,
+        ast.Name,
+        ast.Call,
+        ast.Load,
+        ast.UnaryOp,
+        ast.USub,
+        ast.UAdd,
+    }
+
     allowed_names = {
         "None": None,
         "Ellipsis": Ellipsis,
@@ -52,12 +65,11 @@ def parse_py_value(expr: str):
     node = ast.parse(expr, mode="eval")
 
     for n in ast.walk(node):
+        if type(n) not in ALLOWED_NODES:
+            raise ValueError(f"Node type {type(n).__name__} not allowed in py: {expr}")
         if isinstance(n, ast.Call):
-            # only allow calling slice(...)
             if not (isinstance(n.func, ast.Name) and n.func.id == "slice"):
                 raise ValueError(f"Only slice(...) calls are allowed in py: {expr}")
-        if isinstance(n, ast.Attribute):
-            raise ValueError(f"Attributes not allowed in py: {expr}")
         if isinstance(n, ast.Name) and n.id not in allowed_names:
             raise ValueError(f"Name {n.id} not allowed in py: {expr}")
 
@@ -100,6 +112,14 @@ def make_tensor_from_conf(
 
 
 def confirm_device(x: Any, expected_device: torch.device) -> bool:
+    """
+    Recursively verify that all tensors in x are on the expected device.
+
+    This handles cases where operations return nested structures (tuples/lists)
+    containing multiple tensors, ensuring all outputs are on the correct device
+    before comparison. Non-tensor values (e.g. scalar) are considered valid on
+    any device.
+    """
     if torch.is_tensor(x):
         return str(expected_device) in str(x.device)
     if isinstance(x, (tuple, list)):
@@ -108,6 +128,14 @@ def confirm_device(x: Any, expected_device: torch.device) -> bool:
 
 
 def to_device(x: Any, device: torch.device) -> Any:
+    """
+    Recursively move all tensors in x to the specified device.
+
+    This handles cases where operation inputs or outputs are nested structures
+    (tuples/lists) containing multiple tensors. All tensors are moved to the
+    target device while preserving the structure. Non-tensor values (e.g. scalar)
+    pass through unchanged.
+    """
     if torch.is_tensor(x):
         return x.to(device)
     if isinstance(x, (tuple, list)):
@@ -116,6 +144,14 @@ def to_device(x: Any, device: torch.device) -> Any:
 
 
 def _normalize_out(out: Any) -> Any:
+    """
+    Normalize operation output to a consistent format for comparison.
+
+    Some torch operations return lists while others return tuples, even when
+    semantically equivalent. This function converts all list outputs to tuples
+    recursively, ensuring consistent comparison between reference (CPU) and
+    test (device) outputs regardless of container type differences.
+    """
     if torch.is_tensor(out):
         return out
     if isinstance(out, (tuple, list)):

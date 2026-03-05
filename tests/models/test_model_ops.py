@@ -110,7 +110,7 @@ _init_model_ops_db()
 seen_case_keys = set()
 
 
-class TestSpyre(PrivateUse1TestBase):
+class TestSpyreModelOps(PrivateUse1TestBase):
     @ops(model_ops_db)
     def test_model_ops_db(
         self,
@@ -212,6 +212,6 @@ class TestSpyre(PrivateUse1TestBase):
             torch._dynamo.reset()
 
 
-# Instantiate device type tests for the TestSpyre class
+# Instantiate device type tests for the TestSpyreModelOps class
 # This is required for @ops decorator to work properly
-instantiate_device_type_tests(TestSpyre, globals())
+instantiate_device_type_tests(TestSpyreModelOps, globals())
