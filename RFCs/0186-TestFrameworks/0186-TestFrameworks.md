@@ -8,7 +8,7 @@
 
 **Tracking issue:** #241
 **Target repository:** `torch-spyre/torch-spyre`
-**Related issues/PRs:** #323
+**Related issues/PRs:** #808
 
 ---
 
@@ -248,10 +248,10 @@ markers =
     bf16operation: tests for bfloat16 operations
     constant: tests for operations with constants
 
-addopts = -m "not fp32operation and not bf16operation and not constant"
+addopts = -m "not fp32operation and not bf16operation"
 ```
 
-By default, tests marked with fp32operation, bf16operation, or constant are excluded. To run all tests regardless of markers, use `-m ""` option.
+By default, tests marked with fp32operation or bf16operation are excluded. To run all tests regardless of markers, use `-m ""` option.
 
 ---
 
@@ -262,9 +262,9 @@ A test case is generated based on the op to test, and the input sources which is
 - -tensor: randomly generated tensor(s) following shape, dtype, init, etc.
 - -value: scalars, lists, tuples.
 - -py: restricted Python literal expressions (tuples, None, Ellipsis, slices, ints, floats, lists, inf, -inf, nan).
-- -file: load from .pt files (torch.load("path/to/file.pt")).
+- ~~-file: load from .pt files (torch.load("path/to/file.pt")).~~
 
-Rationale: Debugging error-sensitive bugs often requires specific tensor values, especially in the backward path, so YAML supports exact data (init: data) and file-based inputs (-file).
+Rationale: Debugging error-sensitive bugs often requires specific tensor values, especially in the backward path, so YAML will support exact data (init: data) and file-based inputs (-file).
 
 ### Input tensor description
 
