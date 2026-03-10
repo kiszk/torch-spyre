@@ -27,8 +27,12 @@ import torch_spyre._inductor.customops  # noqa: F401
 from torch_spyre.fallbacks import fallback_ops
 from .ir import SpyreReduction
 from torch._inductor.virtualized import V
-
+from .errors import Unsupported
 import threading
+from .logging_utils import get_inductor_logger
+import logging
+
+logger = get_inductor_logger("lowering")
 
 # A module-level lock + nesting counter to make the CM reentrant/thread-safe
 _lowerings_lock = threading.RLock()
@@ -199,28 +203,66 @@ def ensure_default_handler(op_name):
 
 @register_spyre_lowering(torch.ops.aten.mm.default)
 def lower_mm(x, y):
-    def inner_fn(index, reduction_index):
-        i0, i1 = index
-        (r0,) = reduction_index
-        return (x_loader([i0, r0]), y_loader([r0, i1]))
-
     x = V.graph.get_buffer(x.realize())
     y = V.graph.get_buffer(y.realize())
     x_loader = x.make_loader()
     y_loader = y.make_loader()
 
-    result = Reduction.create(
-        reduction_type=MATMUL_REDUCTION_OP,
-        input_node=[x, y],
-        device=x.get_device(),
-        dst_dtype=x.get_dtype(),
-        src_dtype=x.get_dtype(),
-        inner_fn=inner_fn,
-        ranges=[x.get_size()[0], y.get_size()[1]],
-        reduction_ranges=[x.get_size()[1]],
-    )
+    x_size = x.get_size()
+    y_size = y.get_size()
+    x_ndim = len(x_size)
+    y_ndim = len(y_size)
+
+    # Handle 3D input with 2D weight (batched matmul)
+    if x_ndim == 3 and y_ndim == 2:
+
+        def inner_fn(index, reduction_index):
+            i0, i1, i2 = index  # batch, row, col
+            (r0,) = reduction_index
+            return (x_loader([i0, i1, r0]), y_loader([r0, i2]))
+
+        result = Reduction.create(
+            reduction_type=BATCH_MATMUL_OP,  # Use BATCH_MATMUL_OP for 3D×2D
+            input_node=[x, y],
+            device=x.get_device(),
+            dst_dtype=x.get_dtype(),
+            src_dtype=x.get_dtype(),
+            inner_fn=inner_fn,
+            ranges=[x_size[0], x_size[1], y_size[1]],  # [B, M, N]
+            reduction_ranges=[x_size[2]],  # K
+        )
+    # Standard 2D × 2D matrix multiplication
+    elif x_ndim == 2 and y_ndim == 2:
+
+        def inner_fn(index, reduction_index):
+            i0, i1 = index
+            (r0,) = reduction_index
+            return (x_loader([i0, r0]), y_loader([r0, i1]))
+
+        result = Reduction.create(
+            reduction_type=MATMUL_REDUCTION_OP,  # Use MATMUL_REDUCTION_OP for 2D×2D
+            input_node=[x, y],
+            device=x.get_device(),
+            dst_dtype=x.get_dtype(),
+            src_dtype=x.get_dtype(),
+            inner_fn=inner_fn,
+            ranges=[x_size[0], y_size[1]],
+            reduction_ranges=[x_size[1]],
+        )
+    else:
+        raise ValueError(
+            f"Unsupported tensor dimensions for mm: x.shape={x_size}, y.shape={y_size}. "
+            f"Expected (2D, 2D) or (3D, 2D), got ({x_ndim}D, {y_ndim}D)"
+        )
 
     result.realize()
+
+    if logger.isEnabledFor(logging.DEBUG):
+        result_buf = V.graph.get_buffer(result.get_name())
+        logger.debug(
+            f"mm: x{[int(s) for s in x_size]} @ y{[int(s) for s in y_size]} -> {[int(s) for s in result_buf.get_size()]}, "
+            f"x_layout={x.get_layout()}, y_layout={y.get_layout()}, out_layout={result_buf.get_layout()}"
+        )
 
     return result
 
@@ -231,8 +273,8 @@ def lower_bmm(x, y):
     y = V.graph.get_buffer(y.realize())
     x_loader = x.make_loader()
     y_loader = y.make_loader()
-    d3 = len(x.get_size()) == 3
-    if d3:
+
+    if len(x.get_size()) == 3 and len(y.get_size()) == 3:
 
         def inner_fn(index, reduction_index):
             i0, i1, i2 = index
@@ -251,7 +293,7 @@ def lower_bmm(x, y):
             ranges=[x.get_size()[0], x.get_size()[1], y.get_size()[2]],  # B, M, N
             reduction_ranges=[x.get_size()[2]],  # K
         )
-    else:  # 4d
+    elif len(x.get_size()) == 4 and len(y.get_size()) == 4:
 
         def inner_fn(index, reduction_index):
             i0, i1, i2, i3 = index
@@ -275,8 +317,35 @@ def lower_bmm(x, y):
             ],
             reduction_ranges=[x.get_size()[-1]],
         )
+    elif len(x.get_size()) == 3 and len(y.get_size()) == 2:
 
+        def inner_fn(index, reduction_index):
+            i0, i1, i2 = index
+            (r0,) = reduction_index
+            tmp1 = x_loader([i0, i1, r0])
+            tmp2 = y_loader([r0, i2])
+            return (tmp1, tmp2)
+
+        result = Reduction.create(
+            reduction_type=BATCH_MATMUL_OP,
+            input_node=[x, y],
+            device=x.get_device(),
+            dst_dtype=x.get_dtype(),
+            src_dtype=x.get_dtype(),
+            inner_fn=inner_fn,
+            ranges=[x.get_size()[0], x.get_size()[1], y.get_size()[1]],  # B, M, N
+            reduction_ranges=[x.get_size()[2]],  # K
+        )
+    else:
+        raise Unsupported(f"BMM with input shapes {x.get_size()} and {y.get_size()}")
     result.realize()
+
+    if logger.isEnabledFor(logging.DEBUG):
+        result_buf = V.graph.get_buffer(result.get_name())
+        logger.debug(
+            f"bmm: x{[int(s) for s in x.get_size()]} @ y{[int(s) for s in y.get_size()]} -> {[int(s) for s in result_buf.get_size()]}"
+        )
+
     return result
 
 

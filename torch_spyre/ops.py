@@ -37,6 +37,27 @@ def spyre__mm_out(
     return compiled_mm(self, mat2, out=out)
 
 
+@torch.library.register_kernel("aten::linear", ["spyre"])
+def spyre__linear(
+    input: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor | None = None
+) -> torch.Tensor:
+    def _linear(input, weight, bias):
+        weight = weight.transpose(-1, -2).contiguous()
+        while weight.dim() < input.dim():
+            weight = torch.unsqueeze(weight, 0)
+        out = input @ weight
+        if bias:
+            out += bias
+        return out
+
+    # Prevents double tracing
+    if not torch.compiler.is_compiling():
+        compiled_linear = torch.compile(_linear, dynamic=False)
+    else:
+        compiled_linear = _linear
+    return compiled_linear(input, weight, bias)
+
+
 @torch.library.register_kernel("aten::addmm", ["spyre"])  # type:ignore
 def spyre__addmm_default(
     self: torch.Tensor,
@@ -72,6 +93,19 @@ def spyre__fill_scalar(
 ) -> torch.Tensor:
     tmp = torch.ones(self.size(), dtype=self.dtype) * other
     self.copy_(tmp)
+    return self
+
+
+@torch.library.register_kernel("aten::normal_", ["spyre"])
+def spyre__normal_(self, mean=0.0, std=1.0, *, generator=None):
+    # "normal_" generates a random tensor, thus copying
+    # "self" back from SPYRE to CPU is not needed.
+    # cpu_tmp = self.to("cpu")
+
+    # Create a new tensor on cpu itself to avoid unnecessary data copy.
+    cpu_tmp = torch.empty_like(self, device="cpu", memory_format=torch.preserve_format)
+    cpu_tmp.normal_(mean, std, generator=generator)
+    self.copy_(cpu_tmp)
     return self
 
 
@@ -257,6 +291,20 @@ def spyre__mish_out(self: torch.Tensor, out: torch.Tensor = None) -> torch.Tenso
     # Out variant
     compiled_mish = torch.compile(torch.ops.aten.mish.out, dynamic=False)
     return compiled_mish(self, out=out)
+
+
+@torch.library.register_kernel("aten::uniform_", "spyre")
+def spyre__uniform_(self, from_=0.0, to=1.0, generator=None):
+    # Create a new tensor on cpu
+    cpu_tmp = torch.empty_like(self, device="cpu", memory_format=torch.preserve_format)
+
+    # Fill the CPU tensor with uniform random values
+    cpu_tmp.uniform_(from_, to, generator=generator)
+
+    # Copy the CPU tensor back to the spyre device
+    self.copy_(cpu_tmp)
+
+    return self
 
 
 # INSERT_CODEGEN_HERE

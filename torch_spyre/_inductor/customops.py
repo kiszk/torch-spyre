@@ -153,7 +153,7 @@ def rms_norm(
         raise Unsupported(
             f"spyre.layernorm: unsupported reduction shape {normalized_shape}"
         )
-    return torch.rms_norm(x, normalized_shape, weight, eps)
+    return torch.compile(torch.ops.spyre.rms_norm)(x, normalized_shape, weight, eps)
 
 
 @rms_norm.register_fake
@@ -218,3 +218,13 @@ def _(
     dtype: Optional[torch.dtype] = None,
 ):
     return torch.empty(size, dtype=dtype, device="spyre")
+
+
+@torch.library.custom_op("spyre::logical_not", mutates_args=(), device_types="spyre")
+def logical_not(input: torch.Tensor) -> torch.Tensor:
+    pass
+
+
+@logical_not.register_fake
+def _(input: torch.Tensor):
+    return input.new_empty(input.size())

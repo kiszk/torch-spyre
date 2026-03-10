@@ -296,7 +296,7 @@ class TestOps(TestCase):
         z = (x_spyre + y).to("cpu")
         torch.testing.assert_close(z, x + y, rtol=self.rtol, atol=self.atol)
 
-    @unittest.skip("xfail: Swapping stick dimension is unsupported in new DCI")
+    @unittest.skip("xfail: contiguous crashes in eager mode")
     def test_add_Tensor_transpose(self):
         x = torch.arange(8, dtype=self.dtype).view(2, 4)
         y = torch.arange(8, dtype=self.dtype).view(4, 2) * 10
@@ -526,9 +526,11 @@ class TestOps(TestCase):
             z, torch.matmul(x, y), rtol=self.rtol, atol=self.atol
         )
 
-    @unittest.skip("TODO: mean.out not implemented in eager mode")
     def test_mean(self):
-        x = torch.tensor([[[1, 2, 3], [4, 5, 6]]], dtype=self.dtype)
+        x = torch.tensor(
+            [[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [[7.0, 8.0, 9.0], [10.0, 11.0, 12.0]]],
+            dtype=self.dtype,
+        )
         x_spyre = x.to("spyre")
         y0 = torch.mean(x_spyre, dim=[0]).to("cpu")
         y1 = torch.mean(x_spyre, dim=[1]).to("cpu")
@@ -560,6 +562,20 @@ class TestOps(TestCase):
         y1 = torch.softmax(x_spyre, dim=1).to("cpu")
         torch.testing.assert_close(
             y1, torch.softmax(x, dim=1), rtol=self.rtol, atol=self.atol
+        )
+
+    def test_normal_randn(self):
+        gen = torch.manual_seed(42)
+
+        y_spyre = torch.randn(3, 5, device="spyre", generator=gen)
+
+        # torch.Generator is stateful, hence reset
+        gen.manual_seed(42)
+
+        y_cpu = torch.randn(3, 5, device="cpu", generator=gen)
+
+        torch.testing.assert_close(
+            y_spyre.to("cpu"), y_cpu, rtol=self.rtol, atol=self.atol
         )
 
     def test_zeros(self):
@@ -729,6 +745,32 @@ class TestOps(TestCase):
         x = torch.rand(512, dtype=self.dtype).to("spyre")
         with self.assertRaisesRegex(RuntimeError, "elems_per_stick"):
             x.view(16, 32)
+
+    def test_uniform_(self):
+        x_spyre = torch.tensor([[1, 2, 3], [4, 5, 6]], dtype=self.dtype, device="spyre")
+        x_spyre.uniform_()
+        x_cpu = x_spyre.to("cpu")
+        self.assertTrue(
+            torch.all(x_cpu >= 0.0) and torch.all(x_cpu < 1.0),
+            f"uniform_ values out of range [0, 1): {x_cpu}",
+        )
+        self.assertFalse(
+            torch.all(x_cpu == x_cpu[0, 0]), "uniform_ produced all identical values"
+        )
+
+    def test_uniform_custom_range(self):
+        x_spyre = torch.tensor(
+            [1.0, 2.0, 3.0, 4.0, 5.0], dtype=self.dtype, device="spyre"
+        )
+        x_spyre.uniform_(-5.0, 5.0)
+        x_cpu = x_spyre.to("cpu")
+        self.assertTrue(
+            torch.all(x_cpu >= -5.0) and torch.all(x_cpu < 5.0),
+            f"uniform_ values out of range [-5, 5): {x_cpu}",
+        )
+        self.assertFalse(
+            torch.all(x_cpu == x_cpu[0]), "uniform_ produced all identical values"
+        )
 
     # NOTE: embedding / indirect indexing / index_select are not supported yet
     @pytest.mark.filterwarnings("ignore::torch_spyre.fallbacks.FallbackWarning")

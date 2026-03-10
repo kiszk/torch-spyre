@@ -166,6 +166,7 @@ class TestOps(unittest.TestCase, metaclass=ParameterizedTestMeta):
                     ((3, 1, 256), (3, 256, 128)),
                     ((3, 17, 256), (3, 256, 128)),
                     ((3, 17, 128, 256), (3, 17, 256, 128)),
+                    ((2, 64, 128), (128, 16384)),
                 ]
             ),
         },
@@ -342,6 +343,11 @@ class TestOps(unittest.TestCase, metaclass=ParameterizedTestMeta):
                     2,
                     cached_randn((128, 128, 128), abs=True),
                 ),
+                "dim_0_1": (
+                    0,
+                    1,
+                    cached_randn((128, 64, 128), abs=True),
+                ),
             }
         },
         ("test_transpose_4d_cpu", "test_transpose_4d_cpu"): {
@@ -360,6 +366,16 @@ class TestOps(unittest.TestCase, metaclass=ParameterizedTestMeta):
                     1,
                     3,
                     cached_randn((3, 256, 17, 64), abs=True),
+                ),
+                "dim_1_2": (
+                    1,
+                    3,
+                    cached_randn((3, 256, 64, 64), abs=True),
+                ),
+                "dim_0_1": (
+                    0,
+                    1,
+                    cached_randn((64, 25, 7, 64), abs=True),
                 ),
             }
         },
@@ -508,6 +524,18 @@ class TestOps(unittest.TestCase, metaclass=ParameterizedTestMeta):
             },
         },
         (
+            "test_permute",
+            "test_permute",
+        ): {
+            "param_sets": {
+                "4d_0_2_1_3": ((2, 3, 16, 64), (0, 2, 1, 3)),
+                "3d_0_2_1": ((2, 1024, 844), (0, 2, 1)),
+                "4d_0_3_1_2": ((2, 2, 256, 48), (0, 3, 1, 2)),
+                "4d_0_m2_m1_1": ((2, 48, 2, 256), (0, -2, -1, 1)),
+                "5d_0_2_3_4_1": ((2, 48, 2, 256, 265), (0, 2, 3, 4, 1)),
+            },
+        },
+        (
             "test_fallback",
             "test_fallback_cpu",
         ): {
@@ -627,6 +655,28 @@ class TestOps(unittest.TestCase, metaclass=ParameterizedTestMeta):
                 "4d013": {cached_randn((1, 1, 4, 1), dtype=torch.float16)},
                 "4d023": {cached_randn((1, 3, 1, 1), dtype=torch.float16)},
                 "4d123": {cached_randn((2, 1, 1, 1), dtype=torch.float16)},
+            },
+        },
+        (
+            "test_logical_not",
+            "test_fallback_unary_op_cpu",
+        ): {
+            "ops_dict": {
+                "logical_not": torch.logical_not,
+            },
+            "param_sets": {
+                "1d_fp16": (cached_randn(128, dtype=torch.float16),),
+                "1d_bool": (cached_randn(128, dtype=torch.float16) > 0,),
+                "2d_fp16": (cached_randn((4, 128), dtype=torch.float16),),
+                "2d_bool": (cached_randn((4, 128), dtype=torch.float16) > 0,),
+                "3d_fp16": (cached_randn((2, 4, 128), dtype=torch.float16),),
+                "3d_bool": (cached_randn((2, 4, 128), dtype=torch.float16) > 0,),
+                "4d_fp16": (cached_randn((1, 2, 4, 128), dtype=torch.float16),),
+                "4d_bool": (cached_randn((1, 2, 4, 128), dtype=torch.float16) > 0,),
+                "fp16_single_elem": (cached_randn(1, dtype=torch.float16),),
+                "bool_single_elem": (cached_randn(1, dtype=torch.float16) > 0,),
+                # TODO: Fix torch.eq(-0.0,0.0) equality bug (Issue 628)
+                # "fp16_signed_0": (torch.tensor([0.0, -0.0, 1.0, -1.0], dtype=torch.float16),),
             },
         },
         (
@@ -854,6 +904,10 @@ class TestOps(unittest.TestCase, metaclass=ParameterizedTestMeta):
     def test_unary_op_cpu(self, op, x):
         compare_with_cpu(op, x)
 
+    @pytest.mark.filterwarnings("ignore::torch_spyre.fallbacks.FallbackWarning")
+    def test_fallback_unary_op_cpu(self, op, x):
+        compare_with_cpu(op, x)
+
     def test_binary_op(self, op, a, b):
         if op == torch.div:
             # TODO: Division by 0 or near-zero differs on Spyre from CPU, sidestep for now.
@@ -924,6 +978,12 @@ class TestOps(unittest.TestCase, metaclass=ParameterizedTestMeta):
     )
     def test_clone(self, x):
         compare_with_cpu(lambda a: torch.clone(a).contiguous(), x)
+
+    def test_permute(self, input_dims, dims):
+        compare_with_cpu(
+            lambda input: torch.permute(input, dims),
+            cached_randn(input_dims, dtype=torch.float16),
+        )
 
     def test_dropout_functional(self, input, kwargs):
         compare_with_cpu(lambda a: torch.nn.functional.dropout(a, **kwargs), input)
