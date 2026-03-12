@@ -57,7 +57,7 @@ target models, increasing risk and slowing development.
 - **Nightly monitoring**: Continuously track correctness of enabled OpFuncs
   using the industry-standard **pytest** framework.
 - **Scalability**: Support multiple models (Granite-4h, GPT-OSS,
-  Granite-Vision-3, Granite-Speech) with **cross-model deduplication**.
+  Ministral-3-14B and others) with **cross-model deduplication**.
 - **Maintainability**: Centralize test intent in descriptors (**shapes, dtypes,
   tolerances**) for easy updates as models evolve.
 
@@ -133,33 +133,33 @@ Marker usage and registration follow pytest documentation best practices, enabli
 
 ```bash
 # List available models/cases
-pytest --list-models 2>&1 | tee logs_test.txt
-pytest --list-cases  2>&1 | tee logs_test.txt
+pytest -c pytest_model.ini tests/models/test_model_ops.py --list-models 2>&1 | tee logs_test.txt
+pytest -c pytest_model.ini tests/models/test_model_ops.py --list-cases  2>&1 | tee logs_test.txt
 
 # Run a single case by name
-pytest -q tests/models/test_model_ops.py --model gpt_oss -k "mul_ok"
+pytest -c pytest_model.ini -q tests/models/test_model_ops.py --model gpt_oss -k "mul_ok"
 
 # Run all 'torch.mul' ops for GPT-oss
-pytest -q tests/models/test_model_ops.py --model gpt_oss -k "torch_mul"
+pytest -c pytest_model.ini -q tests/models/test_model_ops.py --model gpt_oss -k "torch_mul"
 
 # Run all tests ignoring default marker filters
-pytest tests/models/test_model_ops.py --model gpt-oss-20b -m ""
+pytest -c pytest_model.ini tests/models/test_model_ops.py --model gpt-oss-20b -m ""
 
 # Run for multiple models
-pytest --model gpt_oss tests/
-pytest --model gpt-oss-20b --model granite-4-h tests/
+pytest -c pytest_model.ini tests/models/test_model_ops.py --model gpt_oss
+pytest -c pytest_model.ini tests/models/test_model_ops.py --model gpt-oss-20b --model granite-4-h
 
 # Show selected tests based on marks
-pytest --list-cases-by-mark
-pytest --list-cases-by-mark --model gpt-oss-20b
-# Show excluded tests based on marks
-pytest --list-cases-by-mark --show-excluded
-pytest --list-cases-by-mark --show-excluded --model gpt-oss-20b
+pytest -c pytest_model.ini tests/models/test_model_ops.py --list-cases-by-mark
+pytest -c pytest_model.ini tests/models/test_model_ops.py --list-cases-by-mark --model gpt-oss-20b
 # Show skipped tests
-pytest tests/models/test_model_ops.py --show-skipped --model gpt-oss-20b
+pytest -c pytest_model.ini tests/models/test_model_ops.py --show-skipped --model gpt-oss-20b
+# Show excluded tests based on marks
+pytest -c pytest_model.ini tests/models/test_model_ops.py --list-cases-by-mark --show-excluded
+pytest -c pytest_model.ini tests/models/test_model_ops.py --list-cases-by-mark --show-excluded --model gpt-oss-20b
 
 # Run tests including either "torch_add" or "torch_mul" in test name
-pytest tests/models/test_model_ops.py --test-name torch_add --test-name torch_mul
+pytest -c pytest_model.ini tests/models/test_model_ops.py --test-name torch_add --test-name torch_mul
 
 ```
 
@@ -185,6 +185,7 @@ pytest \
 Below is the proposed directory structure for the YAML-driven test framework:
 
 ```bash
+pytest_model.ini
 tests/
 ├── conftest.py
 +── models/
@@ -235,9 +236,9 @@ cases:
 
 ---
 
-### pytest.ini Configuration
+### pytest_model.ini Configuration
 
-The `pytest.ini` file contains default marker expressions that filter tests:
+The `pytest_model.ini` file contains default marker expressions that filter tests:
 
 ```ini
 [pytest]
@@ -409,5 +410,5 @@ Future (performance) metrics if enabled:
 ## Dependencies
 
 - Existing internal scripts for op & input extraction.
-- pytest runner (markers defined in pytest.ini). [docs.pytest.org]
+- pytest runner (markers defined in pytest_model.ini). [docs.pytest.org]
 - torch for CPU reference and .pt loading (baseline correctness). [docs.pytorch.org]
