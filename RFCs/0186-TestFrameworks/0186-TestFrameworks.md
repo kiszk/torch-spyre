@@ -249,10 +249,10 @@ markers =
     bf16operation: tests for bfloat16 operations
     constant: tests for operations with constants
 
-addopts = -m "not fp32operation and not bf16operation"
+addopts = -m "not bf16operation"
 ```
 
-By default, tests marked with fp32operation or bf16operation are excluded. To run all tests regardless of markers, use `-m ""` option.
+By default, tests marked with bf16operation are excluded. To run all tests regardless of markers, use `-m ""` option.
 
 ---
 
