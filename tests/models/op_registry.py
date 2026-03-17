@@ -137,6 +137,10 @@ def _tensor_view(x: torch.Tensor, shape, *args) -> torch.Tensor:
     return x.view(final_shape)
 
 
+def _tensor_view_as(x: torch.Tensor, other: torch.Tensor) -> torch.Tensor:
+    return x.view_as(other)
+
+
 def _tensor_permute(x: torch.Tensor, dims, *args) -> torch.Tensor:
     if isinstance(dims, (list, tuple)):
         final_dims = list(dims)
@@ -338,7 +342,8 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     "torch.Tensor.contiguous": OpAdapter("torch.contiguous", _tensor_contiguous),
     "torch.reshape": OpAdapter("torch.reshape", torch.reshape),
     "torch.view": OpAdapter("torch.view", _tensor_view),
-    "torch.Tensor.view": OpAdapter("torch.view", _tensor_view),
+    "torch.view_as": OpAdapter("torch.view_as", _tensor_view),
+    "torch.Tensor.view": OpAdapter("torch.view", _tensor_view_as),
     "torch.aten.view": OpAdapter("torch.view", _tensor_view),
     "torch.transpose": OpAdapter("torch.transpose", _tensor_transpose),
     "torch.permute": OpAdapter("torch.permute", _tensor_permute),
