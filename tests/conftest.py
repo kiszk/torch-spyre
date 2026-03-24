@@ -133,6 +133,11 @@ def pytest_addoption(parser):
         dest="dedupe",
         help="Disable deduplication.",
     )
+    parser.addoption(
+        "--no-device-replace",
+        action="store_true",
+        help="Disable cuda device replacement in kwargs.",
+    )
 
     # NEW: inventory modes
     parser.addoption(

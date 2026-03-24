@@ -125,6 +125,9 @@ class TestSpyreModelOps(PrivateUse1TestBase):
             pytestconfig.getoption("--compile-backend") or "inductor"
         ).strip()
         allowed_test_names = pytestconfig.getoption("--test-name")
+        device_replace_disabled = bool(
+            pytestconfig.getoption("--no-device-replace", default=False)
+        )
 
         method_name = self._testMethodName
 
@@ -185,7 +188,9 @@ class TestSpyreModelOps(PrivateUse1TestBase):
         description = case.get("description")
 
         # Build CPU args ONCE, then copy to Spyre (identical values)
-        cpu_sample = make_SampleInput(case, seed, dtype)
+        cpu_sample = make_SampleInput(
+            case, seed, dtype, None if device_replace_disabled else test_device
+        )
 
         def to_spyre(arg):
             if isinstance(arg, list):

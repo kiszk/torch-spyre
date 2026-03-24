@@ -256,7 +256,9 @@ def parse_dtype(spec) -> torch.dtype:
     )
 
 
-def make_SampleInput(case: Dict[str, Any], seed, dtype: torch.dtype) -> SampleInput:
+def make_SampleInput(
+    case: Dict[str, Any], seed, dtype: torch.dtype, test_device: torch.device
+) -> SampleInput:
     dtype_str = str(dtype)
     cpu_args = []
     for i, inp in enumerate(case.get("inputs", [])):
@@ -302,6 +304,9 @@ def make_SampleInput(case: Dict[str, Any], seed, dtype: torch.dtype) -> SampleIn
                     value = ast.literal_eval(value)
                 except (ValueError, SyntaxError):
                     pass
+            if test_device is not None and key == "device":
+                if "cuda" in value:
+                    value = test_device
         attrs[key] = value
 
     args = tuple(cpu_args[1:]) if len(cpu_args) > 1 else None
