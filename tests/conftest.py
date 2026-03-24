@@ -204,7 +204,12 @@ def pytest_addoption(parser):
     parser.addoption(
         "--no-device-replace",
         action="store_true",
-        help="Disable cuda device replacement in kwargs.",
+        help="Disable cuda device replacement in kwargs or tensor.to().",
+    )
+    parser.addoption(
+        "--force-test-tensors-cpu",
+        action="store_false",
+        help="Force to test operations with tensors on cpu.",
     )
 
     # NEW: inventory modes
