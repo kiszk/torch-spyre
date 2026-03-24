@@ -410,6 +410,8 @@ OP_REGISTRY: Dict[str, OpAdapter] = {
     # Sort / Topk
     "torch.sort": OpAdapter("torch.sort", torch.sort),
     "torch.topk": OpAdapter("torch.topk", torch.topk),
+    # normalization
+    "torch.rms_norm": OpAdapter("torch.rms_norm", torch.rms_norm),
     # NNs / functionals (use F.* where appropriate)
     "torch.nn.functional.dropout": OpAdapter(
         "torch.nn.functional.dropout", torch.nn.functional.dropout, pre=_dropout_pre
