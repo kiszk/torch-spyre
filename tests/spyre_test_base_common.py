@@ -37,19 +37,18 @@ from spyre_test_matching import (
 )
 from spyre_test_parsing import (
     FileEntry,
-    SpyreTestConfig,
     apply_op_config_overrides,
     load_yaml_config,
     resolve_current_file,
 )
 
 from spyre_upstream_patcher import (
-    _SpyreDtypePatcher,
-    _SpyreOnlyOnPatcher,
-    _SpyreOpListPatcher,
-    _SpyreOpDtypeExpander,
+    _OOTDtypePatcher,
+    _OOTOnlyOnPatcher,
+    _OOTOpDtypeExpander,
+    _OOTOpListPatcher,
 )
-from spyre_test_config_models import SupportedOpConfig, TestEntry
+from spyre_test_config_models import OOTTestConfig, SupportedOpConfig, TestEntry
 
 
 # Resolve the actual backend name registered for privateuse1.
@@ -73,7 +72,7 @@ def remove_builtin_privateuse1_test_base():
     """
     Remove built-in PrivateUse1TestBase from device_type_test_bases.
 
-    This ensures only SpyreTestBase handles the privateuse1 device type,
+    This ensures only TorchTestBase handles the privateuse1 device type,
     preventing nondeterministic overwrites when list(set(...)) randomizes order.
 
     Side effect: Modifies the global device_type_test_bases list in-place.
@@ -136,16 +135,16 @@ def _extract_op_name_from_method(
 
 
 # ---------------------------------------------------------------------------
-# SpyreTestBase
+# TorchTestBase
 # ---------------------------------------------------------------------------
 
 
 # PrivateUse1TestBase injected via globals() by runpy
-class SpyreTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa: F821
-    """Base class for all Spyre PyTorch test overrides.
+class TorchTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa: F821
+    """Base class for OOT Device PyTorch test overrides.
 
     All configuration is loaded lazily from the YAML file pointed to by
-    SPYRE_PYTORCH_TEST_CONFIG.  The YAML is validated by Pydantic on load.
+    PYTORCH_TEST_CONFIG.  The YAML is validated by Pydantic on load.
     See spyre_test_config_schema.json for the full schema.
     """
 
@@ -157,6 +156,19 @@ class SpyreTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa:
     SUPPORTED_OPS_CONFIG: Dict[str, "SupportedOpConfig"] = {}  # {op_name -> config}
     GLOBAL_SUPPORTED_DTYPES: Optional[Set[torch.dtype]] = None  # None = no filtering
 
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        # PrivateUse1TestBase.setUpClass sets cls.device_type = "spyre"
+        # (the registered backend name). This mutates the base class's
+        # device_type, causing subsequent instantiate_device_type_tests calls
+        # to generate class names like TestOldViewOpsSPYRE instead of
+        # TestOldViewOpsPRIVATEUSE1, which then get filtered out by
+        # PYTORCH_TESTING_DEVICE_ONLY_FOR=privateuse1.
+        # Reset TorchTestBase.device_type to "privateuse1" so subsequent
+        # calls generate the correct class name.
+        TorchTestBase.device_type = "privateuse1"
+
     # ------------------------------------------------------------------
     # Config loading  (called once per test run via instantiate_test)
     # ------------------------------------------------------------------
@@ -166,7 +178,7 @@ class SpyreTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa:
         if not path or getattr(cls, "_yaml_loaded", False):
             return
 
-        config: SpyreTestConfig = load_yaml_config(path)
+        config: OOTTestConfig = load_yaml_config(path)
 
         # global op filtering and overrides
         cls._supported_ops = config.global_config.resolved_supported_ops()
@@ -265,7 +277,7 @@ class SpyreTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa:
     # ------------------------------------------------------------------
     @classmethod
     def instantiate_test(cls, name, test, *, generic_cls=None):
-        _SpyreOnlyOnPatcher(test, _SPYRE_DEVICE_TYPE).patch()
+        _OOTOnlyOnPatcher(test, _SPYRE_DEVICE_TYPE).patch()
         cls._load_test_suite_config()
 
         # print tags to stderr
@@ -274,14 +286,14 @@ class SpyreTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa:
         if tags:
             os.write(
                 2,
-                f"[SpyreTestBase] {generic_cls.__name__}::{name} "
+                f"[OOTDeviceTestBase] {generic_cls.__name__}::{name} "
                 f"tags: [{', '.join(tags)}]\n".encode(),
             )
 
         # op list filtering
         supported_ops = cls._get_supported_ops()
         if supported_ops is not None:
-            _SpyreOpListPatcher(test, supported_ops).patch()
+            _OOTOpListPatcher(test, supported_ops).patch()
 
         op_level_dtypes: Set[torch.dtype] = set()
         if cls.SUPPORTED_OPS_CONFIG:
@@ -302,13 +314,13 @@ class SpyreTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa:
                             op_level_dtypes |= resolved
 
         if op_level_dtypes:
-            _SpyreDtypePatcher(test, op_level_dtypes).patch()
+            _OOTDtypePatcher(test, op_level_dtypes).patch()
 
         if entry is not None:
             extra_dtypes = entry.edits.dtypes.resolved_include()
             if extra_dtypes:
-                _SpyreDtypePatcher(test, extra_dtypes).patch()
-                _SpyreOpDtypeExpander(test, extra_dtypes).patch()
+                _OOTDtypePatcher(test, extra_dtypes).patch()
+                _OOTOpDtypeExpander(test, extra_dtypes).patch()
 
         existing_methods = set(cls.__dict__.keys())
         super().instantiate_test(name, test, generic_cls=generic_cls)
@@ -350,4 +362,4 @@ class SpyreTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa:
                     )
 
 
-TEST_CLASS = SpyreTestBase
+TEST_CLASS = TorchTestBase

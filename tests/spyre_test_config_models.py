@@ -1,5 +1,5 @@
 """
-Pydantic models for the Spyre PyTorch test framework YAML config.
+Pydantic models for the OOT PyTorch test framework YAML config.
 
 Used by spyre_test_parsing.py to validate and parse the YAML config.
 """
@@ -306,7 +306,7 @@ class TestsBlock(BaseModel):
         return values
 
 
-class SpyreTestConfig(BaseModel):
+class OOTTestConfig(BaseModel):
     test_suite_config: TestsBlock
 
     @property

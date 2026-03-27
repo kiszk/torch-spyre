@@ -127,4 +127,4 @@ Potential enhancements to work division code generation include:
 ## See Also
 
 - [Work Division Planning](work_division_planning.md) - How parallelization plans are created
-- [Tensor Layouts](tensor_layouts.md) - Understanding device layouts and dimensions
+- [Tensor Layouts](../user_guide/tensors_and_layouts.md) - Understanding device layouts and dimensions

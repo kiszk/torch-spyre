@@ -306,11 +306,6 @@ def register_spyre_decompositions_via_dispatchkey(
     return decomposition_decorator
 
 
-@register_spyre_decomposition([torch.ops.spyre.compact])
-def compact_decomp(x: torch.Tensor) -> torch.Tensor:
-    return torch.ops.spyre.slice(torch.ops.spyre.swap(x))
-
-
 # TODO (imaihal): Inductor applies constant folding to torch.full, which allocates
 # a one-element Spyre tensor. This currently fails because Spyre does not handle
 # single-element tensors well.
@@ -458,16 +453,13 @@ def spyre_rms_norm(
             f"got device={input.device.type}, normalized_shape={normalized_shape}"
         )
 
-    # TODO: limitation with mean on dim=-1, transpose for now to avoid
-    # https://github.com/torch-spyre/torch-spyre/issues/632
-    input = input.transpose(-1, -2).contiguous()
     eps_tensor = torch.ops.spyre.full(
         input.shape, eps, dtype=torch.float16, device="spyre"
     )
     rsqrt_inp = (
-        torch.rsqrt(torch.mean(input * input, dim=-2, keepdim=True)) + eps_tensor
+        torch.rsqrt(torch.mean(input * input, dim=-1, keepdim=True)) + eps_tensor
     )
-    output = (input * rsqrt_inp).transpose(-1, -2).contiguous()
+    output = input * rsqrt_inp
     if weight is not None:
         output = output * weight
     return output

@@ -23,7 +23,7 @@ from typing import Set
 import torch
 
 
-class _SpyreOnlyOnPatcher:
+class _OOTOnlyOnPatcher:
     """Patches @onlyOn decorated test methods to also allow privateuse1.
 
     The already-produced only_fn wrapper closes over the onlyOn instance.
@@ -105,7 +105,7 @@ class _SpyreOnlyOnPatcher:
 # ---------------------------------------------------------------------------
 
 
-class _SpyreDtypePatcher:
+class _OOTDtypePatcher:
     """Patches @ops allowed_dtypes on a bound test method before instantiation.
 
     Needed because upstream @ops(..., allowed_dtypes=(...)) restricts which dtype
@@ -151,7 +151,7 @@ class _SpyreDtypePatcher:
             self._ops_instance.allowed_dtypes |= self._extra_dtypes
 
 
-class _SpyreOpListPatcher:
+class _OOTOpListPatcher:
     """Filters @ops.op_list to supported_ops before super().instantiate_test() runs.
 
     @ops stores its op list as self.op_list = list(op_list) at decoration
@@ -216,7 +216,7 @@ class _SpyreOpListPatcher:
         self._ops_instance.op_list[:] = filtered
 
 
-class _SpyreOpDtypeExpander:
+class _OOTOpDtypeExpander:
     """Expands op.dtypes on each OpInfo in @ops.op_list to include extra dtypes.
 
     _parametrize_test computes test variants as:

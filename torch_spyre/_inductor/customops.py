@@ -19,49 +19,6 @@ from torch_spyre.ops.fallbacks import warn_fallback
 from .errors import Unsupported
 
 
-@torch.library.custom_op("spyre::compact", mutates_args=())
-def compact(input: torch.Tensor) -> torch.Tensor:
-    if len(input.size()) != 1:
-        raise Unsupported("compact not implemented for 1-D tensors")
-    return input.clone()
-
-
-@compact.register_fake
-def _(input):
-    if len(input.size()) != 1:
-        raise Unsupported("compact only implemented for 1-D tensors")
-    return input.new_empty(input.size())
-
-
-@torch.library.custom_op("spyre::swap", mutates_args=(), device_types="spyre")
-def swap(input: torch.Tensor) -> torch.Tensor:
-    if len(input.size()) != 1:
-        raise Unsupported("swap only implemented for 1-D tensors")
-    return input.new_empty_strided(input.size(), [64])
-
-
-@swap.register_fake
-def _(input):
-    if len(input.size()) != 1:
-        raise Unsupported("swap only implemented for 1-D tensors")
-    return input.new_empty_strided(input.size(), [64])
-
-
-@torch.library.custom_op("spyre::slice", mutates_args=(), device_types="spyre")
-def slice(input: torch.Tensor) -> torch.Tensor:
-    if len(input.size()) != 1:
-        raise Unsupported("slice only implemented for 1-D tensors")
-    output = input.new_empty(input.size())
-    return output
-
-
-@slice.register_fake
-def _(input):
-    if len(input.size()) != 1:
-        raise Unsupported("slice only implemented for 1-D tensors")
-    return input.new_empty(input.size())
-
-
 @torch.library.custom_op("spyre::softplus", mutates_args=(), device_types="spyre")
 def softplus(
     input: torch.Tensor, beta: float = 1.0, threshold: float = 20.0

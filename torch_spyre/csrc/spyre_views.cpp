@@ -27,7 +27,6 @@
 #include <torch/library.h>
 #include <util/sen_data_convert.h>
 
-#include <cassert>
 #include <cstddef>
 #include <set>
 #include <vector>

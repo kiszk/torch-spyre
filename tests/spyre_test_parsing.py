@@ -1,8 +1,8 @@
 """
-YAML config parsing and op_db filtering for the Spyre PyTorch test framework.
+YAML config parsing and op_db filtering for the OOT PyTorch test framework.
 
 Responsibilities:
-  - load_yaml_config: read YAML and return validated SpyreTestConfig
+  - load_yaml_config: read YAML and return validated OOTTestConfig
   - resolve_rel_path: expand ${PYTORCH} / ${TORCH_SPYRE} tokens
   - resolve_current_file: match a YAML file entry against cwd
   - filter_op_db: monkey-patch pytorch op_db lists to supported_ops subset
@@ -17,7 +17,7 @@ from typing import Dict, Optional
 import yaml
 
 from spyre_test_constants import REL_PATH_TOKENS
-from spyre_test_config_models import FileEntry, SpyreTestConfig, SupportedOpConfig
+from spyre_test_config_models import FileEntry, OOTTestConfig, SupportedOpConfig
 
 
 # ---------------------------------------------------------------------------
@@ -25,8 +25,8 @@ from spyre_test_config_models import FileEntry, SpyreTestConfig, SupportedOpConf
 # ---------------------------------------------------------------------------
 
 
-def load_yaml_config(path: str) -> SpyreTestConfig:
-    """Load YAML and return a validated SpyreTestConfig.
+def load_yaml_config(path: str) -> OOTTestConfig:
+    """Load YAML and return a validated OOTTestConfig.
 
     Pydantic validates structure, field types, dtype strings, mode values,
     and test id format automatically.
@@ -37,12 +37,12 @@ def load_yaml_config(path: str) -> SpyreTestConfig:
     """
     config_path = Path(path)
     if not config_path.exists():
-        raise FileNotFoundError(f"Spyre config file not found: {config_path}")
+        raise FileNotFoundError(f"OOT test config file not found: {config_path}")
 
     with open(config_path) as f:
         raw = yaml.safe_load(f) or {}
 
-    return SpyreTestConfig.model_validate(raw)
+    return OOTTestConfig.model_validate(raw)
 
 
 # ---------------------------------------------------------------------------
@@ -77,7 +77,7 @@ def _debug(msg: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def resolve_current_file(config: SpyreTestConfig, config_path: str) -> FileEntry:
+def resolve_current_file(config: OOTTestConfig, config_path: str) -> FileEntry:
     """Match a YAML file entry against the file pytest is currently running.
 
     Searches sys.argv[1:] (skipping the pytest runner at argv[0]) for a .py
@@ -141,7 +141,7 @@ def apply_op_config_overrides(
     was copied at decoration time.
 
     Op filtering for test generation is handled separately by
-    _SpyreOpListPatcher -- this function only handles attribute overrides.
+    _OOTOpListPatcher -- this function only handles attribute overrides.
 
     Precision is now per (op, dtype) rather than per op. Since OpInfo stores
     a single atol/rtol, we apply the precision from the first dtype entry
