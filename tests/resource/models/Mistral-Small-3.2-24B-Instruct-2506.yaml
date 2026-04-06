@@ -384,15 +384,15 @@ cases:
   - name: torch.cat.1
     op: torch.cat
     inputs:
-      - tensor:
-          shape: [1064]
-          stride: [1]
-          storage_offset: 0
-          dtype: torch.int64
-          device: cpu
-          init: randint
-          init_args:
-            high: 1000
+      - tensor_list:
+          - shape: [1064]
+            stride: [1]
+            storage_offset: 0
+            dtype: torch.int64
+            device: cpu
+            init: randint
+            init_args:
+              high: 1000
     description: 'site-packages/transformers/models/pixtral/modeling_pixtral.py:45 in position_ids_in_meshgrid, code: return torch.cat(positions)'
     marks: tensorsoncpu
   - name: torch.getitem.4
@@ -1182,13 +1182,13 @@ cases:
   - name: torch.cat.3
     op: torch.cat
     inputs:
-      - tensor:
-          shape: [266, 5120]
-          stride: [5120, 1]
-          storage_offset: 0
-          dtype: torch.bfloat16
-          device: cuda:0
-          init: rand
+      - tensor_list:
+          - shape: [266, 5120]
+            stride: [5120, 1]
+            storage_offset: 0
+            dtype: torch.bfloat16
+            device: cuda:0
+            init: rand
     description: ''
     marks:
       - bf16operation

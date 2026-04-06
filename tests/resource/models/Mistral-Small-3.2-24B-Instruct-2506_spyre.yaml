@@ -354,7 +354,7 @@ cases:
   - name: torch.cat.1_spyre
     op: torch.cat
     inputs:
-      - tensor:
+      - tensor_list:
           - shape: [1064]
             stride: [1]
             storage_offset: 0
@@ -1099,13 +1099,13 @@ cases:
   - name: torch.cat.3_spyre
     op: torch.cat
     inputs:
-      - tensor:
-          shape: [266, 5120]
-          stride: [5120, 1]
-          storage_offset: 0
-          dtype: torch.float16
-          device: cuda:0
-          init: rand
+      - tensor_list:
+          - shape: [266, 5120]
+            stride: [5120, 1]
+            storage_offset: 0
+            dtype: torch.float16
+            device: cuda:0
+            init: rand
     description: ''
     marks: constant
     kwmap:
