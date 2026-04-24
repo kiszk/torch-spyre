@@ -109,7 +109,7 @@ def _build_model_ops_db() -> List[ModelOpInfo]:
     seen: Set[str] = set()
 
     for idx, ops_item in enumerate(test_entry.edits.ops.include):
-        op_name = ops_item.name
+        op_name = ops_item.effective_name()
         if op_name not in OP_REGISTRY:
             import warnings
 
@@ -117,9 +117,17 @@ def _build_model_ops_db() -> List[ModelOpInfo]:
             continue
 
         safe_op = op_name.replace(".", "_")
-        unique_name = f"{safe_op}__{idx}"
 
-        assert unique_name not in seen, f"Duplicate model_ops_db key: {unique_name}"
+        # if test_name entry exists, do not append __idx suffix
+        if ops_item.test_name is not None:
+            unique_name = safe_op
+        else:
+            unique_name = f"{safe_op}__{idx}"
+
+        assert unique_name not in seen, (
+            f"Duplicate model_ops_db key: {unique_name}"
+            f"{' (from test_name)' if ops_item.test_name else ''}"
+        )
         seen.add(unique_name)
 
         db.append(

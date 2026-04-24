@@ -712,9 +712,14 @@ class OpsNamedItem(BaseModel):
     """A named item in an include list in an op"""
 
     name: str
+    test_name: Optional[str] = None
     description: Optional[str] = None
     tags: List[str] = []  # optional per-op tags
     sample_inputs_func: InputsEdits = InputsEdits()
+
+    def effective_name(self) -> str:
+        """Return test_name if exist, otherwise return name"""
+        return self.test_name if self.test_name is not None else self.name
 
     def build_sample_input(
         self,
@@ -730,7 +735,7 @@ class OpsNamedItem(BaseModel):
         """
         cpu_args = self.sample_inputs_func.build_cpu_args(
             seed=seed,
-            op_name=self.name,
+            op_name=self.effective_name(),
             test_device=test_device,
         )
         resolved_kw = self.sample_inputs_func.resolved_kwargs(test_device=test_device)
