@@ -718,8 +718,15 @@ class OpsNamedItem(BaseModel):
     sample_inputs_func: InputsEdits = InputsEdits()
 
     def effective_name(self) -> str:
-        """Return test_name if exist, otherwise return name"""
-        return self.test_name if self.test_name is not None else self.name
+        """Return the effective operation name for test execution.
+
+        Returns test_name if specified and non-empty, otherwise returns name.
+        This allows custom test naming without modifying the operation registry lookup.
+
+        Returns:
+            str: The effective name to use for test execution and naming.
+        """
+        return self.test_name if self.test_name else self.name
 
     def build_sample_input(
         self,
