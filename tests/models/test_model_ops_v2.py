@@ -109,14 +109,15 @@ def _build_model_ops_db() -> List[ModelOpInfo]:
     seen: Set[str] = set()
 
     for idx, ops_item in enumerate(test_entry.edits.ops.include):
-        op_name = ops_item.effective_name()
+        op_name = ops_item.name
         if op_name not in OP_REGISTRY:
             import warnings
 
             warnings.warn(f"test_model_ops: {op_name!r} not in OP_REGISTRY — skipping")
             continue
 
-        safe_op = op_name.replace(".", "_")
+        effective_name = ops_item.effective_name()
+        safe_op = effective_name.replace(".", "_")
 
         # if test_name entry exists, do not append __idx suffix
         if ops_item.test_name is not None:
