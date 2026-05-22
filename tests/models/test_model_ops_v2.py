@@ -15,7 +15,7 @@
 
 import os
 import sys
-from typing import Any, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
 import regex as re
 import torch
@@ -155,11 +155,16 @@ def _build_model_ops_db() -> List[ModelOpInfo]:
                     seed=seed,
                 )
             )
+            model_ops_entry_by_unique_name[unique_name] = test_entry
 
     return db
 
 
 model_ops_db: List[ModelOpInfo] = []
+# unique_name (e.g. "torch_add__2") -> originating TestEntry. Used by the
+# variant resolver in spyre_test_base_common; dtype heuristics alone can
+# pick the wrong entry when merged YAML configs overlap in dtypes.
+model_ops_entry_by_unique_name: Dict[str, TestEntry] = {}
 
 
 def _init_model_ops_db() -> None:
