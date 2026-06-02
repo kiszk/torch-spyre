@@ -134,7 +134,7 @@ class TestSpyreModelOps(TestCase):
             pytestconfig.getoption("--no-device-replace", default=False)
         )
         no_test_tensors_cpu = bool(
-            pytestconfig.getoption("--force-test-tensors-cpu", default=True)
+            pytestconfig.getoption("--include-cpu-tensor-tests", default=True)
         )
 
         method_name = self._testMethodName
