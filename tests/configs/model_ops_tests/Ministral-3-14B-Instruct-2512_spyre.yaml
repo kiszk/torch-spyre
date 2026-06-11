@@ -73,7 +73,7 @@ test_suite_config:
       seed: 123
   files:
     - path: ${TORCH_DEVICE_ROOT}/tests/models/test_model_ops_v2.py
-      unlisted_test_mode: xfail
+      unlisted_test_mode: skip
       tests:
         - names:
             - TestSpyreModelOps::test_model_ops_db
