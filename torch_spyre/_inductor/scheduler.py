@@ -40,44 +40,12 @@ from .op_spec import LoopSpec
 logger = get_inductor_logger("scheduler")
 
 
-def _find_leaf_sched_node(node: BaseSchedulerNode):
-    """Recursively find the first leaf SchedulerNode inside a (possibly nested) node."""
-    for snode in node.get_nodes():
-        if isinstance(snode, SchedulerNode):
-            return snode
-        result = _find_leaf_sched_node(snode)
-        if result is not None:
-            return result
-    return None
-
-
-def _tiled_syms_for_sched_node_at_depth(sched_node: SchedulerNode, depth: int) -> list:
-    """Return the OpSpec iteration-space symbols tiled at ``depth``.
-
-    Uses ``loop_tiled_dims[depth]`` from the IR node and the SchedulerNode's
-    ``iteration_space`` (which produces the same symbols as ``create_op_spec``
-    uses to build ``OpSpec.tiled_symbols``).
-    """
-    ir_op = sched_node.node
-    if ir_op is None:
-        return []
-    raw = getattr(ir_op, "loop_tiled_dims", None)
-    if raw is None or not raw:
-        return []
-    dims_per_level: list = raw if isinstance(raw[0], list) else [raw]
-    if depth >= len(dims_per_level):
-        return []
-    it_space = iteration_space(sched_node)
-    keys = list(it_space.keys())
-    return [keys[d] for d in dims_per_level[depth] if d < len(keys)]
-
-
 class CountedLoopSchedulerNode(FusedSchedulerNode):
     """A group of SchedulerNodes to be executed inside a counted outer loop.
 
     Produced by build_loop_scheduler_nodes from SchedulerNodes whose
-    underlying ir.Operation has been stamped with loop_group_id and
-    loop_count attributes by the coarse-tiling IR pass.
+    underlying ir.Operation has been stamped with a ``loop_info``
+    (``CoarseTileInfo``) attribute by the coarse-tiling IR pass.
 
     loop_count is the trip count of the loop that directly contains this
     group's operations.  For nested loops, the snodes may themselves
@@ -122,9 +90,9 @@ def _loop_group_id(node: BaseSchedulerNode):
     """Return the loop_group_id of the ir.Operation inside node, or None."""
     for snode in node.get_nodes():
         if isinstance(snode, SchedulerNode) and snode.node is not None:
-            gid = getattr(snode.node, "loop_group_id", None)
-            if gid is not None:
-                return gid
+            loop_info = getattr(snode.node, "loop_info", None)
+            if loop_info is not None:
+                return loop_info.loop_group_id
     return None
 
 
@@ -141,10 +109,10 @@ def _loop_count(node: BaseSchedulerNode, depth: int) -> sympy.Expr:
     """
     for snode in node.get_nodes():
         if isinstance(snode, SchedulerNode) and snode.node is not None:
-            raw = getattr(snode.node, "loop_count", None)
-            if raw is not None:
-                counts: list = raw if isinstance(raw, list) else [raw]
-                gid = getattr(snode.node, "loop_group_id", ())
+            loop_info = getattr(snode.node, "loop_info", None)
+            if loop_info is not None:
+                counts: list = loop_info.loop_count
+                gid = loop_info.loop_group_id
                 # coarse_tile stamps one count per nesting level, so
                 # len(counts) == len(gid) always holds.
                 assert len(counts) == len(gid), (
@@ -206,10 +174,10 @@ def _build_loop_group(
 def build_loop_scheduler_nodes(
     nodes: list[BaseSchedulerNode],
 ) -> list[BaseSchedulerNode]:
-    """Post-fusion pass: wrap loop-group SchedulerNodes into CountedLoopSchedulerNodes.
+    """Pre-fusion pass: wrap loop-group SchedulerNodes into CountedLoopSchedulerNodes.
 
-    Reads loop_group_id and loop_count attributes stamped on ir.Operation
-    objects by the coarse-tiling IR pass.  Nodes without these attributes
+    Reads the ``loop_info`` (``CoarseTileInfo``) attribute stamped on
+    ir.Operation objects by the coarse-tiling IR pass.  Nodes without these attributes
     are passed through unchanged.
 
     loop_group_id is a tuple of ints encoding the nesting path, e.g.
@@ -218,9 +186,11 @@ def build_loop_scheduler_nodes(
     a data-flow dependency crossing the group boundary, which is a bug in
     the tiling pass.
 
-    This pass runs before spyre_fuse_nodes so that CountedLoopSchedulerNodes
-    are already formed before fusion; CountedLoopSchedulerNode.can_fuse returns
-    False, which prevents the loop groups from being merged by the fusion pass.
+    Running before Inductor's fusion pass ensures CountedLoopSchedulerNodes are
+    visible to SuperDSCScheduling.can_fuse_vertical/horizontal (which return False),
+    so loop groups survive Inductor fusion intact.  spyre_fuse_nodes is separately
+    protected because it only fuses plain SchedulerNodes (isinstance check), causing
+    CountedLoopSchedulerNodes to force a bundle boundary.
     """
     result = _build_loop_group(nodes, depth=0)
 
@@ -385,19 +355,7 @@ class SuperDSCScheduling(BaseScheduling):
                         ]
                         snode.codegen(index_vars)
 
-        # Compute per-level tiled symbols for the outer (depth=0) LoopSpec.
-        # Find a leaf SchedulerNode to read loop_tiled_dims + iteration_space.
-        outer_tiled_syms: list = []
-        for inner in inner_nodes:
-            ref = _find_leaf_sched_node(inner)
-            if ref is not None:
-                outer_tiled_syms = _tiled_syms_for_sched_node_at_depth(ref, 0)
-                break
-
-        kernel.wrap_op_specs_in_loop(
-            node.loop_count,
-            tiled_symbols=outer_tiled_syms,
-        )
+        kernel.wrap_op_specs_in_loop(node.loop_count)
 
         with V.set_kernel_handler(kernel):
             src_code = kernel.codegen_kernel()
@@ -452,24 +410,10 @@ class SuperDSCScheduling(BaseScheduling):
                     ]
                     snode.codegen(index_vars)
 
-        # Determine this level's tiled symbols using the IR's loop_tiled_dims[depth].
-        ref_sched_node = _find_leaf_sched_node(node)
-        level_syms = (
-            _tiled_syms_for_sched_node_at_depth(ref_sched_node, depth)
-            if ref_sched_node is not None
-            else []
-        )
-
         # Wrap only the newly-added op_specs entries in this inner LoopSpec.
         body = kernel.op_specs[body_start:]
         kernel.op_specs = kernel.op_specs[:body_start]
-        kernel.op_specs.append(
-            LoopSpec(
-                count=node.loop_count,
-                body=body,
-                tiled_symbols=level_syms,
-            )
-        )
+        kernel.op_specs.append(LoopSpec(count=node.loop_count, body=body))
 
     def define_kernel(self, src_code, node_schedule, kernel):
         """

@@ -27,27 +27,33 @@ from torch._inductor.codegen.common import (
 )
 from torch_spyre._inductor.dtype_ops import DtypeOpTable
 from torch._inductor.ops_handler import DefaultHandler, StoreMode
-from torch._inductor.utils import IndentedBuffer, sympy_subs
+from torch._inductor.utils import IndentedBuffer, sympy_index_symbol, sympy_subs
 from torch._inductor.virtualized import V
 
 from .constants import (
     SPYRE_FP32_OPS,
     BATCH_MATMUL_OP,
+    BATCH_MATMUL_FP8_OP,
     IDENTITY_OP,
     RESTICKIFY_OP,
     SEGMENT_OFFSETS,
+    SHARED_WEIGHT_UNIT_BMM_INFO_KEY,
 )
 from .errors import Unsupported
 from .ir import FixedTiledLayout
 from .pass_utils import (
     concretize_expr,
     concretize_index,
+    compute_symbolic_bounds,
+    finite_upper_or_none,
     apply_splits_from_index_coeff,
     iteration_space,
+    indirect_access_subs_from_kernel,
 )
 from .views import compute_coordinates, align_tensors
 from .logging_utils import get_inductor_logger
 from .op_spec import (
+    IndirectAccess,
     LoopSpec,
     OpSpec,
     TensorArg,
@@ -69,6 +75,70 @@ class TensorAccess(RValue):
     name: str
     index: sympy.Expr
     layout: FixedTiledLayout
+
+
+def _preserve_shared_weight_unit_bmm_dim(
+    op: str,
+    it_space: dict[sympy.Symbol, tuple[sympy.Expr, int]],
+    args: Sequence[TensorArg],
+    op_info: dict[str, Any],
+) -> dict[sympy.Symbol, tuple[sympy.Expr, int]]:
+    # TensorArg layout is normalized in-place below to match the surrounding
+    # OpSpec construction helpers.
+    if SHARED_WEIGHT_UNIT_BMM_INFO_KEY not in op_info:
+        return it_space
+    if op not in [BATCH_MATMUL_OP, BATCH_MATMUL_FP8_OP]:
+        return it_space
+    if len(it_space) != 3 or len(args) < 3:
+        return it_space
+    info = op_info.get(SHARED_WEIGHT_UNIT_BMM_INFO_KEY)
+    if not isinstance(info, dict) or info.get("batch_dim") != 0:
+        return it_space
+
+    unit_sym = sympy.Symbol("_spyre_bmm_unit")
+    suffix = 0
+    while unit_sym in it_space:
+        suffix += 1
+        unit_sym = sympy.Symbol(f"_spyre_bmm_unit_{suffix}")
+
+    def _unit_indices(arg: TensorArg) -> list[int]:
+        return [
+            idx
+            for idx, (size, coord) in enumerate(
+                zip(arg.device_size[:-1], arg.device_coordinates[:-1])
+            )
+            if concretize_expr(size) == 1 and coord == 0
+        ]
+
+    target_args = (args[0], args[-1])
+    unit_idxs_by_arg = [_unit_indices(arg) for arg in target_args]
+
+    if all(len(unit_idxs) == 0 for unit_idxs in unit_idxs_by_arg):
+        for arg in target_args:
+            if len(arg.device_size) < 2:
+                return it_space
+            insert_at = len(arg.device_size) - 1
+            arg.device_size.insert(insert_at, 1)
+            arg.device_coordinates.insert(insert_at, sympy.S.Zero)
+        unit_idxs_by_arg = [_unit_indices(arg) for arg in target_args]
+
+    if not all(len(unit_idxs) == 1 for unit_idxs in unit_idxs_by_arg):
+        return it_space
+
+    rewrite_targets = [
+        (arg, unit_idxs[0]) for arg, unit_idxs in zip(target_args, unit_idxs_by_arg)
+    ]
+
+    for arg, unit_idx in rewrite_targets:
+        arg.device_coordinates[unit_idx] = unit_sym
+        nonstick = list(range(len(arg.device_size) - 1))
+        order = [unit_idx] + [i for i in reversed(nonstick) if i != unit_idx]
+        order.append(len(arg.device_size) - 1)
+        arg.device_size[:] = [arg.device_size[i] for i in order]
+        arg.device_coordinates[:] = [arg.device_coordinates[i] for i in order]
+
+    logger.info("Preserving shared-weight unit BMM dim %s", unit_sym)
+    return {unit_sym: (sympy.S.One, 1), **it_space}
 
 
 @dataclass
@@ -239,6 +309,10 @@ class SpyreOpFuncs:
         return PointwiseOp("reciprocal", [x])
 
     @staticmethod
+    def qfp8ch(x):
+        return PointwiseOp("qfp8ch", [x])
+
+    @staticmethod
     def relu(x):
         return PointwiseOp("relufwd", [x])
 
@@ -289,6 +363,10 @@ class SpyreOpFuncs:
     @staticmethod
     def truediv(a, b):
         return PointwiseOp("realdiv", [a, b])
+
+    @staticmethod
+    def silu(a):
+        return PointwiseOp("silu", [a])
 
     @staticmethod
     def where(x, y, z):
@@ -355,6 +433,21 @@ class SpyreKernelOpsHandler(DefaultHandler):
         else:
             return ReductionOp(reduction_type, [value])
 
+    def indirect_indexing(
+        self,
+        index_var: Any,
+        size: Any,
+        check: bool = True,
+        wrap_neg: bool = True,
+    ) -> sympy.Symbol:
+        if isinstance(index_var, TensorAccess):
+            sym = sympy_index_symbol(f"indirect{self.kernel._indirect_var_count}")
+            self.kernel._indirect_var_count += 1
+            self.kernel.indirect_vars[sym] = index_var
+            self.kernel.indirect_sizes[sym] = int(size)
+            return sym
+        return sympy_index_symbol(str(index_var))
+
     def scan(
         self,
         dtypes: tuple[torch.dtype, ...],
@@ -374,6 +467,14 @@ class SpyreKernel(Kernel[CSEVariable]):
         super().__init__()
         self.op_specs: list[OpSpec | UnimplementedOp | LoopSpec] = []
         self.spyre_kernel_args: list[Tuple[str, TensorArg]] = []
+        self.indirect_vars: dict[sympy.Symbol, TensorAccess] = {}
+        self.indirect_sizes: dict[sympy.Symbol, int] = {}
+        self._indirect_var_count: int = 0
+
+    def indirect_var_names(self) -> "frozenset[str] | None":
+        if not self.indirect_vars:
+            return None
+        return frozenset(t.name for t in self.indirect_vars.values())
 
     def __enter__(self) -> Self:
         super().__enter__()
@@ -383,7 +484,11 @@ class SpyreKernel(Kernel[CSEVariable]):
         return self
 
     def create_tensor_arg(
-        self, is_input: bool, name: str, tensor: TensorAccess
+        self,
+        is_input: bool,
+        name: str,
+        tensor: TensorAccess,
+        opspec_name: "str | None" = None,
     ) -> TensorArg:
         it_space = iteration_space(self.current_node)
         # With dynamic=True the host index may contain symbolic strides
@@ -396,6 +501,7 @@ class SpyreKernel(Kernel[CSEVariable]):
             tensor.layout.device_layout.stride_map,
             it_space,
             index,
+            self.indirect_sizes,
         )
         tensor_arg = TensorArg(
             is_input,
@@ -404,8 +510,8 @@ class SpyreKernel(Kernel[CSEVariable]):
             tensor.layout.device_layout.device_size,
             device_coords,
             tensor.layout.allocation,
-            stride_map=list(tensor.layout.device_layout.stride_map),
             per_tile_fixed=getattr(tensor.layout, "per_tile_fixed", False),
+            name=opspec_name,
         )
         if (
             "lx" not in tensor.layout.allocation
@@ -420,18 +526,26 @@ class SpyreKernel(Kernel[CSEVariable]):
         is_reduction: bool,
         args: Sequence[TensorArg],
         op_info: dict[str, Any],
+        indirect_var_names: "frozenset[str] | None" = None,
     ) -> OpSpec:
+        from torch_spyre._inductor.constants import SPYRE_FP8_OPS
+
         for arg in args:
-            if DtypeOpTable.is_dtype_op(op):
+            if _is_indirect_index_arg(arg, indirect_var_names):
                 continue
-            elif arg.device_dtype == DataFormats.IEEE_FP32 and op not in SPYRE_FP32_OPS:
+            # Check if operation supports the argument's dtype
+            if not (
+                op == IDENTITY_OP
+                or DtypeOpTable.is_dtype_op(op)
+                or (op in SPYRE_FP32_OPS and arg.device_dtype == DataFormats.IEEE_FP32)
+                or arg.device_dtype == DataFormats.SEN169_FP16
+                or (
+                    op in SPYRE_FP8_OPS
+                    and arg.device_dtype
+                    in [DataFormats.SEN143_FP8, DataFormats.SEN152_FP8]
+                )
+            ):
                 raise Unsupported(f"{op} on {arg.device_dtype}")
-            elif arg.device_dtype not in [
-                DataFormats.IEEE_FP32,
-                DataFormats.SEN169_FP16,
-                DataFormats.IEEE_INT32,
-            ]:
-                raise Unsupported(f"operation on {arg.device_dtype}")
 
         it_space = iteration_space(self.current_node)
 
@@ -450,22 +564,97 @@ class SpyreKernel(Kernel[CSEVariable]):
         it_space_extended = {
             k: (v, work_division.get(k, 1)) for k, v in it_space.items()
         }
+        it_space_extended = _preserve_shared_weight_unit_bmm_dim(
+            op, it_space_extended, args, op_info
+        )
 
-        # If this op is inside a coarse-tiling loop, identify which iteration-space
-        # symbols are tiled by the enclosing loop(s).  loop_tiled_dims on the IR
-        # node is either a flat list[int] (legacy single-level) or a
-        # list[list[int]] (nested multi-level, outermost first).  We flatten all
-        # levels so that tiled_symbols covers every loop variable from outermost
-        # to innermost — matching the loop_vars ordering in bundle.py _emit_specs.
-        raw_tiled_dims = getattr(ir_node, "loop_tiled_dims", [])
-        if raw_tiled_dims and not isinstance(raw_tiled_dims[0], list):
-            # Legacy flat list — wrap in a single-level list.
-            raw_tiled_dims = [raw_tiled_dims]
-        all_tiled_dims = [d for level in raw_tiled_dims for d in level]
+        # Build per-level tiled_symbols (innermost first) for this op.
+        # loop_tiled_dims / loop_tiled_reduction_dims are lists of per-level
+        # dim-index lists, outermost first — so we build outermost-first then
+        # reverse to get innermost-first for tiled_symbols storage.
+        #
+        # IMPORTANT: loop_tiled_dims stores *host-range* indices (indices into
+        # op.data.ranges), but the iteration space skips unit-size dims.  We
+        # must map host-range index → iteration-space key index before looking
+        # up symbols.
+        li = getattr(ir_node, "loop_info", None)
+        raw_tiled_dims: list[list[int]] = li.loop_tiled_dims if li is not None else []
+        raw_tiled_red_dims: list[list[int]] = (
+            li.loop_tiled_reduction_dims if li is not None else []
+        )
+        # CoarseTileInfo always constructs loop_tiled_dims and
+        # loop_tiled_reduction_dims with the same length (one sublist per
+        # nesting level), so max() is just a safety net; in practice both
+        # lists have the same length and the per-level loop below never
+        # silently drops an entry from the shorter one.
+        n_levels = max(len(raw_tiled_dims), len(raw_tiled_red_dims))
         it_space_keys = list(it_space.keys())
-        tiled_syms = [
-            it_space_keys[i] for i in all_tiled_dims if i < len(it_space_keys)
-        ]
+
+        # host_to_it and n_output_it_syms call int() on data.ranges entries,
+        # which throws on symbolic dimensions.  They are only needed when this
+        # op is inside a tiling loop, so skip the computation for non-tiled ops.
+        tiled_syms: list[list] = []
+        if n_levels > 0:
+            # Build host-range-index → iteration-space-key-index map by walking
+            # data.ranges and counting only non-unit entries.  loop_tiled_dims
+            # stores *host-range* indices which include unit-size dims that the
+            # iteration space skips; this mapping corrects for that.
+            host_to_it: dict[int, int] = {}
+            if hasattr(ir_node, "data") and hasattr(ir_node.data, "ranges"):
+                it_idx = 0
+                for host_idx, r in enumerate(ir_node.data.ranges):
+                    if int(r) != 1:
+                        host_to_it[host_idx] = it_idx
+                        it_idx += 1
+            else:
+                # Fallback: identity mapping (no unit-size dims to skip).
+                host_to_it = {i: i for i in range(len(it_space_keys))}
+
+            # For reduction dims: offset is the number of non-unit output-dim ranges.
+            n_output_it_syms = sum(
+                1
+                for r in (
+                    ir_node.data.ranges
+                    if hasattr(ir_node, "data") and hasattr(ir_node.data, "ranges")
+                    else []
+                )
+                if int(r) != 1
+            )
+
+            tiled_syms_per_level_outermost: list[list] = []
+            for lvl in range(n_levels):
+                level_syms: list = []
+                if lvl < len(raw_tiled_dims):
+                    for d in raw_tiled_dims[lvl]:
+                        mapped = host_to_it.get(d)
+                        if mapped is not None and mapped < len(it_space_keys):
+                            level_syms.append(it_space_keys[mapped])
+                if lvl < len(raw_tiled_red_dims):
+                    for r in raw_tiled_red_dims[lvl]:
+                        sym_idx = n_output_it_syms + r
+                        if sym_idx < len(it_space_keys):
+                            level_syms.append(it_space_keys[sym_idx])
+                tiled_syms_per_level_outermost.append(level_syms)
+            # Reverse so index 0 = innermost level.
+            tiled_syms = list(reversed(tiled_syms_per_level_outermost))
+
+        # Collect (max, granularity) bounds for any symbolic iteration-space
+        # dims. These are passed through OpSpec so SDSC codegen can emit
+        # symbolicDimInfo_ without needing the live ShapeEnv (which is gone
+        # during the codegen phase).
+        symbolic_dim_bounds: dict[str, tuple[int, int]] = {}
+        for _, (size_expr, _) in it_space_extended.items():
+            if not (hasattr(size_expr, "free_symbols") and size_expr.free_symbols):
+                continue
+            if finite_upper_or_none(size_expr) is None:
+                logger.debug(
+                    f"[work_division/symbolic] skipping auto-dynamic symbol "
+                    f"{size_expr}; use mark_dynamic(max=...) to enable symbolic planning"
+                )
+                continue
+            bounds = compute_symbolic_bounds(size_expr)
+            if bounds is not None:
+                symbolic_dim_bounds[str(size_expr)] = bounds
 
         return OpSpec(
             op,
@@ -474,6 +663,7 @@ class SpyreKernel(Kernel[CSEVariable]):
             args,
             op_info,
             tiled_symbols=tiled_syms,
+            symbolic_dim_bounds=symbolic_dim_bounds,
         )
 
     def remove_kernel_local_buffers(self) -> None:
@@ -490,6 +680,9 @@ class SpyreKernel(Kernel[CSEVariable]):
 
     def load(self, name: str, index: sympy.Expr):
         """Codegen a load from an InputBuffer"""
+        scheduler = getattr(V.graph, "scheduler", None)
+        if scheduler is not None:
+            name = scheduler.mutation_real_name.get(name, name)
         buf = V.graph.get_buffer(name)
         layout = buf.get_layout()
         if not isinstance(layout, FixedTiledLayout):
@@ -517,7 +710,11 @@ class SpyreKernel(Kernel[CSEVariable]):
         layout = buf.get_layout()
         if not isinstance(layout, FixedTiledLayout):
             raise Unsupported(f"{name} does not have FixedTiledLayout")
-        _ = self.args.output(name)
+        # Pool buffers are intermediates whose address is baked into the TensorArg
+        # allocation dict; registering them as outputs would overflow SEGMENT_OFFSETS.
+        # (lx buffers are already excluded from spyre_kernel_args in _tensor_arg.)
+        if "pool" not in layout.allocation:
+            _ = self.args.output(name)
         index = sympy_subs(index, V.graph.sizevars.precomputed_replacements)
         dst = TensorAccess(name, index, layout)
         real_dst_name = V.graph.scheduler.mutation_real_name.get(name, name)
@@ -537,6 +734,18 @@ class SpyreKernel(Kernel[CSEVariable]):
         elif isinstance(value, PointwiseOp):
             # Pointwise compute ops
             args: list[TensorArg] = []
+            indirect_syms = _indirect_syms_used(value, self.indirect_vars)
+            if indirect_syms:
+                args += [
+                    self.create_tensor_arg(
+                        True,
+                        idx_tensor.name,
+                        idx_tensor,
+                        opspec_name=idx_tensor.name,
+                    )
+                    for sym in sorted(indirect_syms, key=str)
+                    for idx_tensor in [self.indirect_vars[sym]]
+                ]
             for input in value.arguments:
                 if isinstance(input, TensorAccess):
                     args.append(self.create_tensor_arg(True, input.name, input))
@@ -544,15 +753,40 @@ class SpyreKernel(Kernel[CSEVariable]):
                     raise Unsupported(f"unexpected argument {input} to {value.op}")
             args.append(self.create_tensor_arg(False, real_dst_name, dst))
             op_info.update(value.op_info)
-            self.op_specs.append(self.create_op_spec(value.op, False, args, op_info))
+            self.op_specs.append(
+                self.create_op_spec(
+                    value.op, False, args, op_info, self.indirect_var_names()
+                )
+            )
         elif isinstance(value, TensorAccess):
-            # Reshapes, transposes, and other dataops
-            args = [
-                self.create_tensor_arg(True, value.name, value),
-                self.create_tensor_arg(False, real_dst_name, dst),
-            ]
-            in_coords = args[0].device_coordinates
-            out_coords = args[1].device_coordinates
+            # Reshapes, transposes, and other dataops.
+            if self.indirect_vars:
+                # Gather/scatter: coordinates are built with raw indirect symbols here;
+                # indirect_access_subs is applied later in codegen_kernel → simplify_op_spec.
+                # TODO: scatter codegen (IndirectAccess on output TensorArg → SuperDSC) not yet wired up.
+                args = [
+                    self.create_tensor_arg(
+                        True,
+                        idx_tensor.name,
+                        idx_tensor,
+                        opspec_name=idx_tensor.name,
+                    )
+                    for idx_tensor in sorted(
+                        self.indirect_vars.values(),
+                        key=lambda t: t.name,
+                    )
+                ]
+                args += [
+                    self.create_tensor_arg(True, value.name, value),
+                    self.create_tensor_arg(False, real_dst_name, dst),
+                ]
+            else:
+                args = [
+                    self.create_tensor_arg(True, value.name, value),
+                    self.create_tensor_arg(False, real_dst_name, dst),
+                ]
+            in_coords = args[-2].device_coordinates
+            out_coords = args[-1].device_coordinates
             if all(e == 0 for e in in_coords) and not all(e == 0 for e in out_coords):
                 # Broadcast: scalar input expanding to non-scalar output.
                 op = IDENTITY_OP
@@ -560,7 +794,9 @@ class SpyreKernel(Kernel[CSEVariable]):
                 op = RESTICKIFY_OP
             else:
                 op = IDENTITY_OP
-            op_spec = self.create_op_spec(op, False, args, op_info)
+            op_spec = self.create_op_spec(
+                op, False, args, op_info, self.indirect_var_names()
+            )
             self.op_specs.append(op_spec)
         else:
             raise Unsupported(f"store value of unexpected type {type(value)}")
@@ -573,7 +809,11 @@ class SpyreKernel(Kernel[CSEVariable]):
         layout = buf.get_layout()
         if not isinstance(layout, FixedTiledLayout):
             raise Unsupported(f"{name} does not have FixedTiledLayout")
-        _ = self.args.output(name)
+        # Pool buffers are intermediates whose address is baked into the TensorArg
+        # allocation dict; registering them as outputs would overflow SEGMENT_OFFSETS.
+        # (lx buffers are already excluded from spyre_kernel_args in _tensor_arg.)
+        if "pool" not in layout.allocation:
+            _ = self.args.output(name)
         index = sympy_subs(index, V.graph.sizevars.precomputed_replacements)
         dst = TensorAccess(name, index, layout)
         real_dst_name = V.graph.scheduler.mutation_real_name.get(name, name)
@@ -594,7 +834,7 @@ class SpyreKernel(Kernel[CSEVariable]):
                 f"device_size={list(layout.device_layout.device_size)}, op_info={op_info}"
             )
 
-        if value.op == BATCH_MATMUL_OP:
+        if value.op in [BATCH_MATMUL_OP, BATCH_MATMUL_FP8_OP]:
             if (
                 len(value.arguments) != 2
                 or (not isinstance(value.arguments[0], TensorAccess))
@@ -622,26 +862,26 @@ class SpyreKernel(Kernel[CSEVariable]):
             ]
             self.op_specs.append(self.create_op_spec(value.op, True, args, op_info))
 
-    def wrap_op_specs_in_loop(
-        self, count: sympy.Expr, tiled_symbols: list | None = None
-    ) -> None:
+    def wrap_op_specs_in_loop(self, count: sympy.Expr) -> None:
         """Replace the current op_specs list with a single LoopSpec of the given count."""
         body = self.op_specs
-        self.op_specs = [
-            LoopSpec(
-                count=count,
-                body=body,
-                tiled_symbols=tiled_symbols if tiled_symbols is not None else [],
-            )
-        ]
+        self.op_specs = [LoopSpec(count=count, body=body)]
 
     def codegen_kernel(self):
         """Codegen the body of this kernel by pretty printing its list of OpSpecs"""
 
+        indirect_access_subs = (
+            indirect_access_subs_from_kernel(self.indirect_vars)
+            if self.indirect_vars
+            else None
+        )
         for op_spec in _iter_op_specs(self.op_specs):
-            simplify_op_spec(op_spec)
+            simplify_op_spec(op_spec, self.indirect_sizes, indirect_access_subs)
 
         def sympy_str(x: sympy.Expr) -> str:
+            if isinstance(x, IndirectAccess):
+                name_sym = x.args[0]
+                return f"IndirectAccess('{name_sym}')"
             return "sympify('" + str(x) + "')"
 
         # Now that all loads/stores have been processed we know the final kernel_args and can map names to indices
@@ -679,6 +919,33 @@ class SpyreKernel(Kernel[CSEVariable]):
         wrapper.writeline(f"{name}.run({call_args_str})")
 
 
+def _indirect_syms_used(
+    value: "PointwiseOp", indirect_vars: "dict[sympy.Symbol, TensorAccess]"
+) -> "set[sympy.Symbol]":
+    """Return the subset of indirect_vars keys that appear in value's argument indices."""
+    return {
+        s
+        for inp in value.arguments
+        if isinstance(inp, TensorAccess)
+        for s in inp.index.free_symbols
+        if s in indirect_vars
+    }
+
+
+def _is_indirect_index_arg(
+    arg: TensorArg, indirect_var_names: "frozenset[str] | None"
+) -> bool:
+    """Return True if arg is an indirect index tensor (i.e. a gather index buffer).
+
+    Uses the kernel-level indirect_var_names set, which is populated before
+    create_op_spec is called and is always ground truth regardless of whether
+    IndirectAccess substitution has run.
+    """
+    return arg.name is not None and bool(
+        indirect_var_names and arg.name in indirect_var_names
+    )
+
+
 def _iter_op_specs(specs):
     """Yield every OpSpec in a (possibly nested) op-spec list, depth-first."""
     for item in specs:
@@ -701,12 +968,6 @@ def _codegen_op_spec_list(specs, buf: IndentedBuffer, sympy_str) -> None:
                 with buf.indent():
                     _codegen_op_spec_list(op_spec.body, buf, sympy_str)
                 buf.writeline("],")
-                if op_spec.tiled_symbols:
-                    buf.writeline(
-                        "tiled_symbols=["
-                        + ", ".join(sympy_str(s) for s in op_spec.tiled_symbols)
-                        + "],"
-                    )
             buf.writeline("),")
         elif isinstance(op_spec, (UnimplementedOp, OpSpecUnimplementedOp)):
             if logger.isEnabledFor(logging.DEBUG):
@@ -741,9 +1002,15 @@ def _codegen_op_spec_list(specs, buf: IndentedBuffer, sympy_str) -> None:
                 if op_spec.tiled_symbols:
                     buf.writeline(
                         "tiled_symbols=["
-                        + ", ".join(sympy_str(s) for s in op_spec.tiled_symbols)
+                        + ", ".join(
+                            "[" + ", ".join(sympy_str(s) for s in level) + "]"
+                            for level in op_spec.tiled_symbols
+                        )
                         + "],"
                     )
+                buf.writeline(
+                    f"symbolic_dim_bounds={_serialize_value(op_spec.symbolic_dim_bounds)},"
+                )
                 buf.writeline("args=[")
                 with buf.indent():
                     for arg in op_spec.args:
@@ -761,27 +1028,37 @@ def _codegen_op_spec_list(specs, buf: IndentedBuffer, sympy_str) -> None:
                                 + "],"
                             )
                             buf.writeline(f"allocation={arg.allocation!r},")
-                            if arg.stride_map is not None:
-                                buf.writeline(f"stride_map={arg.stride_map!r},")
                             if arg.per_tile_fixed:
                                 buf.writeline("per_tile_fixed=True,")
+                            if arg.name is not None:
+                                buf.writeline(f"name={arg.name!r},")
                         buf.writeline("),")
                 buf.writeline("]")
             buf.writeline("),")
 
 
-def simplify_op_spec(op_spec):
+def simplify_op_spec(op_spec, indirect_sizes=None, indirect_access_subs=None):
+    # Both parameters must be provided together for gather kernels — indirect_sizes
+    # decomposes symbols in align_tensors; indirect_access_subs replaces them with IndirectAccess.
+    it_space = op_spec.iteration_space
+
     new_op_space_splits, new_tensors = align_tensors(
-        op_spec.iteration_space,
+        it_space,
         [
-            {
-                "size": arg.device_size,
-                "coordinates": arg.device_coordinates,
-            }
+            {"size": arg.device_size, "coordinates": arg.device_coordinates}
             for arg in op_spec.args
         ],
+        indirect_sizes,
     )
     op_spec.iteration_space = new_op_space_splits
+
     for arg, t in zip(op_spec.args, new_tensors):
         arg.device_size = t["size"]
         arg.device_coordinates = t["coordinates"]
+
+        # Apply indirect_access_subs after align_tensors, so that indirect symbols
+        # are decomposed as regular variables before substitution.
+        if indirect_access_subs:
+            arg.device_coordinates = [
+                c.xreplace(indirect_access_subs) for c in arg.device_coordinates
+            ]
