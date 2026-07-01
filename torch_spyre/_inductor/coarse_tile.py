@@ -70,13 +70,19 @@ from torch.utils._ordered_set import OrderedSet
 from torch_spyre._C import SpyreTensorLayout
 
 from .constants import BATCH_MATMUL_OP
+from .errors import Unsupported
 from .logging_utils import get_inductor_logger
 from .loop_info import CoarseTileInfo
-from .propagate_hints import get_op_hints
+from .propagate_hints import DimHint
 from .pass_utils import op_out_coords
+from .span_overflow_hint_analysis import plan_span_overflow_tile
+from .ir import FixedTiledLayout
 
 logger = get_inductor_logger("coarse_tile")
 hints_logger = get_inductor_logger("assign_dim_hints")
+
+
+_SPAN_OVERFLOW_HINT_ID = 10000
 
 
 # ---------------------------------------------------------------------------
@@ -107,13 +113,23 @@ def _hints_levels(ops: list[Operation]) -> list[tuple]:
     Returns a list of (hint_id, count, is_reduction_level) triples, outermost
     first.  Previously this skipped is_reduction hints; it now includes them so
     that _stamp_group can divide reduction_ranges for reduction-dim tiling.
+    Hints with split_count == 1 are dropped: tiling by 1 is a no-op.
     """
     for op in ops:
-        levels = [
-            (h.hint_id, sympy.Integer(h.split_count), h.is_reduction)
-            for h in getattr(op, "dim_hints", [])
-            if h.loop_var is not None
-        ]
+        levels = []
+        for h in getattr(op, "dim_hints", []):
+            if h.loop_var is None:
+                continue
+            if h.split_count == 1:
+                hints_logger.debug(
+                    "spyre_hint on [%s]: hint_id=%d dims=%s split_count=1"
+                    " — tiling by 1 is a no-op, dropping",
+                    ", ".join(o.get_name() for o in ops),
+                    h.hint_id,
+                    h.dim_names,
+                )
+                continue
+            levels.append((h.hint_id, sympy.Integer(h.split_count), h.is_reduction))
         if levels:
             return levels
     return []
@@ -331,13 +347,21 @@ def hints_to_coarse_tile_groups(graph: GraphLowering) -> list[tuple]:
         # Pre-compute hint descriptions per group — get_op_hints is called once per
         # group rather than once per op in the group.
         group_hint_descs: dict[int, str] = {}
-        for g_idx, (group_ops, group_levels) in enumerate(groups):
-            spec_op = group_ops[0]
-            op_hints = get_op_hints(spec_op)
+        for g_idx, (group_ops, _group_levels) in enumerate(groups):
+            # Collect all DimHints across the group, keyed by hint_id.
+            # Prefer a hint whose loop_var is not None (op actually iterates
+            # that dim) over a broadcast hint (loop_var=None), so that the
+            # representative name/count reflects a real iteration.
+            best: dict[int, "DimHint"] = {}
+            for gop in group_ops:
+                for h in getattr(gop, "dim_hints", []):
+                    if h.hint_id not in best or best[h.hint_id].loop_var is None:
+                        best[h.hint_id] = h
             descs = [
-                f"hint_{hint_id}={op_hints[hint_id]}"
-                for hint_id, *_ in group_levels
-                if hint_id in op_hints
+                f"hint_{h.hint_id}={{'tiles': {{"
+                + ", ".join(f"'{n}': {h.split_count}" for n in h.dim_names)
+                + "}}"
+                for h in sorted(best.values(), key=lambda x: x.hint_id)
             ]
             group_hint_descs[g_idx] = ", ".join(descs)
 
@@ -385,6 +409,97 @@ def hints_to_coarse_tile_groups(graph: GraphLowering) -> list[tuple]:
         if pending_ungrouped:
             summary_lines.append(f"  ungrouped: [{', '.join(pending_ungrouped)}]")
         hints_logger.info("%s", "\n".join(summary_lines))
+
+    return groups
+
+
+def span_overflow_groups(graph: GraphLowering) -> list[tuple]:
+    """Build coarse_tile() groups from automatic span-overflow plans.
+
+    This adapter converts a SpanOverflowTilePlan into the same group shape as
+    user spyre_hint annotations: ``[([op], [(hint_id, count, is_reduction)])]``.
+    Ops that already carry user hints are left for the user-hint grouping path.
+    """
+    from . import config
+
+    if config.chunk_large_tensors or config.ignore_span_overflow_hints:
+        return []
+
+    groups: list[tuple] = []
+    next_hint_id = _SPAN_OVERFLOW_HINT_ID
+
+    for op in graph.operations:
+        if not isinstance(op, ComputedBuffer):
+            continue
+        if not isinstance(op.data, Pointwise):
+            continue
+        if not isinstance(op.layout, FixedTiledLayout):
+            continue
+        if getattr(op, "dim_hints", []):
+            continue
+
+        plan = plan_span_overflow_tile(op, config.sencores)
+        if plan is None:
+            continue
+
+        out_coords = op_out_coords(op)
+        hints: list[DimHint] = []
+        levels: list[tuple] = []
+        level_summary: list[tuple[int, int]] = []
+
+        planned_levels = [(plan.selected_host_dim, plan.split_count, plan.is_reduction)]
+
+        for host_dim, split_count, is_reduction in planned_levels:
+            if host_dim >= len(out_coords):
+                raise Unsupported(
+                    f"Cannot adapt span-overflow plan for {op.get_name()}: "
+                    f"host_dim={host_dim} is out of bounds for "
+                    f"{len(out_coords)} output coordinates."
+                )
+
+            coord = out_coords[host_dim]
+            free_symbols = coord.free_symbols
+            if len(free_symbols) != 1:
+                raise Unsupported(
+                    f"Cannot adapt span-overflow plan for {op.get_name()}: "
+                    f"host_dim={host_dim} output coordinate {coord} has "
+                    f"{len(free_symbols)} free symbols; expected exactly one loop var."
+                )
+
+            hint_id = next_hint_id
+            next_hint_id += 1
+            loop_var = next(iter(free_symbols))
+            hints.append(
+                DimHint(
+                    dim_names=["_span_overflow"],
+                    split_count=split_count,
+                    loop_var=loop_var,
+                    is_reduction=is_reduction,
+                    hint_id=hint_id,
+                )
+            )
+            levels.append(
+                (
+                    hint_id,
+                    sympy.Integer(split_count),
+                    is_reduction,
+                )
+            )
+            level_summary.append((host_dim, split_count))
+
+        if not levels:
+            continue
+
+        op.dim_hints = hints  # type: ignore[attr-defined]
+        groups.append(([op], levels))
+
+        logger.info(
+            "span_overflow_groups: op %s levels=%s total=%.2fGB per_core_span=%.2fMB",
+            op.get_name(),
+            level_summary,
+            plan.chunking_info.total_bytes / (1024**3),
+            plan.chunking_info.per_core_span / (1024**2),
+        )
 
     return groups
 
