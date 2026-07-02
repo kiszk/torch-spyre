@@ -444,9 +444,7 @@ class InputsEdits(BaseModel):
                         f"Invalid config_path {arg.config_path!r}: expected "
                         f"'package.module.ClassName'"
                     )
-                config_cls = getattr(
-                    importlib.import_module(module_path), cls_name
-                )
+                config_cls = getattr(importlib.import_module(module_path), cls_name)
                 cpu_args.append(config_cls(**arg.config_kwargs))
 
             elif isinstance(arg, InputArgValue):
