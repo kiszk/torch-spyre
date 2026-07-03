@@ -160,11 +160,11 @@ class InputTensorSpec(BaseModel):
                 torch.manual_seed(int(seed))
 
             if init == "rand":
+                # rand uses uniform [0, 1), map to make_tensor with low=0, high=1
+                t = make_tensor(*shape, dtype=dtype, device="cpu", low=0.0, high=1.0)
+            elif init == "randn":
                 # randn means a standard normal distribution (mean 0, std 1).
                 t = torch.randn(*shape, dtype=dtype)
-            elif init == "randn":
-                # randn uses normal distribution, make_tensor defaults to this
-                t = make_tensor(*shape, dtype=dtype, device="cpu")
             elif init == "randint":
                 # randint needs explicit low/high
                 t = make_tensor(
