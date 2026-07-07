@@ -1183,9 +1183,9 @@ class OpsEdits(BaseModel):
 class ModulesEdits(BaseModel):
     """Per-test module list overrides."""
 
-    include: List[ModulesNamedItem] = (
-        []
-    )  # inject modules into @modules.module_info_list
+    include: List[
+        ModulesNamedItem
+    ] = []  # inject modules into @modules.module_info_list
     exclude: List[NamedItem] = []  # remove modules from @modules.module_info_list
 
     def included_module_names(self) -> Set[str]:
