@@ -466,6 +466,7 @@ def _build_hf_config(arg: "InputArgConfig") -> Any:
             setattr(config, key, value)
         return config
 
+    assert arg.config_path is not None
     module_path, _, cls_name = arg.config_path.rpartition(".")
     if not module_path:
         raise ValueError(
