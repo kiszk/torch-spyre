@@ -16,6 +16,7 @@
 from contextlib import contextmanager
 from warnings import warn
 
+import sympy
 import torch
 
 from torch._inductor.ir import Reduction, Pointwise, StorageBox
@@ -35,6 +36,7 @@ from torch_spyre.ops.fallbacks import fallback_ops
 from .ir import SpyreReduction, SpyreConstantFallback, SpyreEmptyFallback
 from torch_spyre._C import get_elem_in_stick
 from torch._inductor.virtualized import V
+from torch.utils._ordered_set import OrderedSet
 from .errors import Unsupported
 import threading
 from .logging_utils import get_inductor_logger
@@ -250,6 +252,35 @@ def ensure_default_handler(op_name):
 def eager_fallback(op, *args, **kwargs):
     handler = lowering.fallback_handler(op, add_to_fallback_set=False)
     return handler(*args, **kwargs)
+
+
+def _ensure_synthetic_origin(result, target, args: tuple) -> None:
+    """Give a lowering result a synthetic ``target`` origin FX node, so Spyre
+    layout passes (which key off ``op.data.origins[].target``) recognize it even
+    when the lowering was called directly, without an FX node of its own. No-op
+    if a ``target`` origin already exists.
+    """
+
+    def _realized_buffer(node):
+        while not isinstance(node, StorageBox):
+            node = node.data
+        return node.data
+
+    origins = getattr(_realized_buffer(result), "origins", None)
+    if origins and any(o.target == target for o in origins):
+        return
+
+    fx_graph = V.graph.graph
+    first_compute_node = next(n for n in fx_graph.nodes if n.op != "placeholder")
+    with fx_graph.inserting_before(first_compute_node):
+        fx_node = fx_graph.create_node("call_function", target, args)
+
+    # Realize so the origin lands on a stable ComputedBuffer, not a Pointwise.
+    result.realize()
+    buf = _realized_buffer(result)
+    # buf.data is a frozen Loops; override its origins via object.__setattr__.
+    object.__setattr__(buf.data, "origins", OrderedSet([fx_node]))
+    buf.origins = OrderedSet([fx_node])
 
 
 # TODO:This is just place holder now; Real implementation will follow
@@ -756,10 +787,16 @@ def lower_clamp(x, min=None, max=None):
 
 @register_spyre_lowering(torch.ops.aten.clone.default, type_promotion_kind=None)
 def clone(x, *, memory_format=None):
-    from torch._inductor.ir import FlexibleLayout, get_stride_order
-    from torch._inductor.lowering import clone as clone_lowering
+    result = lowering.clone(x, memory_format=memory_format)
 
-    result = clone_lowering(x, memory_format=memory_format)
+    # A clone called directly from another lowering has no aten.clone FX node,
+    # so it inherits the caller's origin and the layout pass skips clone's
+    # layout propagation enforcement. Inject a synthetic clone origin so it fires.
+    args: tuple = ()
+    if isinstance(x, ir.IRNode) and (n := x.get_origin_node()) is not None:
+        args = (n,)
+    _ensure_synthetic_origin(result, torch.ops.aten.clone.default, args)
+
     # Upstream Inductor ignores memory_format (TODO in clone lowering).
     # The output gets a FlexibleLayout whose stride order is inferred from
     # the input's strides via ComputedBuffer.get_fill_order(). When the
@@ -769,8 +806,8 @@ def clone(x, *, memory_format=None):
     # Fix: freeze the layout to the requested stride order so that
     # decide_layout() respects the memory_format contract.
     if memory_format is not None and memory_format != torch.preserve_format:
-        stride_order = get_stride_order(
-            FlexibleLayout.stride_ordered_for_memory_format(
+        stride_order = ir.get_stride_order(
+            ir.FlexibleLayout.stride_ordered_for_memory_format(
                 result.get_size(), memory_format
             )
         )
@@ -779,9 +816,121 @@ def clone(x, *, memory_format=None):
     return result
 
 
+def _reoffset(node, offset):
+    """Re-introduce a storage_offset onto a graph-input node in-graph.
+
+    A tensor that was sliced OUTSIDE the compiled region (e.g. a
+    ``x.narrow(0, 2, 1)`` handed to a standalone-compiled op) reaches the
+    lowering as a placeholder whose FixedLayout carries the right size and
+    stride but ``offset == 0`` — upstream Inductor's placeholder path reads
+    ``static_sizes_strides`` only and drops ``storage_offset`` (see
+    torch/_inductor/graph.py). The Spyre SpyreTensorLayout likewise has no
+    offset field, so the compiled kernel binds the storage BASE pointer
+    (job_plan.cpp / spyre_stream.cpp use ``storage().data_ptr()``) and reads
+    from element 0 regardless of the view's true offset.
+
+    To make the offset survive into the SDSC binary it must live in the
+    in-graph coordinate: superdsc.py bakes a per-dim byte offset from the
+    coordinate's constant term (``as_coeff_Add()[0]``). We therefore rebuild
+    the node as a ReinterpretView over the same storage with the offset
+    installed on the layout — the same mechanism aten.slice / SliceView use.
+    Size and stride are preserved from the input's own layout.
+
+    REQUIREMENT — the offset is a single *host-space* flat scalar (in host
+    elements). ``compute_coordinates`` (views.py) distributes it across dims
+    against the *device* ``stride_map``; the innermost (stick) dim holds
+    ``elems_per_stick`` elements (64 at fp16, 128 at fp8), and the backend has
+    no mechanism to bake an offset that lands *inside* a stick. So a re-injected
+    offset is only representable when it is a whole multiple of
+    ``elems_per_stick`` — i.e. it steps by complete sticks. This was measured
+    directly (see ``sweep_d2d_offsets.py`` / ``tests/inductor/
+    test_copy_from_d2d_offsets.py``): across contiguous ``narrow`` and
+    ``select`` views of every inner size, the copy is correct iff
+    ``offset % elems_per_stick == 0`` and otherwise the restickify pass raises
+    "no mechanism to resolve stick incompatibility". Notably this depends on the
+    OFFSET, not the inner-dim size: e.g. an inner dim of 96 (not a stick
+    multiple) still copies correctly at offset 192 (== 3 sticks) but errors at
+    offset 96 (== 1.5 sticks).
+
+    ``_validate_reoffset_supported`` converts the unaligned case into a clean,
+    actionable ``Unsupported`` at lowering time instead of the cryptic
+    restickify error deeper in the pipeline. It does NOT guard the separate
+    offset-*within*-the-stick-dim case (a column narrow, e.g.
+    ``x.narrow(1, 64, 64)``), which the backend still miscompiles silently — see
+    ``test_column_slice_inner_offset`` (tracked for the follow-up PR).
+    """
+    if offset == 0:
+        return node
+    storage, old_layout = ir.as_storage_and_layout(node)
+    _validate_reoffset_supported(old_layout, offset)
+    new_layout = ir.FixedLayout(
+        old_layout.device,
+        old_layout.dtype,
+        list(old_layout.size),
+        list(old_layout.stride),
+        sympy.expand(offset),
+    )
+    return ir.TensorBox(ir.ReinterpretView(data=storage, layout=new_layout))
+
+
+def _validate_reoffset_supported(layout, offset) -> None:
+    """Fail fast when a D2D-copy offset is not a whole number of sticks.
+
+    A re-injected storage_offset must step by complete sticks: the innermost
+    device dim holds ``elems_per_stick`` elements and the backend cannot bake an
+    offset that lands inside a stick. Measured behavior (``sweep_d2d_offsets.py``)
+    is unambiguous — across contiguous ``narrow`` / ``select`` views of every
+    inner size, the copy is correct iff ``offset % elems_per_stick == 0``; every
+    unaligned offset instead raises deep in the restickify pass ("no mechanism
+    to resolve stick incompatibility"). This check surfaces the same rejection
+    earlier with an actionable message rather than silently miscompiling or
+    emitting a cryptic downstream error.
+
+    Scope — this rule is keyed on the OFFSET alone, so it holds regardless of
+    rank reduction (``select`` drops the outer dim but the flat offset is
+    unchanged) and does not need the device layout, which is not attached to the
+    placeholder yet. It deliberately does NOT cover an offset that falls *inside*
+    the stick dimension itself (a column narrow): that case is
+    ``offset % elems_per_stick == 0`` yet still miscompiles, and detecting it
+    would require the base-storage layout that is unavailable here. It stays a
+    documented known limitation (``test_column_slice_inner_offset``).
+    """
+    try:
+        off = int(offset)
+    except (TypeError, ValueError):
+        # Symbolic offset: cannot check statically, let it through
+        # (specialize_int bakes concrete offsets, so this is the rare path).
+        return
+    if off == 0:
+        return
+    eps = get_elem_in_stick(layout.dtype)
+    if off % eps != 0:
+        raise Unsupported(
+            "spyre::copy_from_d2d of a sliced view requires a stick-aligned "
+            f"storage_offset: {off} is not a multiple of elems_per_stick={eps} "
+            f"(dtype {layout.dtype}). The offset must step by whole sticks; an "
+            "offset landing inside a stick cannot be baked into the kernel "
+            "coordinate. Re-slice on a stick-aligned boundary (a multiple of "
+            f"{eps} elements), or copy the full (unsliced) tensor."
+        )
+
+
 @register_spyre_lowering(torch.ops.spyre.copy_from_d2d)
-def lower_spyre_from_d2d(src, dst):
+def lower_spyre_from_d2d(src, dst, src_off, dst_off):
+    # A sliced src/dst reaches us as a graph input whose storage_offset was
+    # dropped (offset==0 on its layout). Re-introduce the offsets in-graph so
+    # they land in the coordinate that superdsc bakes into the kernel; without
+    # this the kernel reads/writes from the storage base and every offset
+    # silently returns the first call's data. See _reoffset above.
+    src = _reoffset(src, src_off)
+    dst = _reoffset(dst, dst_off)
     lowering.mutate_to(dst, src)
+
+
+@register_spyre_lowering(torch.ops.spyre.copy_)
+def lower_spyre_copy_(src, dst):
+    lowering.mutate_to(dst, src)
+    return dst
 
 
 @register_spyre_lowering(torch.ops.spyre.overwrite)
@@ -1018,7 +1167,7 @@ def lower_constant_pad_nd(input, pad, value=0, align_to_stick=False):
         offsets.append(pad_left)
 
     if not dims:
-        return clone(cropped_input)
+        return lowering.clone(cropped_input)
 
     dtype = input.get_dtype()
     device = input.get_device()
@@ -1073,7 +1222,7 @@ def to_dtype(x, dst_dtype):
     src_dtype = x.get_dtype()
 
     if src_dtype == dst_dtype:
-        return clone(x)
+        return lowering.clone(x)
 
     # Check if conversion is supported by backend
     if DtypeOpTable.get_operator(src_dtype, dst_dtype) is None:
