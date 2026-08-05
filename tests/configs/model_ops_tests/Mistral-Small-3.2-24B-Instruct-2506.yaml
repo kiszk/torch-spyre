@@ -107,7 +107,8 @@ test_suite_config:
                       - value: 2.0
                       - value: false
                       - value: false
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L292 in forward, code: inputs_embeds = self.get_input_embeddings()(input_ids)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L292 in forward,
+                    code: inputs_embeds = self.get_input_embeddings()(input_ids)'
                   tags:
                     - bf16operation
                     - constant
@@ -124,7 +125,8 @@ test_suite_config:
                           init: rand
                     kwargs:
                       dtype: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L451 in forward, code: patch_embeds = self.patch_conv(pixel_values.to(dtype=target_dtype))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L451 in forward,
+                    code: patch_embeds = self.patch_conv(pixel_values.to(dtype=target_dtype))'
                   tags:
                     - bf16operation
                     - torch.to.1
@@ -150,7 +152,8 @@ test_suite_config:
                       - value: (0, 0)
                       - value: (1, 1)
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L451 in forward, code: patch_embeds = self.patch_conv(pixel_values.to(dtype=target_dtype))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L451 in forward,
+                    code: patch_embeds = self.patch_conv(pixel_values.to(dtype=target_dtype))'
                   tags:
                     - bf16operation
                     - constant
@@ -166,7 +169,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L454 in forward, code: for embed, size in zip(patch_embeds, image_sizes)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L454 in forward,
+                    code: for embed, size in zip(patch_embeds, image_sizes)'
                   tags:
                     - bf16operation
                     - constant
@@ -184,7 +188,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L454 in forward, code: for embed, size in zip(patch_embeds, image_sizes)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L454 in forward,
+                    code: for embed, size in zip(patch_embeds, image_sizes)'
                   tags:
                     - constant
                     - torch.getitem.2
@@ -199,7 +204,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452, code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452,
+                    code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
                   tags:
                     - bf16operation
                     - constant
@@ -215,7 +221,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: T
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452, code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452,
+                    code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
                   tags:
                     - bf16operation
                     - constant
@@ -232,7 +239,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452, code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452,
+                    code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
                   tags:
                     - bf16operation
                     - torch.cat.1
@@ -247,7 +255,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452, code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L458 in torch_dynamo_resume_in_forward_at_452,
+                    code: patch_embeds = torch.cat([p.flatten(1).T for p in patch_embeds_list], dim=0).unsqueeze(0)'
                   tags:
                     - bf16operation
                     - constant
@@ -263,7 +272,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.float32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L288 in forward, code: hidden_states = hidden_states.to(torch.float32)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L288 in forward,
+                    code: hidden_states = hidden_states.to(torch.float32)'
                   tags:
                     - bf16operation
                     - constant
@@ -279,7 +289,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -297,7 +308,8 @@ test_suite_config:
                       - value: -1
                     kwargs:
                       keepdim: true
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -313,7 +325,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0e-05
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - constant
@@ -328,7 +341,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.rsqrt.1
@@ -349,7 +363,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.mul.1
@@ -364,7 +379,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - fp32operation
                     - constant
@@ -386,7 +402,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - bf16operation
                     - torch.mul.2
@@ -394,7 +411,8 @@ test_suite_config:
                   sample_inputs_func:
                     args:
                       - value: 28
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L41 in position_ids_in_meshgrid, code: mesh = torch.meshgrid(torch.arange(height), torch.arange(width), indexing="ij")'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L41 in position_ids_in_meshgrid,
+                    code: mesh = torch.meshgrid(torch.arange(height), torch.arange(width), indexing="ij")'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -422,7 +440,8 @@ test_suite_config:
                             high: 1000
                     kwargs:
                       indexing: ij
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L41 in position_ids_in_meshgrid, code: mesh = torch.meshgrid(torch.arange(height), torch.arange(width), indexing="ij")'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L41 in position_ids_in_meshgrid,
+                    code: mesh = torch.meshgrid(torch.arange(height), torch.arange(width), indexing="ij")'
                   tags:
                     - tensorsoncpu
                     - torch.functional.meshgrid.1
@@ -447,7 +466,8 @@ test_suite_config:
                             init_args:
                               high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L41 in position_ids_in_meshgrid, code: mesh = torch.meshgrid(torch.arange(height), torch.arange(width), indexing="ij")'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L41 in position_ids_in_meshgrid,
+                    code: mesh = torch.meshgrid(torch.arange(height), torch.arange(width), indexing="ij")'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -474,7 +494,8 @@ test_suite_config:
                               high: 1000
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid, code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid,
+                    code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -492,7 +513,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: (-1, 2)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid, code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid,
+                    code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -511,7 +533,8 @@ test_suite_config:
                             high: 1000
                       - value: 2
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid, code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid,
+                    code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -537,7 +560,8 @@ test_suite_config:
                             init_args:
                               high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid, code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L42 in position_ids_in_meshgrid,
+                    code: h_grid, v_grid = torch.stack(mesh, dim=-1).reshape(-1, 2).chunk(2, -1)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -555,7 +579,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 110
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L43 in position_ids_in_meshgrid, code: ids = h_grid * max_width + v_grid'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L43 in position_ids_in_meshgrid,
+                    code: ids = h_grid * max_width + v_grid'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -581,7 +606,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L43 in position_ids_in_meshgrid, code: ids = h_grid * max_width + v_grid'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L43 in position_ids_in_meshgrid,
+                    code: ids = h_grid * max_width + v_grid'
                   tags:
                     - tensorsoncpu
                     - torch.add.2
@@ -598,7 +624,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - py: (0,)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L44 in position_ids_in_meshgrid, code: positions.append(ids[:, 0])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L44 in position_ids_in_meshgrid,
+                    code: positions.append(ids[:, 0])'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -615,7 +642,8 @@ test_suite_config:
                             init: randint
                             init_args:
                               high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L45 in position_ids_in_meshgrid, code: return torch.cat(positions)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L45 in position_ids_in_meshgrid,
+                    code: return torch.cat(positions)'
                   tags:
                     - tensorsoncpu
                     - torch.cat.2
@@ -632,7 +660,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L465 in torch_dynamo_resume_in_forward_at_452, code: kwargs["position_ids"] = position_ids.unsqueeze(0).to(patch_embeds.device, non_blocking=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L465 in torch_dynamo_resume_in_forward_at_452,
+                    code: kwargs["position_ids"] = position_ids.unsqueeze(0).to(patch_embeds.device, non_blocking=True)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -652,7 +681,8 @@ test_suite_config:
                       - value: cuda:0
                     kwargs:
                       non_blocking: true
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L465 in torch_dynamo_resume_in_forward_at_452, code: kwargs["position_ids"] = position_ids.unsqueeze(0).to(patch_embeds.device, non_blocking=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L465 in torch_dynamo_resume_in_forward_at_452,
+                    code: kwargs["position_ids"] = position_ids.unsqueeze(0).to(patch_embeds.device, non_blocking=True)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -676,7 +706,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 12100
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L126 in forward, code: freqs = self.inv_freq[position_ids]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L126 in forward,
+                    code: freqs = self.inv_freq[position_ids]'
                   tags:
                     - fp32operation
                     - tensorsoncpu
@@ -691,7 +722,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L130 in forward, code: cos = emb.cos()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L130 in forward,
+                    code: cos = emb.cos()'
                   tags:
                     - fp32operation
                     - torch.cos.1
@@ -705,7 +737,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L131 in forward, code: sin = emb.sin()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L131 in forward,
+                    code: sin = emb.sin()'
                   tags:
                     - fp32operation
                     - torch.sin.1
@@ -721,7 +754,8 @@ test_suite_config:
                           init: rand
                     kwargs:
                       dtype: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L133 in forward, code: return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L133 in forward,
+                    code: return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)'
                   tags:
                     - fp32operation
                     - torch.to.5
@@ -730,10 +764,11 @@ test_suite_config:
                     args:
                       - value: (1064, 1064)
                     kwargs:
-                      fill_value: -3.3895313892515355e+38
+                      fill_value: -3.3895313892515354e+38
                       dtype: torch.bfloat16
                       device: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L401 in generate_block_attention_mask, code: causal_mask = torch.full((seq_len, seq_len), fill_value=d_min, dtype=dtype, device=device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L401 in generate_block_attention_mask,
+                    code: causal_mask = torch.full((seq_len, seq_len), fill_value=d_min, dtype=dtype, device=device)'
                   tags:
                     - constant
                     - torch.full.1
@@ -741,7 +776,8 @@ test_suite_config:
                   sample_inputs_func:
                     args:
                       - value: [1064]
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L403 in generate_block_attention_mask, code: block_end_idx = torch.tensor(patch_embeds_list).cumsum(-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L403 in generate_block_attention_mask,
+                    code: block_end_idx = torch.tensor(patch_embeds_list).cumsum(-1)'
                   tags:
                     - tensorsoncpu
                     - torch.tensor.1
@@ -758,7 +794,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L403 in generate_block_attention_mask, code: block_end_idx = torch.tensor(patch_embeds_list).cumsum(-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L403 in generate_block_attention_mask,
+                    code: block_end_idx = torch.tensor(patch_embeds_list).cumsum(-1)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -767,7 +804,8 @@ test_suite_config:
                   sample_inputs_func:
                     args:
                       - value: [0]
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L404 in generate_block_attention_mask, code: block_start_idx = torch.tensor([0] + patch_embeds_list[:-1]).cumsum(-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L404 in generate_block_attention_mask,
+                    code: block_start_idx = torch.tensor([0] + patch_embeds_list[:-1]).cumsum(-1)'
                   tags:
                     - tensorsoncpu
                     - torch.tensor.2
@@ -782,7 +820,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.float32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L288 in forward, code: hidden_states = hidden_states.to(torch.float32)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L288 in forward,
+                    code: hidden_states = hidden_states.to(torch.float32)'
                   tags:
                     - bf16operation
                     - constant
@@ -798,7 +837,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -816,7 +856,8 @@ test_suite_config:
                       - value: -1
                     kwargs:
                       keepdim: true
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L289 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -838,7 +879,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L290 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.mul.4
@@ -853,7 +895,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - fp32operation
                     - constant
@@ -875,7 +918,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L291 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - bf16operation
                     - torch.mul.5
@@ -897,7 +941,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L227 in forward, code: query_states = self.q_proj(hidden_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L227 in forward,
+                    code: query_states = self.q_proj(hidden_states)'
                   tags:
                     - bf16operation
                     - constant
@@ -916,7 +961,8 @@ test_suite_config:
                       - value: 1064
                       - value: 16
                       - value: 64
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L231 in forward, code: query_states = query_states.view(batch_size, patches, self.num_heads, self.head_dim).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L231 in forward,
+                    code: query_states = query_states.view(batch_size, patches, self.num_heads, self.head_dim).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -933,7 +979,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L231 in forward, code: query_states = query_states.view(batch_size, patches, self.num_heads, self.head_dim).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L231 in forward,
+                    code: query_states = query_states.view(batch_size, patches, self.num_heads, self.head_dim).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -949,7 +996,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L162 in apply_rotary_pos_emb, code: cos = cos.unsqueeze(unsqueeze_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L162 in apply_rotary_pos_emb,
+                    code: cos = cos.unsqueeze(unsqueeze_dim)'
                   tags:
                     - bf16operation
                     - constant
@@ -971,7 +1019,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L164 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L164 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.6
@@ -986,7 +1035,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, 32, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L139 in rotate_half, code: x1 = x[..., : x.shape[-1] // 2]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L139 in rotate_half,
+                    code: x1 = x[..., : x.shape[-1] // 2]'
                   tags:
                     - bf16operation
                     - constant
@@ -1001,7 +1051,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L141 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L141 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - torch.neg.1
@@ -1023,7 +1074,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L141 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L141 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - constant
@@ -1045,7 +1097,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L164 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L164 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.7
@@ -1066,7 +1119,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L164 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L164 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.add.3
@@ -1098,7 +1152,8 @@ test_suite_config:
                       dropout_p: 0.0
                       scale: 0.125
                       is_causal: false
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L154 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L154 in sdpa_attention_forward,
+                    code: attn_output = torch.nn.functional.scaled_dot_product_attention('
                   tags:
                     - bf16operation
                     - torch.nn.functional.scaled_dot_product_attention.1
@@ -1114,7 +1169,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward,
+                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - bf16operation
                     - constant
@@ -1129,7 +1185,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward,
+                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - bf16operation
                     - torch.Tensor.contiguous.1
@@ -1144,7 +1201,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1064, -1)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L253 in forward, code: attn_output = attn_output.reshape(batch_size, patches, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L253 in forward,
+                    code: attn_output = attn_output.reshape(batch_size, patches, -1).contiguous()'
                   tags:
                     - bf16operation
                     - constant
@@ -1159,7 +1217,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L253 in forward, code: attn_output = attn_output.reshape(batch_size, patches, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L253 in forward,
+                    code: attn_output = attn_output.reshape(batch_size, patches, -1).contiguous()'
                   tags:
                     - bf16operation
                     - torch.Tensor.contiguous.2
@@ -1181,7 +1240,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L254 in forward, code: attn_output = self.o_proj(attn_output)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L254 in forward,
+                    code: attn_output = self.o_proj(attn_output)'
                   tags:
                     - bf16operation
                     - constant
@@ -1203,7 +1263,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L328 in torch_dynamo_resume_in_forward_at_322, code: hidden_states = residual + hidden_states'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L328 in torch_dynamo_resume_in_forward_at_322,
+                    code: hidden_states = residual + hidden_states'
                   tags:
                     - bf16operation
                     - torch.add.4
@@ -1225,7 +1286,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L272 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L272 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - constant
@@ -1261,7 +1323,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L272 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L272 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - torch.mul.8
@@ -1283,7 +1346,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L272 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/pixtral/modeling_pixtral.py#L272 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - constant
@@ -1299,7 +1363,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L238 in torch_dynamo_resume_in_get_image_features_at_223, code: image_features = self.multi_modal_projector(selected_image_feature.squeeze(0), image_sizes)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L238 in torch_dynamo_resume_in_get_image_features_at_223,
+                    code: image_features = self.multi_modal_projector(selected_image_feature.squeeze(0), image_sizes)'
                   tags:
                     - bf16operation
                     - constant
@@ -1315,7 +1380,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.float32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L52 in forward, code: hidden_states = hidden_states.to(torch.float32)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L52 in forward,
+                    code: hidden_states = hidden_states.to(torch.float32)'
                   tags:
                     - bf16operation
                     - constant
@@ -1331,7 +1397,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L53 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L53 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -1349,7 +1416,8 @@ test_suite_config:
                       - value: -1
                     kwargs:
                       keepdim: true
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L53 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L53 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -1365,7 +1433,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0e-05
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L54 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L54 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - constant
@@ -1380,7 +1449,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L54 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L54 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.rsqrt.2
@@ -1401,7 +1471,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L54 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L54 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.mul.9
@@ -1416,7 +1487,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L55 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L55 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - fp32operation
                     - constant
@@ -1438,7 +1510,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L55 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L55 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - bf16operation
                     - torch.mul.10
@@ -1455,7 +1528,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L77 in forward, code: (image_size[0] // self.patch_size, image_size[1] // self.patch_size) for image_size in image_sizes'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L77 in forward,
+                    code: (image_size[0] // self.patch_size, image_size[1] // self.patch_size) for image_size in image_sizes'
                   tags:
                     - constant
                     - torch.getitem.8
@@ -1472,7 +1546,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 14
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L77 in forward, code: (image_size[0] // self.patch_size, image_size[1] // self.patch_size) for image_size in image_sizes'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L77 in forward,
+                    code: (image_size[0] // self.patch_size, image_size[1] // self.patch_size) for image_size in image_sizes'
                   tags:
                     - constant
                     - torch.floordiv.1
@@ -1489,7 +1564,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 14
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L77 in forward, code: (image_size[0] // self.patch_size, image_size[1] // self.patch_size) for image_size in image_sizes'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L77 in forward,
+                    code: (image_size[0] // self.patch_size, image_size[1] // self.patch_size) for image_size in image_sizes'
                   tags:
                     - constant
                     - torch.floordiv.2
@@ -1514,7 +1590,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L80 in forward, code: tokens_per_image = [h * w for h, w in image_sizes]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L80 in forward,
+                    code: tokens_per_image = [h * w for h, w in image_sizes]'
                   tags:
                     - torch.mul.11
                 - name: torch.nn.functional.linear
@@ -1535,7 +1612,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L121 in torch_dynamo_resume_in_forward_at_120, code: hidden_states = self.linear_1(image_features)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L121 in torch_dynamo_resume_in_forward_at_120,
+                    code: hidden_states = self.linear_1(image_features)'
                   tags:
                     - bf16operation
                     - constant
@@ -1572,7 +1650,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L123 in torch_dynamo_resume_in_forward_at_120, code: hidden_states = self.linear_2(hidden_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L123 in torch_dynamo_resume_in_forward_at_120,
+                    code: hidden_states = self.linear_2(hidden_states)'
                   tags:
                     - bf16operation
                     - constant
@@ -1591,7 +1670,8 @@ test_suite_config:
                             high: 1000
                     kwargs:
                       device: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L241 in torch_dynamo_resume_in_get_image_features_at_238, code: (torch.as_tensor(image_sizes, device=image_features.device) // downsample_ratio).prod(dim=-1).tolist()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L241 in torch_dynamo_resume_in_get_image_features_at_238,
+                    code: (torch.as_tensor(image_sizes, device=image_features.device) // downsample_ratio).prod(dim=-1).tolist()'
                   tags:
                     - torch.as_tensor.1
                 - name: torch.floordiv
@@ -1607,7 +1687,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 28
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L241 in torch_dynamo_resume_in_get_image_features_at_238, code: (torch.as_tensor(image_sizes, device=image_features.device) // downsample_ratio).prod(dim=-1).tolist()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L241 in torch_dynamo_resume_in_get_image_features_at_238,
+                    code: (torch.as_tensor(image_sizes, device=image_features.device) // downsample_ratio).prod(dim=-1).tolist()'
                   tags:
                     - constant
                     - torch.floordiv.3
@@ -1625,7 +1706,8 @@ test_suite_config:
                             high: 1000
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L241 in torch_dynamo_resume_in_get_image_features_at_238, code: (torch.as_tensor(image_sizes, device=image_features.device) // downsample_ratio).prod(dim=-1).tolist()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L241 in torch_dynamo_resume_in_get_image_features_at_238,
+                    code: (torch.as_tensor(image_sizes, device=image_features.device) // downsample_ratio).prod(dim=-1).tolist()'
                   tags:
                     - torch.prod.1
                 - name: torch.squeeze
@@ -1639,7 +1721,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L243 in torch_dynamo_resume_in_get_image_features_at_241, code: image_features = torch.split(image_features.squeeze(0), split_sizes)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L243 in torch_dynamo_resume_in_get_image_features_at_241,
+                    code: image_features = torch.split(image_features.squeeze(0), split_sizes)'
                   tags:
                     - bf16operation
                     - constant
@@ -1655,7 +1738,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: [266]
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L243 in torch_dynamo_resume_in_get_image_features_at_241, code: image_features = torch.split(image_features.squeeze(0), split_sizes)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L243 in torch_dynamo_resume_in_get_image_features_at_241,
+                    code: image_features = torch.split(image_features.squeeze(0), split_sizes)'
                   tags:
                     - bf16operation
                     - torch.functional.split.1
@@ -1670,7 +1754,8 @@ test_suite_config:
                             device: cuda:0
                             init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L243 in torch_dynamo_resume_in_get_image_features_at_241, code: image_features = torch.split(image_features.squeeze(0), split_sizes)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L243 in torch_dynamo_resume_in_get_image_features_at_241,
+                    code: image_features = torch.split(image_features.squeeze(0), split_sizes)'
                   tags:
                     - bf16operation
                     - constant
@@ -1705,7 +1790,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 10
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L261 in get_placeholder_mask, code: special_image_mask = input_ids == self.config.image_token_id'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L261 in get_placeholder_mask,
+                    code: special_image_mask = input_ids == self.config.image_token_id'
                   tags:
                     - constant
                     - torch.eq.1
@@ -1718,7 +1804,8 @@ test_suite_config:
                           storage_offset: 0
                           dtype: torch.bool
                           device: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L263 in get_placeholder_mask, code: n_image_tokens = special_image_mask.sum()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L263 in get_placeholder_mask,
+                    code: n_image_tokens = special_image_mask.sum()'
                   tags:
                     - torch.sum.1
                 - name: torch.unsqueeze
@@ -1731,7 +1818,8 @@ test_suite_config:
                           dtype: torch.bool
                           device: cuda:0
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L265 in get_placeholder_mask, code: special_image_mask = special_image_mask.unsqueeze(-1).to(inputs_embeds.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L265 in get_placeholder_mask,
+                    code: special_image_mask = special_image_mask.unsqueeze(-1).to(inputs_embeds.device)'
                   tags:
                     - constant
                     - torch.unsqueeze.4
@@ -1745,7 +1833,8 @@ test_suite_config:
                           dtype: torch.bool
                           device: cuda:0
                       - value: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L265 in get_placeholder_mask, code: special_image_mask = special_image_mask.unsqueeze(-1).to(inputs_embeds.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L265 in get_placeholder_mask,
+                    code: special_image_mask = special_image_mask.unsqueeze(-1).to(inputs_embeds.device)'
                   tags:
                     - constant
                     - torch.to.11
@@ -1762,7 +1851,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 5120
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L267 in get_placeholder_mask, code: n_image_tokens * inputs_embeds.shape[-1] == image_features.numel(),'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L267 in get_placeholder_mask,
+                    code: n_image_tokens * inputs_embeds.shape[-1] == image_features.numel(),'
                   tags:
                     - constant
                     - torch.mul.12
@@ -1779,7 +1869,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 1361920
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L267 in get_placeholder_mask, code: n_image_tokens * inputs_embeds.shape[-1] == image_features.numel(),'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L267 in get_placeholder_mask,
+                    code: n_image_tokens * inputs_embeds.shape[-1] == image_features.numel(),'
                   tags:
                     - constant
                     - torch.eq.2
@@ -1806,7 +1897,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L305 in torch_dynamo_resume_in_forward_at_307, code: inputs_embeds = inputs_embeds.masked_scatter(special_image_mask, image_features)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L305 in torch_dynamo_resume_in_forward_at_307,
+                    code: inputs_embeds = inputs_embeds.masked_scatter(special_image_mask, image_features)'
                   tags:
                     - bf16operation
                     - torch.masked_scatter.1
@@ -1816,7 +1908,8 @@ test_suite_config:
                       - value: 1
                     kwargs:
                       device: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L507 in sdpa_mask, code: batch_arange = torch.arange(batch_size, device=device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L507 in sdpa_mask, code: batch_arange
+                    = torch.arange(batch_size, device=device)'
                   tags:
                     - constant
                     - torch.arange.2
@@ -1833,7 +1926,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L509 in sdpa_mask, code: q_arange = torch.arange(q_length, device=device) + q_offset'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L509 in sdpa_mask, code: q_arange
+                    = torch.arange(q_length, device=device) + q_offset'
                   tags:
                     - constant
                     - torch.add.6
@@ -1850,7 +1944,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L510 in sdpa_mask, code: kv_arange = torch.arange(kv_length, device=device) + kv_offset'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L510 in sdpa_mask, code: kv_arange
+                    = torch.arange(kv_length, device=device) + kv_offset'
                   tags:
                     - constant
                     - torch.add.7
@@ -1867,7 +1962,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - py: (None, None, slice(None, None, None), None)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L366 in _non_vmap_expansion_sdpa, code: q_indices = q_indices[None, None, :, None]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L366 in _non_vmap_expansion_sdpa,
+                    code: q_indices = q_indices[None, None, :, None]'
                   tags:
                     - constant
                     - torch.getitem.10
@@ -1884,7 +1980,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - py: (None, None, None, slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L367 in _non_vmap_expansion_sdpa, code: kv_indices = kv_indices[None, None, None, :]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L367 in _non_vmap_expansion_sdpa,
+                    code: kv_indices = kv_indices[None, None, None, :]'
                   tags:
                     - constant
                     - torch.getitem.11
@@ -1909,7 +2006,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L80 in causal_mask_function, code: return kv_idx <= q_idx'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L80 in causal_mask_function,
+                    code: return kv_idx <= q_idx'
                   tags:
                     - torch.le.1
                 - name: torch.Tensor.expand
@@ -1925,7 +2023,8 @@ test_suite_config:
                       - value: -1
                       - value: 855
                       - value: 2048
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L518 in sdpa_mask, code: attention_mask = attention_mask.expand(batch_size, -1, q_length, kv_length)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/masking_utils.py#L518 in sdpa_mask, code: attention_mask
+                    = attention_mask.expand(batch_size, -1, q_length, kv_length)'
                   tags:
                     - constant
                     - torch.Tensor.expand.1
@@ -1940,7 +2039,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (None, slice(None, None, None), None)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward,
+                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - fp32operation
                     - constant
@@ -1955,7 +2055,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward,
+                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - fp32operation
                     - torch.float.1
@@ -1972,7 +2073,8 @@ test_suite_config:
                       - value: 1
                       - value: -1
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward,
+                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - fp32operation
                     - constant
@@ -1988,7 +2090,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L314 in forward,
+                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - fp32operation
                     - constant
@@ -2006,7 +2109,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - py: (slice(None, None, None), None, slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward,
+                    code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - constant
                     - torch.getitem.13
@@ -2022,7 +2126,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward,
+                    code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - torch.float.2
                 - name: torch.float
@@ -2035,7 +2140,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward,
+                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - fp32operation
                     - torch.float.3
@@ -2056,7 +2162,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward,
+                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - fp32operation
                     - torch.matmul.1
@@ -2072,7 +2179,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward,
+                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - fp32operation
                     - constant
@@ -2095,7 +2203,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L320 in forward, code: emb = torch.cat((freqs, freqs), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L320 in forward,
+                    code: emb = torch.cat((freqs, freqs), dim=-1)'
                   tags:
                     - fp32operation
                     - constant
@@ -2110,7 +2219,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward, code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward,
+                    code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - fp32operation
                     - torch.cos.2
@@ -2125,7 +2235,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward, code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward,
+                    code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - fp32operation
                     - constant
@@ -2140,7 +2251,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L322 in forward, code: sin = emb.sin() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L322 in forward,
+                    code: sin = emb.sin() * self.attention_scaling'
                   tags:
                     - fp32operation
                     - torch.sin.2
@@ -2156,7 +2268,8 @@ test_suite_config:
                           init: rand
                     kwargs:
                       dtype: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L324 in forward, code: return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L324 in forward,
+                    code: return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)'
                   tags:
                     - fp32operation
                     - torch.to.13
@@ -2164,7 +2277,8 @@ test_suite_config:
                   sample_inputs_func:
                     args:
                       - value: python.nn_module
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L384 in forward, code: for decoder_layer in self.layers[: self.config.num_hidden_layers]:'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L384 in forward,
+                    code: for decoder_layer in self.layers[: self.config.num_hidden_layers]:'
                   tags:
                     - constant
                     - torch._C._log_api_usage_once.1
@@ -2179,7 +2293,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.float32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L193 in forward, code: hidden_states = hidden_states.to(torch.float32)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L193 in forward,
+                    code: hidden_states = hidden_states.to(torch.float32)'
                   tags:
                     - bf16operation
                     - constant
@@ -2195,7 +2310,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -2213,7 +2329,8 @@ test_suite_config:
                       - value: -1
                     kwargs:
                       keepdim: true
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -2229,7 +2346,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0e-05
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - constant
@@ -2244,7 +2362,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.rsqrt.3
@@ -2265,7 +2384,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.mul.14
@@ -2280,7 +2400,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - fp32operation
                     - constant
@@ -2302,7 +2423,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - bf16operation
                     - torch.mul.15
@@ -2324,7 +2446,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward,
+                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -2340,7 +2463,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 855, -1, 128)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward,
+                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -2357,7 +2481,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward,
+                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -2380,7 +2505,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward,
+                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -2396,7 +2522,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 855, -1, 128)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward,
+                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -2413,7 +2540,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward,
+                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -2429,7 +2557,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L77 in apply_rotary_pos_emb, code: cos = cos.unsqueeze(unsqueeze_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L77 in apply_rotary_pos_emb,
+                    code: cos = cos.unsqueeze(unsqueeze_dim)'
                   tags:
                     - bf16operation
                     - constant
@@ -2451,7 +2580,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.16
@@ -2466,7 +2596,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, 64, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half, code: x1 = x[..., : x.shape[-1] // 2]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half,
+                    code: x1 = x[..., : x.shape[-1] // 2]'
                   tags:
                     - bf16operation
                     - constant
@@ -2481,7 +2612,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - torch.neg.2
@@ -2503,7 +2635,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - constant
@@ -2525,7 +2658,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.17
@@ -2546,7 +2680,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.add.9
@@ -2567,7 +2702,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb,
+                    code: k_embed = (k * cos) + (rotate_half(k) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.18
@@ -2582,7 +2718,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, 64, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half, code: x1 = x[..., : x.shape[-1] // 2]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half,
+                    code: x1 = x[..., : x.shape[-1] // 2]'
                   tags:
                     - bf16operation
                     - constant
@@ -2597,7 +2734,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - torch.neg.3
@@ -2619,7 +2757,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - constant
@@ -2641,7 +2780,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb,
+                    code: k_embed = (k * cos) + (rotate_half(k) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.19
@@ -2662,7 +2802,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb,
+                    code: k_embed = (k * cos) + (rotate_half(k) * sin)'
                   tags:
                     - bf16operation
                     - torch.add.10
@@ -2673,7 +2814,8 @@ test_suite_config:
                     kwargs:
                       dtype: torch.bfloat16
                       device: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L378 in lazy_initialization, code: self.keys = torch.zeros('
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L378 in lazy_initialization, code:
+                    self.keys = torch.zeros('
                   tags:
                     - constant
                     - torch.zeros.1
@@ -2690,7 +2832,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L388 in lazy_initialization, code: self.cumulative_length = self.cumulative_length.to(self.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L388 in lazy_initialization, code:
+                    self.cumulative_length = self.cumulative_length.to(self.device)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -2716,7 +2859,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L420 in update, code: cache_position = torch.arange(kv_length, device=self.device) + self.cumulative_length'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L420 in update, code: cache_position
+                    = torch.arange(kv_length, device=self.device) + self.cumulative_length'
                   tags:
                     - torch.add.11
                 - name: torch.add_
@@ -2763,7 +2907,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2, cache_position, key_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2,
+                    cache_position, key_states)'
                   tags:
                     - bf16operation
                     - constant
@@ -2779,7 +2924,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L24 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L24 in repeat_kv,
+                    code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
                   tags:
                     - bf16operation
                     - constant
@@ -2799,7 +2945,8 @@ test_suite_config:
                       - value: 4
                       - value: 2048
                       - value: 128
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L24 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L24 in repeat_kv,
+                    code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
                   tags:
                     - bf16operation
                     - constant
@@ -2815,7 +2962,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 32, 2048, 128)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L25 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L25 in repeat_kv,
+                    code: return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)'
                   tags:
                     - bf16operation
                     - constant
@@ -2848,7 +2996,8 @@ test_suite_config:
                       dropout_p: 0.0
                       scale: 0.08838834764831845
                       is_causal: false
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L154 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L154 in sdpa_attention_forward,
+                    code: attn_output = torch.nn.functional.scaled_dot_product_attention('
                   tags:
                     - bf16operation
                     - torch.nn.functional.scaled_dot_product_attention.2
@@ -2864,7 +3013,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward,
+                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - bf16operation
                     - constant
@@ -2879,7 +3029,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward,
+                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - bf16operation
                     - torch.Tensor.contiguous.3
@@ -2894,7 +3045,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 855, -1)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward,
+                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - bf16operation
                     - constant
@@ -2909,7 +3061,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward,
+                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - bf16operation
                     - torch.Tensor.contiguous.4
@@ -2931,7 +3084,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L177 in forward, code: attn_output = self.o_proj(attn_output)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L177 in forward,
+                    code: attn_output = self.o_proj(attn_output)'
                   tags:
                     - bf16operation
                     - constant
@@ -2953,7 +3107,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L233 in forward, code: hidden_states = residual + hidden_states'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L233 in forward,
+                    code: hidden_states = residual + hidden_states'
                   tags:
                     - bf16operation
                     - torch.add.12
@@ -2975,7 +3130,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - constant
@@ -3011,7 +3167,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - torch.mul.20
@@ -3033,7 +3190,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - constant
@@ -3049,7 +3207,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (slice(None, None, None), slice(-1, None, None), slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in torch_dynamo_resume_in_forward_at_400, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in torch_dynamo_resume_in_forward_at_400,
+                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - bf16operation
                     - constant
@@ -3072,7 +3231,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in torch_dynamo_resume_in_forward_at_400, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in torch_dynamo_resume_in_forward_at_400,
+                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - bf16operation
                     - constant
@@ -3101,7 +3261,8 @@ test_suite_config:
                       - value: 2.0
                       - value: false
                       - value: false
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L292 in forward, code: inputs_embeds = self.get_input_embeddings()(input_ids)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L292 in forward,
+                    code: inputs_embeds = self.get_input_embeddings()(input_ids)'
                   tags:
                     - bf16operation
                     - constant
@@ -3119,7 +3280,8 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - py: (slice(None, None, None), None, slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward,
+                    code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - constant
                     - torch.getitem.18
@@ -3135,7 +3297,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L315 in forward,
+                    code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - torch.float.4
                 - name: torch.float
@@ -3148,7 +3311,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward,
+                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - fp32operation
                     - torch.float.5
@@ -3169,7 +3333,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward,
+                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - fp32operation
                     - torch.matmul.2
@@ -3185,7 +3350,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L319 in forward,
+                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - fp32operation
                     - constant
@@ -3208,7 +3374,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L320 in forward, code: emb = torch.cat((freqs, freqs), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L320 in forward,
+                    code: emb = torch.cat((freqs, freqs), dim=-1)'
                   tags:
                     - fp32operation
                     - constant
@@ -3223,7 +3390,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward, code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward,
+                    code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - fp32operation
                     - torch.cos.3
@@ -3238,7 +3406,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward, code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L321 in forward,
+                    code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - fp32operation
                     - constant
@@ -3253,7 +3422,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L322 in forward, code: sin = emb.sin() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L322 in forward,
+                    code: sin = emb.sin() * self.attention_scaling'
                   tags:
                     - fp32operation
                     - torch.sin.3
@@ -3269,7 +3439,8 @@ test_suite_config:
                           init: rand
                     kwargs:
                       dtype: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L324 in forward, code: return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L324 in forward,
+                    code: return cos.to(dtype=x.dtype), sin.to(dtype=x.dtype)'
                   tags:
                     - fp32operation
                     - torch.to.17
@@ -3284,7 +3455,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.float32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L193 in forward, code: hidden_states = hidden_states.to(torch.float32)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L193 in forward,
+                    code: hidden_states = hidden_states.to(torch.float32)'
                   tags:
                     - bf16operation
                     - constant
@@ -3300,7 +3472,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -3318,7 +3491,8 @@ test_suite_config:
                       - value: -1
                     kwargs:
                       keepdim: true
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L194 in forward,
+                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - fp32operation
                     - constant
@@ -3334,7 +3508,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0e-05
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - constant
@@ -3349,7 +3524,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.rsqrt.4
@@ -3370,7 +3546,8 @@ test_suite_config:
                           dtype: torch.float32
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L195 in forward,
+                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - fp32operation
                     - torch.mul.22
@@ -3385,7 +3562,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - fp32operation
                     - constant
@@ -3407,7 +3585,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward, code: return self.weight * hidden_states.to(input_dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L196 in forward,
+                    code: return self.weight * hidden_states.to(input_dtype)'
                   tags:
                     - bf16operation
                     - torch.mul.23
@@ -3429,7 +3608,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward,
+                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -3445,7 +3625,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1, -1, 128)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward,
+                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -3462,7 +3643,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L150 in forward,
+                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -3485,7 +3667,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward,
+                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -3501,7 +3684,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1, -1, 128)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward,
+                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -3518,7 +3702,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L151 in forward,
+                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - bf16operation
                     - constant
@@ -3534,7 +3719,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L77 in apply_rotary_pos_emb, code: cos = cos.unsqueeze(unsqueeze_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L77 in apply_rotary_pos_emb,
+                    code: cos = cos.unsqueeze(unsqueeze_dim)'
                   tags:
                     - bf16operation
                     - constant
@@ -3556,7 +3742,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.24
@@ -3571,7 +3758,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, 64, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half, code: x1 = x[..., : x.shape[-1] // 2]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half,
+                    code: x1 = x[..., : x.shape[-1] // 2]'
                   tags:
                     - bf16operation
                     - constant
@@ -3586,7 +3774,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - torch.neg.4
@@ -3608,7 +3797,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - constant
@@ -3630,7 +3820,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.25
@@ -3651,7 +3842,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb, code: q_embed = (q * cos) + (rotate_half(q) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L79 in apply_rotary_pos_emb,
+                    code: q_embed = (q * cos) + (rotate_half(q) * sin)'
                   tags:
                     - bf16operation
                     - torch.add.14
@@ -3672,7 +3864,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb,
+                    code: k_embed = (k * cos) + (rotate_half(k) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.26
@@ -3687,7 +3880,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, 64, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half, code: x1 = x[..., : x.shape[-1] // 2]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L53 in rotate_half,
+                    code: x1 = x[..., : x.shape[-1] // 2]'
                   tags:
                     - bf16operation
                     - constant
@@ -3702,7 +3896,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - torch.neg.5
@@ -3724,7 +3919,8 @@ test_suite_config:
                             init: rand
                     kwargs:
                       dim: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half, code: return torch.cat((-x2, x1), dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L55 in rotate_half,
+                    code: return torch.cat((-x2, x1), dim=-1)'
                   tags:
                     - bf16operation
                     - constant
@@ -3746,7 +3942,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb,
+                    code: k_embed = (k * cos) + (rotate_half(k) * sin)'
                   tags:
                     - bf16operation
                     - torch.mul.27
@@ -3767,7 +3964,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb, code: k_embed = (k * cos) + (rotate_half(k) * sin)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L80 in apply_rotary_pos_emb,
+                    code: k_embed = (k * cos) + (rotate_half(k) * sin)'
                   tags:
                     - bf16operation
                     - torch.add.15
@@ -3792,7 +3990,8 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L420 in update, code: cache_position = torch.arange(kv_length, device=self.device) + self.cumulative_length'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L420 in update, code: cache_position
+                    = torch.arange(kv_length, device=self.device) + self.cumulative_length'
                   tags:
                     - torch.add.16
                 - name: torch.index_copy_
@@ -3822,7 +4021,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2, cache_position, key_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2,
+                    cache_position, key_states)'
                   tags:
                     - bf16operation
                     - constant
@@ -3854,7 +4054,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L427 in update, code: self.values.index_copy_(2, cache_position, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L427 in update, code: self.values.index_copy_(2,
+                    cache_position, value_states)'
                   tags:
                     - bf16operation
                     - constant
@@ -3887,7 +4088,8 @@ test_suite_config:
                       dropout_p: 0.0
                       scale: 0.08838834764831845
                       is_causal: false
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L154 in sdpa_attention_forward, code: attn_output = torch.nn.functional.scaled_dot_product_attention('
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L154 in sdpa_attention_forward,
+                    code: attn_output = torch.nn.functional.scaled_dot_product_attention('
                   tags:
                     - bf16operation
                     - torch.nn.functional.scaled_dot_product_attention.3
@@ -3903,7 +4105,8 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward,
+                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - bf16operation
                     - constant
@@ -3918,7 +4121,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/sdpa_attention.py#L164 in sdpa_attention_forward,
+                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - bf16operation
                     - torch.Tensor.contiguous.5
@@ -3933,7 +4137,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1, -1)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward,
+                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - bf16operation
                     - constant
@@ -3948,7 +4153,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L176 in forward,
+                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - bf16operation
                     - torch.Tensor.contiguous.6
@@ -3970,7 +4176,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L177 in forward, code: attn_output = self.o_proj(attn_output)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L177 in forward,
+                    code: attn_output = self.o_proj(attn_output)'
                   tags:
                     - bf16operation
                     - constant
@@ -3992,7 +4199,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L233 in forward, code: hidden_states = residual + hidden_states'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L233 in forward,
+                    code: hidden_states = residual + hidden_states'
                   tags:
                     - bf16operation
                     - torch.add.17
@@ -4014,7 +4222,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - constant
@@ -4050,7 +4259,8 @@ test_suite_config:
                           dtype: torch.bfloat16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - torch.mul.28
@@ -4072,7 +4282,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward, code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral/modeling_mistral.py#L47 in forward,
+                    code: down_proj = self.down_proj(self.act_fn(self.gate_proj(x)) * self.up_proj(x))'
                   tags:
                     - bf16operation
                     - constant
@@ -4088,7 +4299,8 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (slice(None, None, None), slice(-1, None, None), slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in forward, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in forward,
+                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - bf16operation
                     - constant
@@ -4111,7 +4323,8 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in forward, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/mistral3/modeling_mistral3.py#L414 in forward,
+                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - bf16operation
                     - constant
