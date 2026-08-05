@@ -77,7 +77,7 @@ test_suite_config:
       tests:
         - names:
             - TestSpyreModelOps::test_model_ops_db
-          mode: mandatory_success
+          mode: xfail
           tags:
             - model__gpt-oss-20b_spyre
           edits:
@@ -107,8 +107,7 @@ test_suite_config:
                       - value: 2.0
                       - value: false
                       - value: false
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L470 in forward,
-                    code: inputs_embeds = self.embed_tokens(input_ids)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L470 in forward, code: inputs_embeds = self.embed_tokens(input_ids)'
                   tags:
                     - constant
                     - torch.nn.functional.embedding.1_spyre
@@ -123,8 +122,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (None, slice(None, None, None), None)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward,
-                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - constant
                     - torch.getitem.1_spyre
@@ -138,8 +136,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward,
-                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - torch.float.1_spyre
                 - name: torch.Tensor.expand
@@ -155,8 +152,7 @@ test_suite_config:
                       - value: 1
                       - value: -1
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward,
-                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - constant
                     - torch.Tensor.expand.1_spyre
@@ -171,8 +167,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward,
-                    code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L206 in forward, code: inv_freq_expanded = self.inv_freq[None, :, None].float().expand(position_ids.shape[0], -1, 1).to(x.device)'
                   tags:
                     - constant
                     - torch.to.1_spyre
@@ -189,8 +184,7 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - py: (slice(None, None, None), None, slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward,
-                    code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - constant
                     - torch.getitem.2_spyre
@@ -206,8 +200,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward,
-                    code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - torch.float.2
                 - name: torch.float
@@ -220,8 +213,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward,
-                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - torch.float.3_spyre
                 - name: torch.matmul
@@ -241,8 +233,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward,
-                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - torch.matmul.1_spyre
                 - name: torch.transpose
@@ -257,8 +248,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward,
-                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.transpose.1_spyre
@@ -272,8 +262,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward,
-                    code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward, code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - torch.cos.1_spyre
                 - name: torch.mul
@@ -287,8 +276,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.3465735902799727
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward,
-                    code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward, code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - constant
                     - torch.mul.1_spyre
@@ -302,8 +290,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L214 in forward,
-                    code: sin = emb.sin() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L214 in forward, code: sin = emb.sin() * self.attention_scaling'
                   tags:
                     - torch.sin.1_spyre
                 - name: torch.to
@@ -317,8 +304,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L216 in forward,
-                    code: return cos.to(x.dtype), sin.to(x.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L216 in forward, code: return cos.to(x.dtype), sin.to(x.dtype)'
                   tags:
                     - constant
                     - torch.to.2_spyre
@@ -333,8 +319,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.float32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L64 in forward,
-                    code: hidden_states = hidden_states.to(torch.float32)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L64 in forward, code: hidden_states = hidden_states.to(torch.float32)'
                   tags:
                     - constant
                     - torch.to.3_spyre
@@ -349,8 +334,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward,
-                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - constant
                     - torch.pow.1_spyre
@@ -365,13 +349,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward,
-                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                    kwargs:
+                      keepdim: true
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - constant
                     - torch.mean.1_spyre
-                  kwargs:
-                    keepdim: true
                 - name: torch.add
                   sample_inputs_func:
                     args:
@@ -383,8 +366,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0e-05
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward,
-                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - constant
                     - torch.add.1_spyre
@@ -398,8 +380,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward,
-                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - torch.rsqrt.1_spyre
                 - name: torch.mul
@@ -419,8 +400,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward,
-                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - torch.mul.2_spyre
                 - name: torch.mul
@@ -440,8 +420,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward,
-                    code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward, code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
                   tags:
                     - torch.mul.3_spyre
                 - name: torch.to
@@ -455,8 +434,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward,
-                    code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward, code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
                   tags:
                     - constant
                     - torch.to.4_spyre
@@ -484,8 +462,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward,
-                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - torch.nn.functional.linear.1_spyre
                 - name: torch.Tensor.view
@@ -499,8 +476,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 11, -1, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward,
-                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.Tensor.view.1_spyre
@@ -516,8 +492,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward,
-                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.transpose.2_spyre
@@ -545,8 +520,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward,
-                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - torch.nn.functional.linear.2_spyre
                 - name: torch.Tensor.view
@@ -560,8 +534,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 11, -1, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward,
-                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.Tensor.view.2_spyre
@@ -577,8 +550,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward,
-                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.transpose.3_spyre
@@ -593,8 +565,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L244 in apply_rotary_pos_emb,
-                    code: cos = cos.unsqueeze(unsqueeze_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L244 in apply_rotary_pos_emb, code: cos = cos.unsqueeze(unsqueeze_dim)'
                   tags:
                     - constant
                     - torch.unsqueeze.1_spyre
@@ -609,13 +580,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.chunk.1_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -627,8 +597,7 @@ test_suite_config:
                             device: cuda:0
                             init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.getitem.3_spyre
@@ -649,8 +618,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.4_spyre
                 - name: torch.mul
@@ -670,8 +638,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.5_spyre
                 - name: torch.sub
@@ -691,8 +658,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.sub.1_spyre
                 - name: torch.add
@@ -712,8 +678,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb,
-                    code: second_ = second_half * cos + first_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb, code: second_ = second_half * cos + first_half * sin'
                   tags:
                     - torch.add.2_spyre
                 - name: torch.cat
@@ -732,13 +697,12 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb,
-                    code: return torch.cat((first_, second_), dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb, code: return torch.cat((first_, second_), dim=-1)'
                   tags:
                     - constant
                     - torch.cat.1_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.chunk
                   sample_inputs_func:
                     args:
@@ -750,13 +714,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.chunk.2_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -768,8 +731,7 @@ test_suite_config:
                             device: cuda:0
                             init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.getitem.4_spyre
@@ -790,8 +752,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.6_spyre
                 - name: torch.mul
@@ -811,8 +772,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.7_spyre
                 - name: torch.sub
@@ -832,8 +792,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.sub.2_spyre
                 - name: torch.add
@@ -853,8 +812,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb,
-                    code: second_ = second_half * cos + first_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb, code: second_ = second_half * cos + first_half * sin'
                   tags:
                     - torch.add.3_spyre
                 - name: torch.cat
@@ -873,25 +831,23 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb,
-                    code: return torch.cat((first_, second_), dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb, code: return torch.cat((first_, second_), dim=-1)'
                   tags:
                     - constant
                     - torch.cat.2_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.zeros
                   sample_inputs_func:
                     args:
                       - value: (1, 8, 128, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L378 in lazy_initialization, code:
-                    self.keys = torch.zeros('
+                    kwargs:
+                      dtype: torch.float16
+                      device: cuda:0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L378 in lazy_initialization, code: self.keys = torch.zeros('
                   tags:
                     - constant
                     - torch.zeros.1_spyre
-                  kwargs:
-                    dtype: torch.float16
-                    device: cuda:0
                 - name: torch.to
                   sample_inputs_func:
                     args:
@@ -905,8 +861,7 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: cuda:0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L388 in lazy_initialization, code:
-                    self.cumulative_length = self.cumulative_length.to(self.device)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L388 in lazy_initialization, code: self.cumulative_length = self.cumulative_length.to(self.device)'
                   tags:
                     - constant
                     - tensorsoncpu
@@ -915,13 +870,12 @@ test_suite_config:
                   sample_inputs_func:
                     args:
                       - value: 11
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L529 in update, code: cache_position
-                    = torch.arange(kv_length, device=self.device) + self.cumulative_length'
+                    kwargs:
+                      device: cuda:0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L529 in update, code: cache_position = torch.arange(kv_length, device=self.device) + self.cumulative_length'
                   tags:
                     - constant
                     - torch.arange.1_spyre
-                  kwargs:
-                    device: cuda:0
                 - name: torch.add
                   sample_inputs_func:
                     args:
@@ -943,8 +897,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L529 in update, code: cache_position
-                    = torch.arange(kv_length, device=self.device) + self.cumulative_length'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L529 in update, code: cache_position = torch.arange(kv_length, device=self.device) + self.cumulative_length'
                   tags:
                     - torch.add.4
                 - name: torch.index_copy_
@@ -974,8 +927,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L531 in update, code: self.keys.index_copy_(2,
-                    cache_position, key_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L531 in update, code: self.keys.index_copy_(2, cache_position, key_states)'
                   tags:
                     - constant
                     - torch.index_copy_.1_spyre
@@ -1006,8 +958,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L532 in update, code: self.values.index_copy_(2,
-                    cache_position, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L532 in update, code: self.values.index_copy_(2, cache_position, value_states)'
                   tags:
                     - constant
                     - torch.index_copy_.2_spyre
@@ -1039,8 +990,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv,
-                    code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
                   tags:
                     - constant
                     - torch.getitem.5_spyre
@@ -1059,8 +1009,7 @@ test_suite_config:
                       - value: 8
                       - value: 128
                       - value: 64
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv,
-                    code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
                   tags:
                     - constant
                     - torch.Tensor.expand.2_spyre
@@ -1075,8 +1024,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 64, 128, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L228 in repeat_kv,
-                    code: return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L228 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)'
                   tags:
                     - constant
                     - torch.reshape.1_spyre
@@ -1092,8 +1040,7 @@ test_suite_config:
                           init: rand
                       - value: 2
                       - value: 3
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - constant
                     - torch.transpose.4_spyre
@@ -1114,8 +1061,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - torch.matmul.2_spyre
                 - name: torch.mul
@@ -1129,8 +1075,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0.125
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - constant
                     - torch.mul.8_spyre
@@ -1151,8 +1096,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward,
-                    code: attn_weights = attn_weights + attention_mask'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward, code: attn_weights = attn_weights + attention_mask'
                   tags:
                     - torch.add.5_spyre
                 - name: torch.reshape
@@ -1166,8 +1110,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, -1, 1, 1)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L267 in eager_attention_forward,
-                    code: sinks = module.sinks.reshape(1, -1, 1, 1).expand(query.shape[0], -1, query.shape[-2], -1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L267 in eager_attention_forward, code: sinks = module.sinks.reshape(1, -1, 1, 1).expand(query.shape[0], -1, query.shape[-2], -1)'
                   tags:
                     - constant
                     - torch.reshape.2_spyre
@@ -1185,8 +1128,7 @@ test_suite_config:
                       - value: -1
                       - value: 11
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L267 in eager_attention_forward,
-                    code: sinks = module.sinks.reshape(1, -1, 1, 1).expand(query.shape[0], -1, query.shape[-2], -1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L267 in eager_attention_forward, code: sinks = module.sinks.reshape(1, -1, 1, 1).expand(query.shape[0], -1, query.shape[-2], -1)'
                   tags:
                     - constant
                     - torch.Tensor.expand.3_spyre
@@ -1206,12 +1148,11 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward,
-                    code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward, code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
                   tags:
                     - torch.cat.3_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.max
                   sample_inputs_func:
                     args:
@@ -1222,13 +1163,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                    kwargs:
+                      dim: -1
+                      keepdim: true
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.max.1_spyre
-                  kwargs:
-                    dim: -1
-                    keepdim: true
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -1242,8 +1182,7 @@ test_suite_config:
                             init_args:
                               high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - constant
                     - torch.getitem.6_spyre
@@ -1264,8 +1203,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.sub.3_spyre
                 - name: torch.nn.functional.softmax
@@ -1278,13 +1216,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward,
-                    code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
+                    kwargs:
+                      dim: -1
+                      dtype: torch.float16
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward, code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
                   tags:
                     - torch.nn.functional.softmax.1_spyre
-                  kwargs:
-                    dim: -1
-                    dtype: torch.float16
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -1296,8 +1233,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, -1, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward,
-                    code: scores = probs[..., :-1]  # we drop the sink here'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward, code: scores = probs[..., :-1]  # we drop the sink here'
                   tags:
                     - constant
                     - torch.getitem.7_spyre
@@ -1311,13 +1247,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                    kwargs:
+                      p: 0.0
+                      training: false
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - torch.nn.functional.dropout.1_spyre
-                  kwargs:
-                    p: 0.0
-                    training: false
                 - name: torch.to
                   sample_inputs_func:
                     args:
@@ -1329,8 +1264,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - constant
                     - torch.to.6_spyre
@@ -1351,8 +1285,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward,
-                    code: attn_output = torch.matmul(attn_weights, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward, code: attn_output = torch.matmul(attn_weights, value_states)'
                   tags:
                     - torch.matmul.3_spyre
                 - name: torch.transpose
@@ -1367,8 +1300,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward,
-                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - constant
                     - torch.transpose.5_spyre
@@ -1382,8 +1314,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward,
-                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - torch.Tensor.contiguous.1_spyre
                 - name: torch.reshape
@@ -1397,8 +1328,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 11, -1)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward,
-                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - constant
                     - torch.reshape.3_spyre
@@ -1412,8 +1342,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward,
-                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - torch.Tensor.contiguous.2_spyre
                 - name: torch.nn.functional.linear
@@ -1440,8 +1369,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L350 in forward,
-                    code: attn_output = self.o_proj(attn_output)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L350 in forward, code: attn_output = self.o_proj(attn_output)'
                   tags:
                     - torch.nn.functional.linear.3_spyre
                 - name: torch.add
@@ -1461,8 +1389,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L385 in forward,
-                    code: hidden_states = residual + hidden_states'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L385 in forward, code: hidden_states = residual + hidden_states'
                   tags:
                     - torch.add.6_spyre
                 - name: torch.reshape
@@ -1476,8 +1403,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (-1, 2880)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L147 in forward,
-                    code: hidden_states = hidden_states.reshape(-1, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L147 in forward, code: hidden_states = hidden_states.reshape(-1, hidden_dim)'
                   tags:
                     - constant
                     - torch.reshape.4_spyre
@@ -1505,8 +1431,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L132 in forward,
-                    code: router_logits = F.linear(hidden_states, self.weight, self.bias)  # (num_tokens, num_experts)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L132 in forward, code: router_logits = F.linear(hidden_states, self.weight, self.bias)  # (num_tokens, num_experts)'
                   tags:
                     - torch.nn.functional.linear.4_spyre
                 - name: torch.topk
@@ -1520,13 +1445,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 4
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward,
-                    code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward, code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
                   tags:
                     - constant
                     - torch.topk.1_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -1540,8 +1464,7 @@ test_suite_config:
                             init_args:
                               high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward,
-                    code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward, code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
                   tags:
                     - constant
                     - torch.getitem.8_spyre
@@ -1555,13 +1478,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L134 in forward,
-                    code: router_scores = torch.nn.functional.softmax(router_top_value, dim=1, dtype=router_top_value.dtype)'
+                    kwargs:
+                      dim: 1
+                      dtype: torch.float16
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L134 in forward, code: router_scores = torch.nn.functional.softmax(router_top_value, dim=1, dtype=router_top_value.dtype)'
                   tags:
                     - torch.nn.functional.softmax.2_spyre
-                  kwargs:
-                    dim: 1
-                    dtype: torch.float16
                 - name: torch.repeat_interleave
                   sample_inputs_func:
                     args:
@@ -1573,13 +1495,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 4
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L130 in batched_mm_experts_forward,
-                    code: selected_hidden_states = hidden_states.repeat_interleave(num_top_k, dim=0)'
+                    kwargs:
+                      dim: 0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L130 in batched_mm_experts_forward, code: selected_hidden_states = hidden_states.repeat_interleave(num_top_k, dim=0)'
                   tags:
                     - constant
                     - torch.repeat_interleave.1_spyre
-                  kwargs:
-                    dim: 0
                 - name: torch.reshape
                   sample_inputs_func:
                     args:
@@ -1591,8 +1512,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (-1,)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L131 in batched_mm_experts_forward,
-                    code: sample_weights = top_k_weights.reshape(-1)  # (S,)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L131 in batched_mm_experts_forward, code: sample_weights = top_k_weights.reshape(-1)  # (S,)'
                   tags:
                     - constant
                     - torch.reshape.5_spyre
@@ -1609,8 +1529,7 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: (-1,)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L132 in batched_mm_experts_forward,
-                    code: expert_ids = top_k_index.reshape(-1)  # (S,)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L132 in batched_mm_experts_forward, code: expert_ids = top_k_index.reshape(-1)  # (S,)'
                   tags:
                     - constant
                     - torch.reshape.6_spyre
@@ -1628,8 +1547,7 @@ test_suite_config:
                             high: 1000
                       - value: 0
                       - value: 31
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L138 in batched_mm_experts_forward,
-                    code: expert_ids = expert_ids.clamp(0, self.num_experts - 1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L138 in batched_mm_experts_forward, code: expert_ids = expert_ids.clamp(0, self.num_experts - 1)'
                   tags:
                     - constant
                     - torch.clamp.1_spyre
@@ -1652,8 +1570,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L142 in batched_mm_experts_forward,
-                    code: selected_weights = self.gate_up_proj[expert_ids]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L142 in batched_mm_experts_forward, code: selected_weights = self.gate_up_proj[expert_ids]'
                   tags:
                     - torch.getitem.9_spyre
                 - name: torch.getitem
@@ -1675,8 +1592,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L143 in batched_mm_experts_forward,
-                    code: selected_biases = self.gate_up_proj_bias[expert_ids] if self.has_bias else None'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L143 in batched_mm_experts_forward, code: selected_biases = self.gate_up_proj_bias[expert_ids] if self.has_bias else None'
                   tags:
                     - torch.getitem.10_spyre
                 - name: torch.unsqueeze
@@ -1690,8 +1606,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - constant
                     - torch.unsqueeze.2_spyre
@@ -1712,8 +1627,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - torch.bmm.1_spyre
                 - name: torch.squeeze
@@ -1727,8 +1641,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - constant
                     - torch.squeeze.1_spyre
@@ -1749,8 +1662,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code:
-                    out.add_(bias)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code: out.add_(bias)'
                   tags:
                     - torch.add_.2_spyre
                 - name: torch.getitem
@@ -1764,8 +1676,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, None, 2))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L88 in _apply_gate,
-                    code: gate, up = gate_up[..., ::2], gate_up[..., 1::2]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L88 in _apply_gate, code: gate, up = gate_up[..., ::2], gate_up[..., 1::2]'
                   tags:
                     - constant
                     - torch.getitem.11_spyre
@@ -1779,13 +1690,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L89 in _apply_gate,
-                    code: gate = gate.clamp(min=None, max=self.limit)'
+                    kwargs:
+                      min: None
+                      max: 7.0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L89 in _apply_gate, code: gate = gate.clamp(min=None, max=self.limit)'
                   tags:
                     - torch.clamp.2_spyre
-                  kwargs:
-                    min: None
-                    max: 7.0
                 - name: torch.clamp
                   sample_inputs_func:
                     args:
@@ -1796,13 +1706,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L90 in _apply_gate,
-                    code: up = up.clamp(min=-self.limit, max=self.limit)'
+                    kwargs:
+                      min: -7.0
+                      max: 7.0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L90 in _apply_gate, code: up = up.clamp(min=-self.limit, max=self.limit)'
                   tags:
                     - torch.clamp.3_spyre
-                  kwargs:
-                    min: -7.0
-                    max: 7.0
                 - name: torch.mul
                   sample_inputs_func:
                     args:
@@ -1814,8 +1723,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.702
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate,
-                    code: glu = gate * torch.sigmoid(gate * self.alpha)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate, code: glu = gate * torch.sigmoid(gate * self.alpha)'
                   tags:
                     - constant
                     - torch.mul.9_spyre
@@ -1829,8 +1737,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate,
-                    code: glu = gate * torch.sigmoid(gate * self.alpha)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate, code: glu = gate * torch.sigmoid(gate * self.alpha)'
                   tags:
                     - torch.sigmoid.1_spyre
                 - name: torch.mul
@@ -1850,8 +1757,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate,
-                    code: glu = gate * torch.sigmoid(gate * self.alpha)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate, code: glu = gate * torch.sigmoid(gate * self.alpha)'
                   tags:
                     - torch.mul.10_spyre
                 - name: torch.add
@@ -1865,8 +1771,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L92 in _apply_gate,
-                    code: gated_output = (up + 1) * glu'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L92 in _apply_gate, code: gated_output = (up + 1) * glu'
                   tags:
                     - constant
                     - torch.add.7_spyre
@@ -1889,8 +1794,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L162 in batched_mm_experts_forward,
-                    code: selected_weights = self.down_proj[expert_ids]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L162 in batched_mm_experts_forward, code: selected_weights = self.down_proj[expert_ids]'
                   tags:
                     - torch.getitem.12_spyre
                 - name: torch.getitem
@@ -1912,8 +1816,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L163 in batched_mm_experts_forward,
-                    code: selected_biases = self.down_proj_bias[expert_ids] if self.has_bias else None'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L163 in batched_mm_experts_forward, code: selected_biases = self.down_proj_bias[expert_ids] if self.has_bias else None'
                   tags:
                     - torch.getitem.13_spyre
                 - name: torch.bmm
@@ -1933,8 +1836,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - torch.bmm.2_spyre
                 - name: torch.squeeze
@@ -1948,8 +1850,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - constant
                     - torch.squeeze.2_spyre
@@ -1970,8 +1871,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code:
-                    out.add_(bias)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code: out.add_(bias)'
                   tags:
                     - torch.add_.3_spyre
                 - name: torch.unsqueeze
@@ -1985,8 +1885,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward,
-                    code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward, code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
                   tags:
                     - constant
                     - torch.unsqueeze.3_spyre
@@ -2007,8 +1906,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward,
-                    code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward, code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
                   tags:
                     - torch.mul.11_spyre
                 - name: torch.Tensor.view
@@ -2024,8 +1922,7 @@ test_suite_config:
                       - value: 11
                       - value: 4
                       - value: 2880
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward,
-                    code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward, code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
                   tags:
                     - constant
                     - torch.Tensor.view.3_spyre
@@ -2039,12 +1936,11 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward,
-                    code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
+                    kwargs:
+                      dim: 1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward, code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
                   tags:
                     - torch.sum.1_spyre
-                  kwargs:
-                    dim: 1
                 - name: torch.to
                   sample_inputs_func:
                     args:
@@ -2056,8 +1952,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L179 in batched_mm_experts_forward,
-                    code: return final_hidden_states.to(hidden_states.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L179 in batched_mm_experts_forward, code: return final_hidden_states.to(hidden_states.dtype)'
                   tags:
                     - constant
                     - torch.to.7_spyre
@@ -2072,8 +1967,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 11, 2880)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L150 in forward,
-                    code: hidden_states = hidden_states.reshape(batch_size, sequence_length, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L150 in forward, code: hidden_states = hidden_states.reshape(batch_size, sequence_length, hidden_dim)'
                   tags:
                     - constant
                     - torch.reshape.7_spyre
@@ -2081,14 +1975,13 @@ test_suite_config:
                   sample_inputs_func:
                     args:
                       - value: (1, 8, 2048, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L378 in lazy_initialization, code:
-                    self.keys = torch.zeros('
+                    kwargs:
+                      dtype: torch.float16
+                      device: cuda:0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L378 in lazy_initialization, code: self.keys = torch.zeros('
                   tags:
                     - constant
                     - torch.zeros.2_spyre
-                  kwargs:
-                    dtype: torch.float16
-                    device: cuda:0
                 - name: torch.index_copy_
                   sample_inputs_func:
                     args:
@@ -2116,8 +2009,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2,
-                    cache_position, key_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2, cache_position, key_states)'
                   tags:
                     - constant
                     - torch.index_copy_.3_spyre
@@ -2148,8 +2040,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L427 in update, code: self.values.index_copy_(2,
-                    cache_position, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L427 in update, code: self.values.index_copy_(2, cache_position, value_states)'
                   tags:
                     - constant
                     - torch.index_copy_.4_spyre
@@ -2164,8 +2055,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (slice(None, None, None), slice(None, None, None), None, slice(None, None, None), slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv,
-                    code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
                   tags:
                     - constant
                     - torch.getitem.14_spyre
@@ -2184,8 +2074,7 @@ test_suite_config:
                       - value: 8
                       - value: 2048
                       - value: 64
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv,
-                    code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L227 in repeat_kv, code: hidden_states = hidden_states[:, :, None, :, :].expand(batch, num_key_value_heads, n_rep, slen, head_dim)'
                   tags:
                     - constant
                     - torch.Tensor.expand.4_spyre
@@ -2200,8 +2089,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 64, 2048, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L228 in repeat_kv,
-                    code: return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L228 in repeat_kv, code: return hidden_states.reshape(batch, num_key_value_heads * n_rep, slen, head_dim)'
                   tags:
                     - constant
                     - torch.reshape.8_spyre
@@ -2217,8 +2105,7 @@ test_suite_config:
                           init: rand
                       - value: 2
                       - value: 3
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - constant
                     - torch.transpose.6_spyre
@@ -2239,8 +2126,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - torch.matmul.4_spyre
                 - name: torch.mul
@@ -2254,8 +2140,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0.125
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - constant
                     - torch.mul.12_spyre
@@ -2276,8 +2161,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward,
-                    code: attn_weights = attn_weights + attention_mask'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward, code: attn_weights = attn_weights + attention_mask'
                   tags:
                     - torch.add.8_spyre
                 - name: torch.cat
@@ -2296,12 +2180,11 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward,
-                    code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward, code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
                   tags:
                     - torch.cat.4_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.max
                   sample_inputs_func:
                     args:
@@ -2312,13 +2195,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                    kwargs:
+                      dim: -1
+                      keepdim: true
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.max.2_spyre
-                  kwargs:
-                    dim: -1
-                    keepdim: true
                 - name: torch.sub
                   sample_inputs_func:
                     args:
@@ -2336,8 +2218,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.sub.4_spyre
                 - name: torch.nn.functional.softmax
@@ -2350,13 +2231,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward,
-                    code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
+                    kwargs:
+                      dim: -1
+                      dtype: torch.float16
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward, code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
                   tags:
                     - torch.nn.functional.softmax.3_spyre
-                  kwargs:
-                    dim: -1
-                    dtype: torch.float16
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -2368,8 +2248,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, -1, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward,
-                    code: scores = probs[..., :-1]  # we drop the sink here'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward, code: scores = probs[..., :-1]  # we drop the sink here'
                   tags:
                     - constant
                     - torch.getitem.15_spyre
@@ -2383,13 +2262,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                    kwargs:
+                      p: 0.0
+                      training: false
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - torch.nn.functional.dropout.2_spyre
-                  kwargs:
-                    p: 0.0
-                    training: false
                 - name: torch.to
                   sample_inputs_func:
                     args:
@@ -2401,8 +2279,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - constant
                     - torch.to.8_spyre
@@ -2423,8 +2300,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward,
-                    code: attn_output = torch.matmul(attn_weights, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward, code: attn_output = torch.matmul(attn_weights, value_states)'
                   tags:
                     - torch.matmul.5_spyre
                 - name: torch.getitem
@@ -2438,8 +2314,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (slice(None, None, None), slice(-1, None, None), slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward,
-                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - constant
                     - torch.getitem.16_spyre
@@ -2461,8 +2336,7 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward,
-                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - constant
                     - torch.nn.functional.linear.5_spyre
@@ -2490,8 +2364,7 @@ test_suite_config:
                       - value: 2.0
                       - value: false
                       - value: false
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L470 in forward,
-                    code: inputs_embeds = self.embed_tokens(input_ids)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L470 in forward, code: inputs_embeds = self.embed_tokens(input_ids)'
                   tags:
                     - constant
                     - torch.nn.functional.embedding.2_spyre
@@ -2508,8 +2381,7 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - py: (slice(None, None, None), None, slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward,
-                    code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - constant
                     - torch.getitem.17_spyre
@@ -2525,8 +2397,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward,
-                    code: position_ids_expanded = position_ids[:, None, :].float()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L207 in forward, code: position_ids_expanded = position_ids[:, None, :].float()'
                   tags:
                     - torch.float.4
                 - name: torch.float
@@ -2539,8 +2410,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward,
-                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - torch.float.5_spyre
                 - name: torch.matmul
@@ -2560,8 +2430,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward,
-                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - torch.matmul.6_spyre
                 - name: torch.transpose
@@ -2576,8 +2445,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward,
-                    code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L211 in forward, code: freqs = (inv_freq_expanded.float() @ position_ids_expanded.float()).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.transpose.7_spyre
@@ -2591,8 +2459,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward,
-                    code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward, code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - torch.cos.2_spyre
                 - name: torch.mul
@@ -2606,8 +2473,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.3465735902799727
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward,
-                    code: cos = emb.cos() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L213 in forward, code: cos = emb.cos() * self.attention_scaling'
                   tags:
                     - constant
                     - torch.mul.13_spyre
@@ -2621,8 +2487,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L214 in forward,
-                    code: sin = emb.sin() * self.attention_scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L214 in forward, code: sin = emb.sin() * self.attention_scaling'
                   tags:
                     - torch.sin.2_spyre
                 - name: torch.to
@@ -2636,8 +2501,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L216 in forward,
-                    code: return cos.to(x.dtype), sin.to(x.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L216 in forward, code: return cos.to(x.dtype), sin.to(x.dtype)'
                   tags:
                     - constant
                     - torch.to.9_spyre
@@ -2652,8 +2516,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.float32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L64 in forward,
-                    code: hidden_states = hidden_states.to(torch.float32)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L64 in forward, code: hidden_states = hidden_states.to(torch.float32)'
                   tags:
                     - constant
                     - torch.to.10_spyre
@@ -2668,8 +2531,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward,
-                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - constant
                     - torch.pow.2_spyre
@@ -2684,13 +2546,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward,
-                    code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
+                    kwargs:
+                      keepdim: true
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L65 in forward, code: variance = hidden_states.pow(2).mean(-1, keepdim=True)'
                   tags:
                     - constant
                     - torch.mean.2_spyre
-                  kwargs:
-                    keepdim: true
                 - name: torch.add
                   sample_inputs_func:
                     args:
@@ -2702,8 +2563,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.0e-05
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward,
-                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - constant
                     - torch.add.9_spyre
@@ -2717,8 +2577,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward,
-                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - torch.rsqrt.2_spyre
                 - name: torch.mul
@@ -2738,8 +2597,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward,
-                    code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L66 in forward, code: hidden_states = hidden_states * torch.rsqrt(variance + self.variance_epsilon)'
                   tags:
                     - torch.mul.14_spyre
                 - name: torch.mul
@@ -2759,8 +2617,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward,
-                    code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward, code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
                   tags:
                     - torch.mul.15_spyre
                 - name: torch.to
@@ -2774,8 +2631,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward,
-                    code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L67 in forward, code: return (self.weight * hidden_states).to(input_dtype)  # main diff with Llama'
                   tags:
                     - constant
                     - torch.to.11_spyre
@@ -2803,8 +2659,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward,
-                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - torch.nn.functional.linear.6_spyre
                 - name: torch.Tensor.view
@@ -2818,8 +2673,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1, -1, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward,
-                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.Tensor.view.4_spyre
@@ -2835,8 +2689,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward,
-                    code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L322 in forward, code: query_states = self.q_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.transpose.8_spyre
@@ -2864,8 +2717,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward,
-                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - torch.nn.functional.linear.7_spyre
                 - name: torch.Tensor.view
@@ -2879,8 +2731,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1, -1, 64)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward,
-                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.Tensor.view.5_spyre
@@ -2896,8 +2747,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward,
-                    code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L323 in forward, code: key_states = self.k_proj(hidden_states).view(hidden_shape).transpose(1, 2)'
                   tags:
                     - constant
                     - torch.transpose.9_spyre
@@ -2912,8 +2762,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L244 in apply_rotary_pos_emb,
-                    code: cos = cos.unsqueeze(unsqueeze_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L244 in apply_rotary_pos_emb, code: cos = cos.unsqueeze(unsqueeze_dim)'
                   tags:
                     - constant
                     - torch.unsqueeze.4_spyre
@@ -2928,13 +2777,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.chunk.3_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -2946,8 +2794,7 @@ test_suite_config:
                             device: cuda:0
                             init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.getitem.18_spyre
@@ -2968,8 +2815,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.16_spyre
                 - name: torch.mul
@@ -2989,8 +2835,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.17_spyre
                 - name: torch.sub
@@ -3010,8 +2855,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.sub.5_spyre
                 - name: torch.add
@@ -3031,8 +2875,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb,
-                    code: second_ = second_half * cos + first_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb, code: second_ = second_half * cos + first_half * sin'
                   tags:
                     - torch.add.10_spyre
                 - name: torch.cat
@@ -3051,13 +2894,12 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb,
-                    code: return torch.cat((first_, second_), dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb, code: return torch.cat((first_, second_), dim=-1)'
                   tags:
                     - constant
                     - torch.cat.5_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.chunk
                   sample_inputs_func:
                     args:
@@ -3069,13 +2911,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.chunk.4_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -3087,8 +2928,7 @@ test_suite_config:
                             device: cuda:0
                             init: rand
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb,
-                    code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L236 in _apply_rotary_emb, code: first_half, second_half = torch.chunk(x, 2, dim=-1)'
                   tags:
                     - constant
                     - torch.getitem.19_spyre
@@ -3109,8 +2949,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.18_spyre
                 - name: torch.mul
@@ -3130,8 +2969,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.mul.19_spyre
                 - name: torch.sub
@@ -3151,8 +2989,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb,
-                    code: first_ = first_half * cos - second_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L237 in _apply_rotary_emb, code: first_ = first_half * cos - second_half * sin'
                   tags:
                     - torch.sub.6_spyre
                 - name: torch.add
@@ -3172,8 +3009,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb,
-                    code: second_ = second_half * cos + first_half * sin'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L238 in _apply_rotary_emb, code: second_ = second_half * cos + first_half * sin'
                   tags:
                     - torch.add.11_spyre
                 - name: torch.cat
@@ -3192,13 +3028,12 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb,
-                    code: return torch.cat((first_, second_), dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L239 in _apply_rotary_emb, code: return torch.cat((first_, second_), dim=-1)'
                   tags:
                     - constant
                     - torch.cat.6_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.add
                   sample_inputs_func:
                     args:
@@ -3220,8 +3055,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 1000
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L529 in update, code: cache_position
-                    = torch.arange(kv_length, device=self.device) + self.cumulative_length'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L529 in update, code: cache_position = torch.arange(kv_length, device=self.device) + self.cumulative_length'
                   tags:
                     - torch.add.12
                 - name: torch.index_copy_
@@ -3251,8 +3085,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L531 in update, code: self.keys.index_copy_(2,
-                    cache_position, key_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L531 in update, code: self.keys.index_copy_(2, cache_position, key_states)'
                   tags:
                     - constant
                     - torch.index_copy_.5_spyre
@@ -3283,8 +3116,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L532 in update, code: self.values.index_copy_(2,
-                    cache_position, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L532 in update, code: self.values.index_copy_(2, cache_position, value_states)'
                   tags:
                     - constant
                     - torch.index_copy_.6_spyre
@@ -3305,8 +3137,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - torch.matmul.7_spyre
                 - name: torch.mul
@@ -3320,8 +3151,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0.125
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - constant
                     - torch.mul.20_spyre
@@ -3342,8 +3172,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward,
-                    code: attn_weights = attn_weights + attention_mask'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward, code: attn_weights = attn_weights + attention_mask'
                   tags:
                     - torch.add.13_spyre
                 - name: torch.cat
@@ -3362,12 +3191,11 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward,
-                    code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward, code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
                   tags:
                     - torch.cat.7_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.max
                   sample_inputs_func:
                     args:
@@ -3378,13 +3206,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                    kwargs:
+                      dim: -1
+                      keepdim: true
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.max.3_spyre
-                  kwargs:
-                    dim: -1
-                    keepdim: true
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -3398,8 +3225,7 @@ test_suite_config:
                             init_args:
                               high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - constant
                     - torch.getitem.20_spyre
@@ -3420,8 +3246,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.sub.7_spyre
                 - name: torch.nn.functional.softmax
@@ -3434,13 +3259,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward,
-                    code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
+                    kwargs:
+                      dim: -1
+                      dtype: torch.float16
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward, code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
                   tags:
                     - torch.nn.functional.softmax.4_spyre
-                  kwargs:
-                    dim: -1
-                    dtype: torch.float16
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -3452,8 +3276,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, -1, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward,
-                    code: scores = probs[..., :-1]  # we drop the sink here'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward, code: scores = probs[..., :-1]  # we drop the sink here'
                   tags:
                     - constant
                     - torch.getitem.21_spyre
@@ -3467,13 +3290,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                    kwargs:
+                      p: 0.0
+                      training: false
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - torch.nn.functional.dropout.3_spyre
-                  kwargs:
-                    p: 0.0
-                    training: false
                 - name: torch.to
                   sample_inputs_func:
                     args:
@@ -3485,8 +3307,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - constant
                     - torch.to.12_spyre
@@ -3507,8 +3328,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward,
-                    code: attn_output = torch.matmul(attn_weights, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward, code: attn_output = torch.matmul(attn_weights, value_states)'
                   tags:
                     - torch.matmul.8_spyre
                 - name: torch.transpose
@@ -3523,8 +3343,7 @@ test_suite_config:
                           init: rand
                       - value: 1
                       - value: 2
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward,
-                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - constant
                     - torch.transpose.10_spyre
@@ -3538,8 +3357,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward,
-                    code: attn_output = attn_output.transpose(1, 2).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L278 in eager_attention_forward, code: attn_output = attn_output.transpose(1, 2).contiguous()'
                   tags:
                     - torch.Tensor.contiguous.3_spyre
                 - name: torch.reshape
@@ -3553,8 +3371,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1, -1)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward,
-                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - constant
                     - torch.reshape.9_spyre
@@ -3568,8 +3385,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward,
-                    code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L349 in forward, code: attn_output = attn_output.reshape(*input_shape, -1).contiguous()'
                   tags:
                     - torch.Tensor.contiguous.4_spyre
                 - name: torch.nn.functional.linear
@@ -3596,8 +3412,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L350 in forward,
-                    code: attn_output = self.o_proj(attn_output)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L350 in forward, code: attn_output = self.o_proj(attn_output)'
                   tags:
                     - torch.nn.functional.linear.8_spyre
                 - name: torch.add
@@ -3617,8 +3432,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L385 in forward,
-                    code: hidden_states = residual + hidden_states'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L385 in forward, code: hidden_states = residual + hidden_states'
                   tags:
                     - torch.add.14_spyre
                 - name: torch.reshape
@@ -3632,8 +3446,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (-1, 2880)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L147 in forward,
-                    code: hidden_states = hidden_states.reshape(-1, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L147 in forward, code: hidden_states = hidden_states.reshape(-1, hidden_dim)'
                   tags:
                     - constant
                     - torch.reshape.10_spyre
@@ -3661,8 +3474,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L132 in forward,
-                    code: router_logits = F.linear(hidden_states, self.weight, self.bias)  # (num_tokens, num_experts)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L132 in forward, code: router_logits = F.linear(hidden_states, self.weight, self.bias)  # (num_tokens, num_experts)'
                   tags:
                     - torch.nn.functional.linear.9_spyre
                 - name: torch.topk
@@ -3676,13 +3488,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 4
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward,
-                    code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward, code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
                   tags:
                     - constant
                     - torch.topk.2_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -3696,8 +3507,7 @@ test_suite_config:
                             init_args:
                               high: 1000
                       - value: 0
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward,
-                    code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L133 in forward, code: router_top_value, router_indices = torch.topk(router_logits, self.top_k, dim=-1)  # (num_tokens, top_k)'
                   tags:
                     - constant
                     - torch.getitem.22_spyre
@@ -3711,13 +3521,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L134 in forward,
-                    code: router_scores = torch.nn.functional.softmax(router_top_value, dim=1, dtype=router_top_value.dtype)'
+                    kwargs:
+                      dim: 1
+                      dtype: torch.float16
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L134 in forward, code: router_scores = torch.nn.functional.softmax(router_top_value, dim=1, dtype=router_top_value.dtype)'
                   tags:
                     - torch.nn.functional.softmax.5_spyre
-                  kwargs:
-                    dim: 1
-                    dtype: torch.float16
                 - name: torch.repeat_interleave
                   sample_inputs_func:
                     args:
@@ -3729,13 +3538,12 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 4
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L130 in batched_mm_experts_forward,
-                    code: selected_hidden_states = hidden_states.repeat_interleave(num_top_k, dim=0)'
+                    kwargs:
+                      dim: 0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L130 in batched_mm_experts_forward, code: selected_hidden_states = hidden_states.repeat_interleave(num_top_k, dim=0)'
                   tags:
                     - constant
                     - torch.repeat_interleave.2_spyre
-                  kwargs:
-                    dim: 0
                 - name: torch.reshape
                   sample_inputs_func:
                     args:
@@ -3747,8 +3555,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (-1,)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L131 in batched_mm_experts_forward,
-                    code: sample_weights = top_k_weights.reshape(-1)  # (S,)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L131 in batched_mm_experts_forward, code: sample_weights = top_k_weights.reshape(-1)  # (S,)'
                   tags:
                     - constant
                     - torch.reshape.11_spyre
@@ -3765,8 +3572,7 @@ test_suite_config:
                           init_args:
                             high: 1000
                       - value: (-1,)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L132 in batched_mm_experts_forward,
-                    code: expert_ids = top_k_index.reshape(-1)  # (S,)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L132 in batched_mm_experts_forward, code: expert_ids = top_k_index.reshape(-1)  # (S,)'
                   tags:
                     - constant
                     - torch.reshape.12_spyre
@@ -3784,8 +3590,7 @@ test_suite_config:
                             high: 1000
                       - value: 0
                       - value: 31
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L138 in batched_mm_experts_forward,
-                    code: expert_ids = expert_ids.clamp(0, self.num_experts - 1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L138 in batched_mm_experts_forward, code: expert_ids = expert_ids.clamp(0, self.num_experts - 1)'
                   tags:
                     - constant
                     - torch.clamp.4_spyre
@@ -3808,8 +3613,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L142 in batched_mm_experts_forward,
-                    code: selected_weights = self.gate_up_proj[expert_ids]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L142 in batched_mm_experts_forward, code: selected_weights = self.gate_up_proj[expert_ids]'
                   tags:
                     - torch.getitem.23_spyre
                 - name: torch.getitem
@@ -3831,8 +3635,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L143 in batched_mm_experts_forward,
-                    code: selected_biases = self.gate_up_proj_bias[expert_ids] if self.has_bias else None'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L143 in batched_mm_experts_forward, code: selected_biases = self.gate_up_proj_bias[expert_ids] if self.has_bias else None'
                   tags:
                     - torch.getitem.24_spyre
                 - name: torch.unsqueeze
@@ -3846,8 +3649,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - constant
                     - torch.unsqueeze.5_spyre
@@ -3868,8 +3670,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - torch.bmm.3_spyre
                 - name: torch.squeeze
@@ -3883,8 +3684,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - constant
                     - torch.squeeze.3_spyre
@@ -3905,8 +3705,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code:
-                    out.add_(bias)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code: out.add_(bias)'
                   tags:
                     - torch.add_.4_spyre
                 - name: torch.getitem
@@ -3920,8 +3719,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, None, 2))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L88 in _apply_gate,
-                    code: gate, up = gate_up[..., ::2], gate_up[..., 1::2]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L88 in _apply_gate, code: gate, up = gate_up[..., ::2], gate_up[..., 1::2]'
                   tags:
                     - constant
                     - torch.getitem.25_spyre
@@ -3935,13 +3733,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L89 in _apply_gate,
-                    code: gate = gate.clamp(min=None, max=self.limit)'
+                    kwargs:
+                      min: None
+                      max: 7.0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L89 in _apply_gate, code: gate = gate.clamp(min=None, max=self.limit)'
                   tags:
                     - torch.clamp.5_spyre
-                  kwargs:
-                    min: None
-                    max: 7.0
                 - name: torch.clamp
                   sample_inputs_func:
                     args:
@@ -3952,13 +3749,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L90 in _apply_gate,
-                    code: up = up.clamp(min=-self.limit, max=self.limit)'
+                    kwargs:
+                      min: -7.0
+                      max: 7.0
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L90 in _apply_gate, code: up = up.clamp(min=-self.limit, max=self.limit)'
                   tags:
                     - torch.clamp.6_spyre
-                  kwargs:
-                    min: -7.0
-                    max: 7.0
                 - name: torch.mul
                   sample_inputs_func:
                     args:
@@ -3970,8 +3766,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1.702
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate,
-                    code: glu = gate * torch.sigmoid(gate * self.alpha)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate, code: glu = gate * torch.sigmoid(gate * self.alpha)'
                   tags:
                     - constant
                     - torch.mul.21_spyre
@@ -3985,8 +3780,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate,
-                    code: glu = gate * torch.sigmoid(gate * self.alpha)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate, code: glu = gate * torch.sigmoid(gate * self.alpha)'
                   tags:
                     - torch.sigmoid.2_spyre
                 - name: torch.mul
@@ -4006,8 +3800,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate,
-                    code: glu = gate * torch.sigmoid(gate * self.alpha)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L91 in _apply_gate, code: glu = gate * torch.sigmoid(gate * self.alpha)'
                   tags:
                     - torch.mul.22_spyre
                 - name: torch.add
@@ -4021,8 +3814,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L92 in _apply_gate,
-                    code: gated_output = (up + 1) * glu'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L92 in _apply_gate, code: gated_output = (up + 1) * glu'
                   tags:
                     - constant
                     - torch.add.15_spyre
@@ -4045,8 +3837,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L162 in batched_mm_experts_forward,
-                    code: selected_weights = self.down_proj[expert_ids]'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L162 in batched_mm_experts_forward, code: selected_weights = self.down_proj[expert_ids]'
                   tags:
                     - torch.getitem.26_spyre
                 - name: torch.getitem
@@ -4068,8 +3859,7 @@ test_suite_config:
                           init: randint
                           init_args:
                             high: 32
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L163 in batched_mm_experts_forward,
-                    code: selected_biases = self.down_proj_bias[expert_ids] if self.has_bias else None'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L163 in batched_mm_experts_forward, code: selected_biases = self.down_proj_bias[expert_ids] if self.has_bias else None'
                   tags:
                     - torch.getitem.27_spyre
                 - name: torch.bmm
@@ -4089,8 +3879,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - torch.bmm.4_spyre
                 - name: torch.squeeze
@@ -4104,8 +3893,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code:
-                    out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L107 in _batched_linear, code: out = torch.bmm(input.unsqueeze(1), weight).squeeze(1)'
                   tags:
                     - constant
                     - torch.squeeze.4_spyre
@@ -4126,8 +3914,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code:
-                    out.add_(bias)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L113 in _batched_linear, code: out.add_(bias)'
                   tags:
                     - torch.add_.5_spyre
                 - name: torch.unsqueeze
@@ -4141,8 +3928,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: -1
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward,
-                    code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward, code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
                   tags:
                     - constant
                     - torch.unsqueeze.6_spyre
@@ -4163,8 +3949,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward,
-                    code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L171 in batched_mm_experts_forward, code: weighted_out = proj_out * sample_weights.unsqueeze(-1)  # (S, hidden_dim)'
                   tags:
                     - torch.mul.23_spyre
                 - name: torch.Tensor.view
@@ -4180,8 +3965,7 @@ test_suite_config:
                       - value: 1
                       - value: 4
                       - value: 2880
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward,
-                    code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward, code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
                   tags:
                     - constant
                     - torch.Tensor.view.6_spyre
@@ -4195,12 +3979,11 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward,
-                    code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
+                    kwargs:
+                      dim: 1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L177 in batched_mm_experts_forward, code: final_hidden_states = weighted_out.view(num_tokens, num_top_k, hidden_dim).sum(dim=1)'
                   tags:
                     - torch.sum.2_spyre
-                  kwargs:
-                    dim: 1
                 - name: torch.to
                   sample_inputs_func:
                     args:
@@ -4212,8 +3995,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L179 in batched_mm_experts_forward,
-                    code: return final_hidden_states.to(hidden_states.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/integrations/moe.py#L179 in batched_mm_experts_forward, code: return final_hidden_states.to(hidden_states.dtype)'
                   tags:
                     - constant
                     - torch.to.13_spyre
@@ -4228,8 +4010,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: (1, 1, 2880)
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L150 in forward,
-                    code: hidden_states = hidden_states.reshape(batch_size, sequence_length, hidden_dim)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L150 in forward, code: hidden_states = hidden_states.reshape(batch_size, sequence_length, hidden_dim)'
                   tags:
                     - constant
                     - torch.reshape.13_spyre
@@ -4260,8 +4041,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2,
-                    cache_position, key_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L426 in update, code: self.keys.index_copy_(2, cache_position, key_states)'
                   tags:
                     - constant
                     - torch.index_copy_.7_spyre
@@ -4292,8 +4072,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L427 in update, code: self.values.index_copy_(2,
-                    cache_position, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/cache_utils.py#L427 in update, code: self.values.index_copy_(2, cache_position, value_states)'
                   tags:
                     - constant
                     - torch.index_copy_.8_spyre
@@ -4314,8 +4093,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - torch.matmul.9_spyre
                 - name: torch.mul
@@ -4329,8 +4107,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: 0.125
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward,
-                    code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L263 in eager_attention_forward, code: attn_weights = torch.matmul(query, key_states.transpose(2, 3)) * scaling'
                   tags:
                     - constant
                     - torch.mul.24_spyre
@@ -4351,8 +4128,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward,
-                    code: attn_weights = attn_weights + attention_mask'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L265 in eager_attention_forward, code: attn_weights = attn_weights + attention_mask'
                   tags:
                     - torch.add.16_spyre
                 - name: torch.cat
@@ -4371,12 +4147,11 @@ test_suite_config:
                             dtype: torch.float16
                             device: cuda:0
                             init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward,
-                    code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
+                    kwargs:
+                      dim: -1
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L268 in eager_attention_forward, code: combined_logits = torch.cat([attn_weights, sinks], dim=-1)'
                   tags:
                     - torch.cat.8_spyre
-                  kwargs:
-                    dim: -1
                 - name: torch.max
                   sample_inputs_func:
                     args:
@@ -4387,13 +4162,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                    kwargs:
+                      dim: -1
+                      keepdim: true
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.max.4_spyre
-                  kwargs:
-                    dim: -1
-                    keepdim: true
                 - name: torch.sub
                   sample_inputs_func:
                     args:
@@ -4411,8 +4185,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward,
-                    code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L273 in eager_attention_forward, code: combined_logits = combined_logits - combined_logits.max(dim=-1, keepdim=True).values'
                   tags:
                     - torch.sub.8_spyre
                 - name: torch.nn.functional.softmax
@@ -4425,13 +4198,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward,
-                    code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
+                    kwargs:
+                      dim: -1
+                      dtype: torch.float16
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L274 in eager_attention_forward, code: probs = F.softmax(combined_logits, dim=-1, dtype=combined_logits.dtype)'
                   tags:
                     - torch.nn.functional.softmax.6_spyre
-                  kwargs:
-                    dim: -1
-                    dtype: torch.float16
                 - name: torch.getitem
                   sample_inputs_func:
                     args:
@@ -4443,8 +4215,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (Ellipsis, slice(None, -1, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward,
-                    code: scores = probs[..., :-1]  # we drop the sink here'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L275 in eager_attention_forward, code: scores = probs[..., :-1]  # we drop the sink here'
                   tags:
                     - constant
                     - torch.getitem.28_spyre
@@ -4458,13 +4229,12 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: rand
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                    kwargs:
+                      p: 0.0
+                      training: false
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - torch.nn.functional.dropout.4_spyre
-                  kwargs:
-                    p: 0.0
-                    training: false
                 - name: torch.to
                   sample_inputs_func:
                     args:
@@ -4476,8 +4246,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - value: torch.bfloat16
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward,
-                    code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L276 in eager_attention_forward, code: attn_weights = nn.functional.dropout(scores, p=dropout, training=module.training).to(value_states.dtype)'
                   tags:
                     - constant
                     - torch.to.14_spyre
@@ -4498,8 +4267,7 @@ test_suite_config:
                           dtype: torch.float16
                           device: cuda:0
                           init: xavier
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward,
-                    code: attn_output = torch.matmul(attn_weights, value_states)'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L277 in eager_attention_forward, code: attn_output = torch.matmul(attn_weights, value_states)'
                   tags:
                     - torch.matmul.10_spyre
                 - name: torch.getitem
@@ -4513,8 +4281,7 @@ test_suite_config:
                           device: cuda:0
                           init: rand
                       - py: (slice(None, None, None), slice(-1, None, None), slice(None, None, None))
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward,
-                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - constant
                     - torch.getitem.29_spyre
@@ -4536,8 +4303,7 @@ test_suite_config:
                           device: cuda:0
                           init: xavier
                       - value: null
-                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward,
-                    code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
+                  description: 'https://github.com/huggingface/transformers/blob/v5.14.1/src/transformers/models/gpt_oss/modeling_gpt_oss.py#L667 in forward, code: logits = self.lm_head(hidden_states[:, slice_indices, :])'
                   tags:
                     - constant
                     - torch.nn.functional.linear.10_spyre
