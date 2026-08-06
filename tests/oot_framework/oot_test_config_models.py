@@ -725,7 +725,12 @@ def _move_to_test_device(obj: Any, test_device: Optional[torch.device]) -> Any:
     return obj
 
 
-def _build_cache(arg: "InputArgCache", *, seed: Optional[int]) -> Any:
+def _build_cache(
+    arg: "InputArgCache",
+    *,
+    seed: Optional[int],
+    test_device: Optional[torch.device] = None,
+) -> Any:
     """Reconstruct a KV cache primed with past tokens from an ``InputArgCache``.
 
     Builds the concrete cache class named by ``cache_path`` (e.g. StaticCache)
@@ -738,6 +743,15 @@ def _build_cache(arg: "InputArgCache", *, seed: Optional[int]) -> Any:
 
     The captured ``key``/``value`` specs hold the populated slice
     ``[B, num_kv_heads, past_len, head_dim]`` (not the full fixed allocation).
+
+    ``test_device`` places the cache's backing buffers on the target device.
+    A lazily-initialized layer cache (e.g. ``StaticLayer``) pins its ``device``
+    from the FIRST ``update()`` call's ``key_states``, so the priming K/V below
+    are moved to ``test_device`` BEFORE ``update()``. Without this the whole
+    cache stays on CPU, and the module-under-test's own (on-device) decode
+    ``update(key_states, ...)`` mixes an on-device tensor with a CPU cache
+    buffer -> a device-mismatch error inside the compiled region. ``None``
+    (CPU-target runs) leaves the priming tensors on CPU.
     """
     import importlib
 
@@ -760,9 +774,12 @@ def _build_cache(arg: "InputArgCache", *, seed: Optional[int]) -> Any:
     config_cls = getattr(importlib.import_module(cfg_module), cfg_cls_name)
     config = config_cls(**arg.config_kwargs)
 
-    # Build the past K/V tensors (populated slice) on CPU.
-    key = arg.key.build(seed=seed)
-    value = arg.value.build(seed=(None if seed is None else seed + 1))
+    # Build the past K/V tensors (populated slice) on CPU, then relocate to the
+    # test device so the cache pins its backing buffers there (see docstring).
+    key = _move_to_test_device(arg.key.build(seed=seed), test_device)
+    value = _move_to_test_device(
+        arg.value.build(seed=(None if seed is None else seed + 1)), test_device
+    )
 
     # max_cache_len must cover the past; fall back to the captured past length.
     past_len = key.shape[-2]
@@ -770,6 +787,8 @@ def _build_cache(arg: "InputArgCache", *, seed: Optional[int]) -> Any:
 
     cache = cache_cls(config=config, max_cache_len=max_cache_len)
     # Prime the target layer's slot; update() appends and returns the full span.
+    # The device-placed key/value make a lazily-initialized layer pin its
+    # buffers on test_device, matching the on-device decode update() later.
     cache.update(key, value, arg.layer_idx)
     return cache
 
@@ -949,7 +968,9 @@ class InputsEdits(BaseModel):
                 elif isinstance(arg, InputArgConfig):
                     out[k] = _build_hf_config(arg)
                 elif isinstance(arg, InputArgCache):
-                    out[k] = _build_cache(arg, seed=inp_seed)
+                    out[k] = _build_cache(
+                        arg, seed=inp_seed, test_device=test_device
+                    )
                 elif isinstance(arg, InputArgPy):
                     out[k] = _eval_py_literal(arg.py)
                 continue
