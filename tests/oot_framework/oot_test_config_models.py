@@ -968,9 +968,7 @@ class InputsEdits(BaseModel):
                 elif isinstance(arg, InputArgConfig):
                     out[k] = _build_hf_config(arg)
                 elif isinstance(arg, InputArgCache):
-                    out[k] = _build_cache(
-                        arg, seed=inp_seed, test_device=test_device
-                    )
+                    out[k] = _build_cache(arg, seed=inp_seed, test_device=test_device)
                 elif isinstance(arg, InputArgPy):
                     out[k] = _eval_py_literal(arg.py)
                 continue
