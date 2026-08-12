@@ -14,17 +14,24 @@
 
 import os
 import sys
-from typing import Callable, Literal, Optional
+from typing import Literal
 
 from torch.utils._config_module import install_config_module
+from .logging_utils import _get_env_bool
 
-lx_planning: bool = os.environ.get("LX_PLANNING", "0") == "1"
+lx_planning: bool = os.environ.get("LX_PLANNING", "1") == "1"
 co_optimizing_lx_planning: bool = (
     os.environ.get("CO_OPTIMIZING_LX_PLANNING", "0") == "1"
 )
-chunk_large_tensors: bool = os.environ.get("CHUNK_LARGE_TENSORS", "0") == "1"
+hbm_pool_planning: bool = _get_env_bool("HBM_POOL_PLANNING", True)
 
 global_stick_optimizer: bool = os.environ.get("GLOBAL_STICK_OPTIMIZER", "1") == "1"
+
+# Opt-in OpSpec->KTIR emitter (experimental, #3380). When enabled the scheduler
+# emits ``async_compile.ktir(...)`` instead of the SDSC bundle, and
+# ``create_tensor_arg`` populates the op-spec buffer name so the emitter has a
+# stable per-buffer identity. Inert by default: the SDSC/flex path is unchanged.
+ktir_emitter: bool = os.environ.get("TORCH_SPYRE_KTIR", "0") == "1"
 
 allow_all_ops_in_lx_planning: bool = False
 
@@ -32,51 +39,92 @@ dxp_lx_frac_avail: float = float(os.environ.get("DXP_LX_FRAC_AVAIL", "0.2"))
 
 sencores: int = int(os.getenv("SENCORES", "32"))
 
-# k_fast: a two-layer optimisation for K-split matmul work-divisions.
-#   Layer 1 (planner, core_division.py): picks (1, n, k>1) over pure-M
-#     for narrow-N small-M matmul shapes that would otherwise leave the
-#     PT array under-utilised.
-#   Layer 2 (SDSC emitter, codegen/compute_ops.py): permutes physical
-#     core IDs so K-collaborators land on adjacent ring positions,
-#     reducing PSUM chain hops from m*n to 1.
-# Set SPYRE_CORE_ID_K_FAST_EMISSION=0 to disable both layers.
+# Symbolic-dim knobs consumed by compute_granularity in pass_utils.py.
+# The pointwise work-division PR (#2499) wires that helper into the
+# compilation pipeline; until then these knobs are read only by the
+# helper and its unit tests. See #2284, #2287 for the design.
+
+# Cap on bucket count (= max_size / granularity).
+# TODO: confirm the default with the Deeptools team.
+max_buckets: int = int(os.getenv("MAX_BUCKETS", "32"))
+
+# Soft floor on the auto-derived granularity when mark_dynamic(min=...)
+# is not provided. Keeps the picked granularity from collapsing to a
+# very small divisor when max_size has many of them.
+min_default_granularity: int = int(os.getenv("MIN_DEFAULT_GRANULARITY", "4"))
+
+ignore_work_division_hints: bool = (
+    os.environ.get("SPYRE_INDUCTOR_IGNORE_HINTS", "0") == "1"
+)
+
+ignore_wsr_hints: bool = os.environ.get("SPYRE_INDUCTOR_IGNORE_HINTS", "0") == "1"
+
+# Per-pass operation logging for CustomPreSchedulingPasses.
+# Set to "all" or "1" to log after every pass, or a comma-separated list of
+# pass function names (e.g., "split_multi_ops,insert_restickify") to log only
+# after specific passes. Set via SPYRE_LOG_PASSES env var or programmatically.
+log_passes: str = os.environ.get("SPYRE_LOG_PASSES", "")
+
+# Disable compiler-generated span-overflow coarse-tiling hints.  The global
+# SPYRE_INDUCTOR_IGNORE_HINTS flag also disables these so one switch can still
+# suppress all WSR/coarse-tiling hint paths.
+#
+# Defaults to disabled (opt-in): span-overflow auto-tiling can synchronize
+# compatible contiguous pointwise groups, but incompatible producer/consumer
+# groups and reduction-dim tiling still need broader support. Set
+# SPYRE_INDUCTOR_IGNORE_SPAN_OVERFLOW_HINTS=0 to opt in;
+# tests exercising this path directly should override via
+# config.patch({"ignore_span_overflow_hints": False}).
+ignore_span_overflow_hints: bool = (
+    ignore_wsr_hints
+    or os.environ.get("SPYRE_INDUCTOR_IGNORE_SPAN_OVERFLOW_HINTS", "1") == "1"
+)
+
+# Enable reduction-dim (Lk-style) coarse tiling. Defaults to enabled — this
+# capability is exercised by passing tests today. Disabling it (or a future
+# hardware limitation that can't support it) makes planning treat any op
+# whose group requests reduction-dim tiling as unsupported, raising
+# Unsupported rather than attempting to tile it.
+enable_reduction_tiling: bool = (
+    os.environ.get("SPYRE_INDUCTOR_ENABLE_REDUCTION_TILING", "1") == "1"
+)
+
+# For K-split matmuls, permute physical core IDs so the cores collaborating on a
+# K reduction land on adjacent ring positions, cutting PSUM chain hops from m*n
+# to 1. The split itself is chosen by the cost-model planner; this only reorders
+# cores at SDSC emission. Set SPYRE_CORE_ID_K_FAST_EMISSION=0 to disable.
 core_id_k_fast_emission: bool = (
     os.environ.get("SPYRE_CORE_ID_K_FAST_EMISSION", "1") == "1"
 )
 
-coarse_tiling: bool = os.environ.get("COARSE_TILING", "0") == "1"
+# Disable splitting on spatial image dimensions (i, j) for conv2d operations when stride > 1.
+# When enabled (default True), splits are disabled only for strided convolutions to prevent
+# DSM/strided memory access complexity that degrades correctness. For stride=1 convolutions,
+# splitting may still occur unless the backend heuristics choose not to split.
+# Set SPYRE_INDUCTOR_DISABLE_CONV2D_SPATIAL_SPLIT=0 to allow splitting on i/j dims regardless of stride.
+disable_conv2d_spatial_split: bool = (
+    os.environ.get("SPYRE_INDUCTOR_DISABLE_CONV2D_SPATIAL_SPLIT", "1") == "1"
+)
 
-# When True, HBM tensor addresses are emitted as runtime symbols (%sym_N
-# constants) in bundle.mlir and resolved via affine.apply for tiled loops.
-# Requires backend compiler support for the sdscbundle symbol table, which is
-# still under development.
-bundle_hbm_symbols: bool = os.environ.get("BUNDLE_HBM_SYMBOLS", "0") == "1"
+# When True (default), HBM tensor addresses are emitted as runtime symbols
+# with !sdscbundle.input_arg<index> parameters and input_arg_extract ops
+# in the bundle.mlir.
+# When False, HBM tensor addresses are baked as concrete integers
+# into the SDSC JSON and bundle.mlir emits sdsc_execute with no operands.
+bundle_symbolic_args: bool = os.environ.get("BUNDLE_SYMBOLIC_ARGS", "1") == "1"
 
-# When True (default), LoopSpec nodes are fully unrolled into flat OpSpecs
-# before generate_bundle runs.  Set to False to pass LoopSpecs through intact
-# (used with bundle_hbm_symbols=True for the scf.for / affine.apply path).
-unroll_loops: bool = os.environ.get("UNROLL_LOOPS", "1") == "1"
-
-# Optional callable injected by callers to compute coarse-tiling groups.
-# Signature: (list[Operation]) -> list[tuple[list[Operation], sympy.Expr[, list[int]]]]
-# Each tuple is (ops, loop_count) or (ops, loop_count, tiled_dims).
-# tiled_dims overrides the default per-group (None = tile outermost dim only).
-# When None and coarse_tiling is True, groups are derived from spyre_hint
-# annotations via hints_to_coarse_tile_groups (a no-op if no hints are present).
-# When set, this callable overrides the hint-derived groups entirely.
-# Must be a module-level named function (not a lambda) for Inductor cache pickling.
-# This is intended to be used for interim testing of the coarse-tiling transformation
-# until the working set reduction annotation framework is being developed.
-# It will be removed once the full-fledged annotation mechanism is available.
-coarse_tiling_groups_fn: Optional[Callable] = None
-
-# Layout solver class used by default in scratchpad.allocator.DefaultAllocator.
+# Layout solver class used by default in scratchpad.allocator.ScratchpadAllocator.
 # Options:
-#  "greedy":   GreedyLayoutSolver (default),
-#  "bestfit":  BestFitLayoutSolver,
-#  "firstfit": FirstFitLayoutSolver.
+#  "greedy":       GreedyLayoutSolver (default),
+#  "bestfit":      BestFitLayoutSolver,
+#  "firstfit":     FirstFitLayoutSolver,
+#  "simulated_annealing":  SimulatedAnnealingLayoutSolver,
+#  "cpsat":    CpSatLayoutSolver (OR-Tools CP-SAT joint core-division +
+#              LX placement, minimizing HBM transfer traffic).
 
 # TODO(isuruf): Change to firstfit when deeptools PR4298 lands
-layout_solver: Literal["greedy", "bestfit", "firstfit"] = "greedy"
+layout_solver: Literal[
+    "greedy", "bestfit", "firstfit", "cpsat", "simulated_annealing"
+] = os.environ.get("LAYOUT_SOLVER", "greedy")  # type: ignore[assignment]
 
 install_config_module(sys.modules[__name__])

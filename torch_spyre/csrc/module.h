@@ -17,8 +17,8 @@
 #pragma once
 
 #include <pybind11/pybind11.h>
+#include <spyrecode-host-functions/sendataconvert/sen_host_ops.h>
 #include <torch/csrc/utils/pybind.h>
-#include <util/sen_host_ops.h>
 
 #include <flex/flex.hpp>
 #include <memory>
@@ -28,18 +28,16 @@ using DataConversionInfo = data_conversion_info;
 
 namespace spyre {
 
-using Runtime = flex::RuntimeEntry;
-
 class GlobalRuntime {
  public:
-  static void set(const std::shared_ptr<Runtime>& runtime) {
+  static void set(const std::shared_ptr<flex::RuntimeContext>& runtime) {
     instance() = runtime;
   }
   static void reset() {
     instance().reset();  // sets the shared_ptr to nullptr
   }
 
-  static const std::shared_ptr<Runtime>& get() {
+  static const std::shared_ptr<flex::RuntimeContext>& get() {
     return instance();
   }
 
@@ -47,13 +45,14 @@ class GlobalRuntime {
   GlobalRuntime() = delete;
   ~GlobalRuntime() = delete;
 
-  static std::shared_ptr<Runtime>& instance() {
-    static std::shared_ptr<Runtime> s;
+  static std::shared_ptr<flex::RuntimeContext>& instance() {
+    static std::shared_ptr<flex::RuntimeContext> s;
     return s;
   }
 };
 bool get_downcast_warn_enabled();
 bool is_supported_dtype(c10::ScalarType dtype);
+DataFormats get_device_dtype(c10::ScalarType torch_dtype);
 
 int device_count();
 void startRuntime();

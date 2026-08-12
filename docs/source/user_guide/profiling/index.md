@@ -23,25 +23,72 @@ workloads running on the Spyre accelerator. The full design of the
 planned toolkit is in
 [RFC 0601 — Spyre Profiling Toolkit][rfc-0601].
 
-The in-tree `torch_spyre.profiler` package is currently a scaffold —
-`torch_spyre.profiler.is_available()` returns `False`, and there is no
-public API yet. Profiling today goes through `torch.profiler` plus the
-external integrations described on this page (`kineto-spyre`,
-`aiu-smi`, `aiu-trace-analyzer`); the in-tree API will be populated as
-RFC 0601 lands.
+The in-tree `torch_spyre.profiler` package is still mostly a scaffold —
+`torch_spyre.profiler.is_available()` returns `False`. One public API is
+already available: First Failure Data Capture (FFDC) via
+`torch.spyre.get_diagnostic_report` (see below). Broader profiling APIs
+will land with RFC 0601. Day-to-day performance work still goes through
+`torch.profiler` plus the external integrations on this page
+(`kineto-spyre`, `aiu-smi`, `aiu-trace-analyzer`).
 
 ## What can be profiled today
 
 | Capability | Status | Where |
 |---|---|---|
 | Compiler pipeline logs | Available | [Environment variables](environment_variables.md) |
+| FFDC diagnostic reports on Spyre compile/runtime/unimplemented failures | Available (`USE_SPYRE_PROFILER=1`) | [API: `get_diagnostic_report`](../../api/torch_spyre.rst) · [Environment variables](environment_variables.md) |
 | CPU-side timing with `torch.profiler` | Available | [PyTorch Profiler](pytorch_profiler.md) |
-| Device telemetry (power, temperature, bandwidth) | Available (IBM-internal distribution; public release tracked in [#1335][issue-1335]) | [Device monitoring](device_monitoring.md) |
+| Device telemetry (power, temperature, bandwidth) | Available — PF and VF mode (IBM-internal distribution; public release tracked in [#1335][issue-1335]) | [Device monitoring](device_monitoring.md) |
 | Device-side kernel timing via `ProfilerActivity.PrivateUse1` | Preview (requires [`kineto-spyre`][kineto-spyre] wheel) | [PyTorch Profiler](pytorch_profiler.md) |
 | Trace post-processing (aiu-trace-analyzer) | Available, known gaps | [Trace analysis](trace_analysis.md) |
-| `torch.spyre.memory_allocated()` / `max_memory_allocated()` | Planned | [RFC 0601][rfc-0601] |
+| `torch.spyre.memory.memory_allocated()` / `max_memory_allocated()` | Available — delegates to [`torch.accelerator.memory`][accelerator-memory] (PR [#770][pr-770]) | [Quick example](#memory-api-quick-example) |
+| Kineto bridge (`SpyreActivityProfiler`) | In progress — in-tree Kineto integration for `ProfilerActivity.PrivateUse1` device-side events (PR [#1856][pr-1856]) | upstream Kineto integration |
 | Scratchpad utilization metrics | Planned | [RFC 0601][rfc-0601] |
 | IR-instrumentation-based fine-grained profiler | Planned | [RFC 0601][rfc-0601] |
+
+### FFDC quick example
+
+When `USE_SPYRE_PROFILER=1`, Spyre compile, kernel-launch, and
+unimplemented-operation failures write a JSON diagnostic report
+(exception, env, nearby compile artifacts). Retrieve the newest
+report with:
+
+```python
+import torch
+
+report = torch.spyre.get_diagnostic_report()
+if report is not None:
+    print(report["failure"]["category"], report["failure"]["message"])
+```
+
+See the [API reference](../../api/torch_spyre.rst) for the default
+output directory and schema details.
+
+### Memory API quick example
+
+`torch.spyre.memory` re-exports `torch.accelerator.memory`, so the
+same memory-query calls used on CUDA apply to Spyre. The example
+below allocates a tensor, frees it, and reads the current and peak
+allocations:
+
+```python
+import torch
+
+# Reset the peak counter so max_memory_allocated() starts from zero.
+torch.spyre.memory.reset_peak_memory_stats()
+
+# Allocate on the device; memory_allocated() reflects the new total.
+x = torch.rand((64, 64), dtype=torch.float16, device="spyre")
+print(torch.spyre.memory.memory_allocated())     # bytes currently allocated
+
+# Free the tensor. memory_allocated() drops back, but the peak persists.
+del x
+print(torch.spyre.memory.memory_allocated())     # current allocation
+print(torch.spyre.memory.max_memory_allocated()) # peak since reset
+```
+
+The module also exposes `reset_accumulated_memory_stats()` and
+`memory_stats()`.
 
 ## Toolkit layers
 
@@ -54,7 +101,7 @@ RFC 0601 lands.
 | Device / HW | `aiu-smi` | Device-level telemetry |
 | Post-processing | [aiu-trace-analyzer][ata] | Derived metrics |
 
-## Contents
+## Profiling topics
 
 - [Environment variables](environment_variables.md) — logging, device
   enumeration, runtime/driver variables used by `aiu-smi` and
@@ -94,3 +141,6 @@ design and may change.
 [kineto-spyre]: https://github.com/IBM/kineto-spyre
 [ata]: https://github.com/IBM/aiu-trace-analyzer
 [issue-1335]: https://github.com/torch-spyre/torch-spyre/issues/1335
+[pr-770]: https://github.com/torch-spyre/torch-spyre/pull/770
+[pr-1856]: https://github.com/torch-spyre/torch-spyre/pull/1856
+[accelerator-memory]: https://docs.pytorch.org/docs/stable/accelerator.html

@@ -21,6 +21,8 @@ from torch_spyre.ops.fallbacks import warn_fallback
 
 from .errors import Unsupported
 
+aten = torch.ops.aten
+
 
 @torch.library.custom_op("spyre::softplus", mutates_args=(), device_types="spyre")
 def softplus(
@@ -173,6 +175,18 @@ def _(input: torch.Tensor, approximate: str = "none"):
     return input.new_empty(input.size())
 
 
+@torch.library.custom_op("spyre::silu", mutates_args=(), device_types="spyre")
+def silu(
+    input: torch.Tensor,
+) -> torch.Tensor:
+    return aten.div.Tensor(input, 1 + aten.exp.default(-input))
+
+
+@silu.register_fake
+def _(input: torch.Tensor):
+    return input.new_empty(input.size())
+
+
 @torch.library.custom_op("spyre::clamp", mutates_args=(), device_types="spyre")
 def clamp(
     input: torch.Tensor,
@@ -230,17 +244,83 @@ def _(input: torch.Tensor):
 def copy_from_d2d(
     src: torch.Tensor,
     dst: torch.Tensor,
+    src_off: int,
+    dst_off: int,
     compiled,
 ) -> None:
-    return compiled(src, dst)
+    # src_off/dst_off are the src/dst storage_offsets, passed as explicit ints
+    # because a sliced tensor's offset is invisible to the compiled kernel
+    # otherwise: a graph input's storage_offset is dropped by Inductor (its
+    # FixedLayout.offset is 0 and SpyreTensorLayout has no offset field), so the
+    # kernel binds the storage BASE pointer and reads from element 0. The
+    # lowering (lower_spyre_from_d2d) consumes these ints to re-introduce the
+    # offsets in-graph via a ReinterpretView, putting them into the coordinate
+    # that superdsc bakes into the SDSC binary.
+    #
+    # specialize_int=True is required on top of that: dynamo's TENSOR_MATCH
+    # guard keys on dtype/device/size/stride but NOT storage_offset, and its
+    # default auto-dynamic promotes the offset int to a symbol after the second
+    # distinct value — a symbolic offset cannot be baked as a constant into the
+    # coordinate. specialize_int installs int-equality guards so each distinct
+    # offset triggers a fresh trace and a fresh SDSC binary with the offset
+    # baked as a constant. This mirrors the spyre.overwrite fix above (PR
+    # #2084). Patch is call-scoped to leave process-wide dynamo behavior alone.
+    # Note: one compiled binary per unique (input shape, offsets) tuple;
+    # dynamo's cache_size_limit is bumped to 1024 in torch_spyre/__init__.py.
+    with torch._dynamo.config.patch(specialize_int=True):
+        return compiled(src, dst, src_off, dst_off)
 
 
 @copy_from_d2d.register_fake
 def _(
     src: torch.Tensor,
     dst: torch.Tensor,
+    src_off: int,
+    dst_off: int,
 ) -> None:
     pass
+
+
+# Copy src into dst in-place (the mutating primitive).
+# No @compile_once needed: the body calls aten::copy_ which dispatches
+# through spyre__copy_from → copy_from_d2d / copy_tensor — no cycle back
+# to spyre::copy_ itself.
+@torch.library.custom_op("spyre::copy_", mutates_args=("dst",), device_types="spyre")
+def copy_(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
+    dst.copy_(src)
+    return dst
+
+
+@copy_.register_fake
+def _(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
+    return dst
+
+
+@torch.library.register_kernel("spyre::copy_", ["cpu"])
+def copy__cpu(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
+    dst.copy_(src)
+    return dst
+
+
+# Functional (out-of-place) wrapper for spyre::copy_.
+# Returns a new tensor equal to dst with src written into it.
+# The graph sees a pure value-producing node; Inductor's reinplacer will
+# rewrite copy_f → copy_ (in-place) wherever it is safe to do so.
+@torch.library.custom_op("spyre::copy_f", mutates_args=(), device_types="spyre")
+def copy_f(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
+    result = dst.clone()
+    torch.ops.spyre.copy_(src, result)
+    return result
+
+
+@copy_f.register_fake
+def _(src: torch.Tensor, dst: torch.Tensor) -> torch.Tensor:
+    return dst.clone()
+
+
+inplaceable_ops[torch.ops.spyre.copy_f.default] = InplaceableOp(
+    torch.ops.spyre.copy_.default, 1
+)
 
 
 # Copy input into output starting at offsets along dimensions dims and
@@ -334,13 +414,14 @@ def max_dim_int64_fallback(
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
     CPU fallback for torch.max(input, dim) when input is int64.
-    This custom op will be registered with a CPU fallback in fallbacks.py.
-    Returns a tuple (values, indices) as expected by torch.max.
+
+    The Spyre device kernel (registered in fallbacks.py via
+    register_kernel(op, ["spyre"])) handles spyre-tensor inputs. PT 2.12
+    routes calls with non-spyre tensor inputs (e.g. compare_with_cpu test
+    paths) to this CompositeExplicitAutograd body, so it must compute the
+    real result rather than raise.
     """
-    # This should never be called directly; the fallback in fallbacks.py handles it
-    raise RuntimeError(
-        "spyre::max_dim_int64_fallback should be handled by CPU fallback registration"
-    )
+    return torch.max(input, dim=dim, keepdim=keepdim)
 
 
 @max_dim_int64_fallback.register_fake
@@ -363,18 +444,101 @@ def _(input: torch.Tensor, dim: int, keepdim: bool = False):
     return (values, indices)
 
 
+@torch.library.custom_op("spyre::unfold", mutates_args=(), device_types="spyre")
+def spyre_unfold(
+    input: torch.Tensor,
+    kernel_size: Sequence[int],
+    dilation: Optional[Sequence[int]] = None,
+    padding: Optional[Sequence[int]] = None,
+    stride: Optional[Sequence[int]] = None,
+) -> torch.Tensor:
+    """
+    Im2col unfold operation via torch.nn.functional.unfold.
+    Converts (N, C, H, W) input to (N, C*K_h*K_w, L) where L = H_out * W_out.
+    Uses CPU fallback for the unfold operation.
+    """
+
+    dilation = dilation or (1, 1)
+    padding = padding or (0, 0)
+    stride = stride or (1, 1)
+
+    warn_fallback("torch.ops.spyre.unfold")
+    # Move to CPU, perform unfold, move back to Spyre
+    input_cpu = input.to("cpu")
+    result_cpu = torch.nn.functional.unfold(
+        input_cpu,
+        kernel_size=kernel_size,
+        dilation=dilation,
+        padding=padding,
+        stride=stride,
+    )
+    return result_cpu.to(input.device)
+
+
+@spyre_unfold.register_fake
+def _(
+    input: torch.Tensor,
+    kernel_size: Sequence[int],
+    dilation: Optional[Sequence[int]] = None,
+    padding: Optional[Sequence[int]] = None,
+    stride: Optional[Sequence[int]] = None,
+) -> torch.Tensor:
+    dilation = dilation or (1, 1)
+    padding = padding or (0, 0)
+    stride = stride or (1, 1)
+
+    N, C, H_in, W_in = input.shape
+    K_h, K_w = kernel_size
+    dil_h, dil_w = dilation
+    pad_h, pad_w = padding
+    stride_h, stride_w = stride
+
+    H_out = (H_in + 2 * pad_h - dil_h * (K_h - 1) - 1) // stride_h + 1
+    W_out = (W_in + 2 * pad_w - dil_w * (K_w - 1) - 1) // stride_w + 1
+
+    return input.new_empty((N, C * K_h * K_w, H_out * W_out))
+
+
+@torch.library.custom_op(
+    "spyre::reshape_via_cpu", mutates_args=(), device_types="spyre"
+)
+def spyre_reshape_via_cpu(
+    input: torch.Tensor,
+    shape: Sequence[int],
+) -> torch.Tensor:
+    """
+    Reshape operation that executes on CPU to avoid stick-alignment issues.
+
+    When reshaping produces a shape with innermost dimension that doesn't align
+    with stick boundaries (64 elements for fp16), the Inductor coordinate
+    computation fails. This op moves to CPU, reshapes, then moves back to Spyre.
+
+    This is similar to unfold, which also uses CPU fallback for correct layouts.
+    """
+    warn_fallback("torch.ops.spyre.reshape_via_cpu")
+    input_cpu = input.to("cpu")
+    result_cpu = input_cpu.reshape(shape)
+    return result_cpu.to(input.device)
+
+
+@spyre_reshape_via_cpu.register_fake
+def _(
+    input: torch.Tensor,
+    shape: Sequence[int],
+) -> torch.Tensor:
+    return input.new_empty(shape)
+
+
 @torch.library.custom_op("spyre::min_dim_int64_fallback", mutates_args=())
 def min_dim_int64_fallback(
     input: torch.Tensor, dim: int, keepdim: bool = False
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """
-    CPU fallback for torch.min(input, dim) when input is int64.
-    This custom op will be registered with a CPU fallback in fallbacks.py.
-    Returns a tuple (values, indices) as expected by torch.min.
+    CPU fallback for torch.min(input, dim) when input is int64. See
+    max_dim_int64_fallback for the rationale on the body computing the
+    real result instead of raising.
     """
-    raise RuntimeError(
-        "spyre::min_dim_int64_fallback should be handled by CPU fallback registration"
-    )
+    return torch.min(input, dim=dim, keepdim=keepdim)
 
 
 @min_dim_int64_fallback.register_fake
@@ -395,28 +559,26 @@ def _(input: torch.Tensor, dim: int, keepdim: bool = False):
     return (values, indices)
 
 
-## TODO (imaihal): This needs scalar tensor support from Spyre to CPU. issues #1172
-#
-# @torch.library.custom_op("spyre::max_default_int64_fallback", mutates_args=())
-# def max_default_int64_fallback(input: torch.Tensor) -> torch.Tensor:
-#    """
-#    CPU fallback for torch.max(input) when input is int64.
-#    This custom op will be registered with a CPU fallback in fallbacks.py.
-#    Returns a 1D tensor with shape [1] containing the maximum value.
-#    """
-#    # This should never be called directly; the fallback in fallbacks.py handles it
-#    raise RuntimeError(
-#        "spyre::max_default_int64_fallback should be handled by CPU fallback registration"
-#    )
-#
-#
-# @max_default_int64_fallback.register_fake
-# def _(input: torch.Tensor):
-#    """
-#    Fake implementation for shape inference.
-#    Returns a scalar (0D) tensor matching the input dtype.
-#    """
-#    return input.new_empty([])
+@torch.library.custom_op("spyre::max_default_int64_fallback", mutates_args=())
+def max_default_int64_fallback(input: torch.Tensor) -> torch.Tensor:
+    """
+    CPU fallback for torch.max(input) when input is int64.
+    This custom op will be registered with a CPU fallback in fallbacks.py.
+    Returns a 1D tensor with shape [1] containing the maximum value.
+    """
+    # This should never be called directly; the fallback in fallbacks.py handles it
+    raise RuntimeError(
+        "spyre::max_default_int64_fallback should be handled by CPU fallback registration"
+    )
+
+
+@max_default_int64_fallback.register_fake
+def _(input: torch.Tensor):
+    """
+    Fake implementation for shape inference.
+    Returns a scalar (0D) tensor matching the input dtype.
+    """
+    return input.new_empty([])
 
 
 @torch.library.custom_op("spyre::batched_matmul", mutates_args=(), device_types="spyre")
@@ -428,6 +590,74 @@ def batched_matmul(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:  # type: i
 def _(x: torch.Tensor, y: torch.Tensor) -> torch.Tensor:
     output_shape = list(x.shape[:-1]) + [y.shape[-1]]
     return x.new_empty(output_shape)
+
+
+@torch.library.custom_op("spyre::conv2d", mutates_args=(), device_types="spyre")
+def spyre_conv2d(
+    input: torch.Tensor,
+    weight: torch.Tensor,
+    stride: Sequence[int],
+    padding: Sequence[int],
+    dilation: Sequence[int],
+    groups: int,
+) -> torch.Tensor:  # type: ignore[empty-body]
+    pass
+
+
+@spyre_conv2d.register_fake
+def _(
+    input: torch.Tensor,
+    weight: torch.Tensor,
+    stride: Sequence[int],
+    padding: Sequence[int],
+    dilation: Sequence[int],
+    groups: int,
+) -> torch.Tensor:
+    # Compute output shape: (N, C_out, H_out, W_out)
+    N, C_in, H_in, W_in = input.shape
+    C_out, C_in_g, kH, kW = weight.shape
+
+    H_out = (H_in + 2 * padding[0] - dilation[0] * (kH - 1) - 1) // stride[0] + 1
+    W_out = (W_in + 2 * padding[1] - dilation[1] * (kW - 1) - 1) // stride[1] + 1
+
+    output_shape = [N, C_out, H_out, W_out]
+    return input.new_empty(output_shape)
+
+
+@torch.library.custom_op(
+    "spyre::conv2d_with_bias", mutates_args=(), device_types="spyre"
+)
+def spyre_conv2d_with_bias(
+    input: torch.Tensor,
+    weight: torch.Tensor,
+    bias: Optional[torch.Tensor],
+    stride: Sequence[int],
+    padding: Sequence[int],
+    dilation: Sequence[int],
+    groups: int,
+) -> torch.Tensor:  # type: ignore[empty-body]
+    pass
+
+
+@spyre_conv2d_with_bias.register_fake
+def _(
+    input: torch.Tensor,
+    weight: torch.Tensor,
+    bias: Optional[torch.Tensor],
+    stride: Sequence[int],
+    padding: Sequence[int],
+    dilation: Sequence[int],
+    groups: int,
+) -> torch.Tensor:
+    # Compute output shape: (N, C_out, H_out, W_out)
+    N, C_in, H_in, W_in = input.shape
+    C_out, C_in_g, kH, kW = weight.shape
+
+    H_out = (H_in + 2 * padding[0] - dilation[0] * (kH - 1) - 1) // stride[0] + 1
+    W_out = (W_in + 2 * padding[1] - dilation[1] * (kW - 1) - 1) // stride[1] + 1
+
+    output_shape = [N, C_out, H_out, W_out]
+    return input.new_empty(output_shape)
 
 
 @torch.library.custom_op("spyre::constant", mutates_args=(), device_types="spyre")
@@ -458,3 +688,263 @@ def to_dtype_cpu(input: torch.Tensor, dtype: torch.dtype) -> torch.Tensor:
 @to_dtype_cpu.register_fake
 def _(input: torch.Tensor, dtype: torch.dtype) -> torch.Tensor:
     return torch.empty_like(input, dtype=dtype)
+
+
+@torch.library.custom_op("spyre::qfp8ch", mutates_args=(), device_types="spyre")
+def qfp8ch(input: torch.Tensor) -> torch.Tensor:
+    """
+    Channel-wise FP8 format conversion (pointwise, optimized for matmul).
+
+    Converts input tensor to FP8 E4M3 format with channel-wise semantics.
+    This operation ONLY performs format conversion - scaling must be done separately.
+
+    Args:
+        input: Input tensor (FP16/BF16/FP32) to convert to FP8
+               Should already be scaled and clamped
+
+    Returns:
+        FP8 E4M3 tensor (same shape as input)
+
+    Maps to: deeptools Qfp8ch operation
+    """
+    pass
+
+
+@qfp8ch.register_fake
+def _(input: torch.Tensor) -> torch.Tensor:
+    # Output is FP8 with same shape as input
+    return torch.empty(input.size(), dtype=torch.float8_e4m3fn, device=input.device)
+
+
+@torch.library.custom_op(
+    "spyre::quantize_fp8_with_scale", mutates_args=(), device_types="spyre"
+)
+def quantize_fp8_with_scale(input: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    """
+    Quantize FP16 tensor to FP8 using pre-computed scale.
+
+    Performs four steps:
+    1. Compute inverse scale: inv_scale = 1 / scale (reciprocal, POINTWISE on sfp unit)
+    2. Scale the input: x_scaled = x * inv_scale (POINTWISE)
+    3. Clamp to FP8 E4M3 range: x_clamped = clamp(x_scaled, -448, 448) (POINTWISE)
+    4. Convert to FP8 format: x_fp8 = qfp8ch(x_clamped) (POINTWISE format conversion)
+
+    Args:
+        input: Input tensor (FP16) to quantize, shape [batch, seq, hidden]
+        scale: Quantization scale (FP16), shape [batch, seq, 1]
+
+    Returns:
+        FP8 E4M3 tensor (same shape as input)
+
+    Example:
+        >>> x = torch.randn(2, 4, 8, dtype=torch.float16, device='spyre')
+        >>> x_fp8 = torch.ops.spyre.quantize_fp8_with_scale(x, scale)
+
+    Note:
+        - Uses reciprocal operation (hardware sfp unit) for 1/scale computation
+    """
+    pass
+
+
+@quantize_fp8_with_scale.register_fake
+def _(input: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    # Output is FP8 with same shape as input
+    return torch.empty(input.size(), dtype=torch.float8_e4m3fn, device=input.device)
+
+
+@torch.library.custom_op(
+    "spyre::dequantize_fp8_with_scale", mutates_args=(), device_types="spyre"
+)
+def dequantize_fp8_with_scale(input: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:  # type: ignore[empty-body]
+    """
+    Dequantize FP8 tensor to FP16 using pre-computed scale.
+    Performs two steps:
+    1. Convert FP8 to FP16: x_fp16 = fp8todl16(x) (dtype conversion)
+    2. Scale the output: x_scaled = x_fp16 * scale (POINTWISE)
+    Args:
+        input: Input tensor (FP8) to dequantize, shape [batch, seq, hidden]
+        scale: Dequantization scale (FP16), shape [batch, seq, 1]
+    Returns:
+        FP16 tensor (same shape as input)
+    Example:
+        >>> @torch.compile(backend='inductor')
+        >>> def dequant(x_fp8, scale):
+        >>>     return torch.ops.spyre.dequantize_fp8_with_scale(x_fp8, scale)
+    Note:
+        - MUST use torch.compile(backend='inductor') - does not work in eager mode
+        - Uses fp8todl16 operation for FP8→FP16 conversion
+        - Scale must be FP16, NOT FP32
+    """
+    pass
+
+
+@dequantize_fp8_with_scale.register_fake
+def _(input: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    # Output is FP16 with same shape as input
+    return torch.empty(input.size(), dtype=torch.float16, device=input.device)
+
+
+@torch.library.custom_op("spyre::scaled_mm", mutates_args=(), device_types="spyre")
+def scaled_mm(
+    mat1: torch.Tensor, mat2: torch.Tensor, out_dtype: torch.dtype = None
+) -> torch.Tensor:  # type: ignore[empty-body]
+    """
+    Raw FP8 matrix multiplication, with no scaling or bias applied.
+
+    Scaling (scale_a, scale_b) and bias are intentionally NOT applied here -
+    they're applied afterward at the decomposition level by scaled_mm_decomp,
+    mirroring how dequantize_fp8_with_scale keeps its FP8->FP16 conversion
+    separate from the subsequent scale multiply.
+    """
+    pass
+
+
+@scaled_mm.register_fake
+def _(
+    mat1: torch.Tensor, mat2: torch.Tensor, out_dtype: torch.dtype = None
+) -> torch.Tensor:
+    output_shape = [mat1.shape[0], mat2.shape[-1]]
+    return mat1.new_empty(output_shape, dtype=out_dtype or torch.float16)
+
+
+@torch.library.custom_op(
+    "spyre::quantize_weight_fp8_with_scale", mutates_args=(), device_types="spyre"
+)
+def quantize_weight_fp8_with_scale(
+    input: torch.Tensor, scale: torch.Tensor
+) -> torch.Tensor:
+    pass
+
+
+@quantize_weight_fp8_with_scale.register_fake
+def _(input: torch.Tensor, scale: torch.Tensor) -> torch.Tensor:
+    # Output is FP8 with same shape as input
+    return torch.empty(input.size(), dtype=torch.float8_e4m3fn, device=input.device)
+
+
+@torch.library.custom_op("spyre::qfp8wt", mutates_args=(), device_types="spyre")
+def qfp8wt(input: torch.Tensor) -> torch.Tensor:
+    pass
+
+
+@qfp8wt.register_fake
+def _(input: torch.Tensor) -> torch.Tensor:
+    # Output is FP8 with same shape as input
+    return torch.empty(input.size(), dtype=torch.float8_e4m3fn, device=input.device)
+
+
+@torch.library.custom_op("spyre::causal_mask", mutates_args=(), device_types="spyre")
+def causal_mask(
+    seqlen_q: int,
+    seqlen_kv: int,
+    dtype: torch.dtype,
+    device: torch.device,
+) -> torch.Tensor:
+    """
+    Build a causal additive mask on CPU and transfer to the target device.
+
+    Shape: [1, 1, seqlen_q, seqlen_kv] in natural orientation: query i attends
+    to keys 0..i.  Entries are 0.0 (keep) or -inf (masked).  The kept diagonal
+    guarantees no fully-masked row (no 0/0 NaN denominator).
+
+    Built entirely on CPU (tril + masked_fill_) so those in-place ops are
+    opaque to torch.compile — assert_functional_graph is satisfied and the
+    compiled graph only sees the resulting device tensor.  No device_types
+    restriction is set because there are no tensor arguments to dispatch on;
+    the device is an explicit parameter.
+    """
+    # Causal boolean lower-triangular pattern: True = attend, False = mask
+    causal_cpu = torch.tril(
+        torch.ones(seqlen_q, seqlen_kv, dtype=torch.bool, device="cpu")
+    )
+    mask_cpu = torch.zeros(1, 1, seqlen_q, seqlen_kv, dtype=dtype, device="cpu")
+    mask_cpu.masked_fill_(~causal_cpu, float("-inf"))
+    return mask_cpu.to(device=device)
+
+
+@causal_mask.register_fake
+def _(
+    seqlen_q: int,
+    seqlen_kv: int,
+    dtype: torch.dtype,
+    device: torch.device,
+) -> torch.Tensor:
+    return torch.empty(1, 1, seqlen_q, seqlen_kv, dtype=dtype, device=device)
+
+
+@torch.library.custom_op(
+    "spyre::stagger_to_standard_ea", mutates_args=(), device_types="spyre"
+)
+def stagger_to_standard_ea(x: torch.Tensor) -> torch.Tensor:
+    """Restore standard Element Arrangement (EA) from staggered EA.
+
+    The fp32todl16 conversion reorders elements when converting fp32 to fp16,
+    producing staggered EA in the output.  This op applies mm(x, P.t()) to
+    permute the last dimension back to standard EA so downstream ops see a
+    normal fp16 tensor.
+
+    The permutation matrix P encodes the hardware fp32→fp16 stagger pattern.
+    Each fp16 stick (64 elements) staggers independently:
+        stick_base = (phys // 64) * 64
+        local_phys = phys % 64
+        k, w = local_phys // 8, local_phys % 8
+        local_logical = k*4 + w            if w < 4
+                      = k*4 + (w-4) + 32   otherwise   (32 = fp16_stick // 2)
+        logical = stick_base + local_logical
+
+    ``half`` is always 32 (half of one fp16 stick), independent of N.
+    N = x.shape[-1] must be a multiple of 64.
+
+    P is built on CPU and transferred to the device.  It is determined solely
+    by N, so it is constant for a given tensor width and can be reused across
+    ops (lt, eq, etc.) that produce the same stagger pattern.
+
+    Input:  fp16 tensor with staggered EA, any shape [..., N]
+    Output: fp16 tensor with standard EA, same shape [..., N]
+    """
+    n = x.shape[-1]
+    device = x.device
+
+    # Build N×N permutation matrix on CPU, transfer to device.
+    # Each fp16 stick (64 elements) staggers independently with half=32.
+    FP16_STICK = 64
+    half = FP16_STICK // 2  # 32 — fixed, independent of n
+    P = torch.zeros(n, n, dtype=torch.float16, device="cpu")
+    for phys_j in range(n):
+        stick_base = (phys_j // FP16_STICK) * FP16_STICK
+        local_phys = phys_j % FP16_STICK
+        k, w = local_phys // 8, local_phys % 8
+        local_logical = k * 4 + w if w < 4 else k * 4 + (w - 4) + half
+        P[stick_base + local_logical, phys_j] = 1.0
+    P = P.to(device=device)
+
+    # Flatten all dims except the last into a single batch dim for mm,
+    # then restore the original shape.  This works for any rank >= 1:
+    # the stagger pattern only affects the last (stick) dimension, so
+    # flattening leading dims produces the correct row ordering for mm.
+    orig_shape = list(x.shape)
+    m = x.numel() // n
+    result = torch.mm(x.reshape(m, n), P.t()).reshape(orig_shape)
+    return result
+
+
+@stagger_to_standard_ea.register_fake
+def _(x: torch.Tensor) -> torch.Tensor:
+    return torch.empty_like(x)
+
+
+@torch.library.custom_op("spyre::prod_dim_int", mutates_args=(), device_types="spyre")
+def prod_dim_int(input: torch.Tensor, dim: int, keepdim: bool = False) -> torch.Tensor:
+    pass
+
+
+@prod_dim_int.register_fake
+def _(input: torch.Tensor, dim: int, keepdim: bool = False) -> torch.Tensor:
+    if dim < 0:
+        dim += input.ndim
+    out_shape = list(input.shape)
+    if keepdim:
+        out_shape[dim] = 1
+    else:
+        out_shape = out_shape[:dim] + out_shape[dim + 1 :]
+    return torch.empty(out_shape, dtype=input.dtype, device=input.device)

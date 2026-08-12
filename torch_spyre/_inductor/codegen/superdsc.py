@@ -14,28 +14,53 @@
 
 import dataclasses
 import math
-from typing import Any
 from collections import Counter
-from sympy import Integer, Symbol, Expr, Mod, floor
+from typing import Any
 
+from sympy import Expr, Integer, Symbol
 from torch._inductor.virtualized import V
+
 from torch_spyre._C import DataFormats
+from torch_spyre._inductor import config as _spyre_config
+from torch_spyre._inductor.config import disable_conv2d_spatial_split
+from torch_spyre._C import ElementArrangement
 from torch_spyre._inductor.constants import (
+    CONV2D_DIM_LABELS,
+    CONV2D_LAYOUT_LABELS,
     IDENTITY_OP,
     INPUT_DIM_LABELS,
-    OUTPUT_DIM_LABELS,
     LAYOUT_LABELS,
     MATMUL_DIM_LABELS,
     MATMUL_LAYOUT_LABELS,
+    MATMUL_REDUCTION_OPS,
+    OUTPUT_DIM_LABELS,
+    POOL_DIM_LABELS,
+    POOL_OPS,
+    RESTICKIFY_OP,
+    DEPTHWISE_CONV2D_OP,
     TOPK_OPS,
 )
-from torch_spyre._inductor import config as _spyre_config
-from torch_spyre._inductor.logging_utils import get_inductor_logger
-from torch_spyre._inductor.op_spec import OpSpec
-from torch_spyre._inductor.op_spec import TensorArg
+from torch_spyre._inductor.core_mapping import core_to_slice_mapping
 from torch_spyre._inductor.dtype_ops import DtypeOpTable
+from torch_spyre._inductor.indirect_access import (
+    compute_indirect_max_dim_sizes,
+    get_index_tensor_for_value,
+    get_indirect_dim_symbols,
+    get_indirect_layout_label,
+    get_value_tensor_idx_for_index,
+    is_index_tensor,
+    is_indirect_value_tensor,
+)
+from torch_spyre._inductor.logging_utils import get_inductor_logger
+from torch_spyre._inductor.op_spec import (
+    DebugHandle,
+    IndirectAccess,
+    OpSpec,
+    TensorArg,
+)
+from torch_spyre._inductor.pass_utils import coeff_through_floor
 
-from .compute_ops import generate_sdsc
+from .compute_ops import SymbolKind, generate_sdsc, num_bytes
 
 logger = get_inductor_logger("codegen.superdsc")
 
@@ -52,6 +77,10 @@ class SDSCArgs:
     allocation: dict[str, Any]
     start_address: int | Symbol
     backGap: dict[Symbol, int]
+    arg_index: int = -1
+    is_index_tensor: bool = False
+    related_value_tensor_idx: int = -1
+    device_tile_advance_expr: Expr | None = None
 
     def __str__(self) -> str:
         scales = ", ".join(f"{k}={v}" for k, v in self.scales.items())
@@ -71,6 +100,8 @@ class SDSCArgs:
             f"  allocation=[{allocation}],\n"
             f"  start_address={self.start_address}\n"
             f"  backGap={self.backGap}\n"
+            f"  is_index_tensor={self.is_index_tensor}\n"
+            f"  related_value_tensor_idx={self.related_value_tensor_idx}\n"
             f")"
         )
 
@@ -90,6 +121,24 @@ class SDSCSpec:
     args: list[SDSCArgs]
     constants: dict[str, Any]
     coordinate_masking: dict[Symbol, Any]
+    conv_params: dict[str, Any] = dataclasses.field(default_factory=dict)
+    # maps SDSC dim name -> (pytorch_sym_name, granularity, max_val)
+    symbolic_dims: dict[str, tuple[str, int, int]] = dataclasses.field(
+        default_factory=dict
+    )
+    indirect_access_indices: list[int] = dataclasses.field(default_factory=list)
+    debug_handle: DebugHandle | None = None
+    # Generic pool/window fields.  Neutral defaults mean generate_sdsc treats a
+    # non-pool op exactly as before; parse_op_spec fills these for pool ops via
+    # _avgpool_sdsc_fields, so compute_ops.py stays free of op-specific logic.
+    padding_sizes: dict = dataclasses.field(default_factory=dict)
+    padding_sizes_per_core: dict = dataclasses.field(default_factory=dict)
+    pds_reuse: bool = False
+    stick_replication: bool = False
+    window_dims: frozenset = dataclasses.field(default_factory=frozenset)
+    input_coord_padding: dict = dataclasses.field(default_factory=dict)
+    input_coord_sizes: dict = dataclasses.field(default_factory=dict)
+    emit_memorg_padding: bool = False
 
     def __str__(self) -> str:
         iter_space = ", ".join(f"{k}={v}" for k, v in self.iteration_space.items())
@@ -103,6 +152,10 @@ class SDSCSpec:
         core_slice_map = ", ".join(
             f"{k}={v}" for k, v in self.core_id_to_work_slice.items()
         )
+        psizes = ", ".join(f"{k}={v}" for k, v in self.padding_sizes.items())
+        psizes_per_core = ", ".join(
+            f"{k}={v}" for k, v in self.padding_sizes_per_core.items()
+        )
         args = "\n".join("  " + line for a in self.args for line in str(a).splitlines())
         parts = [
             f"  opfunc={self.opfunc}",
@@ -112,6 +165,8 @@ class SDSCSpec:
             f"  iteration_space=[{iter_space}]",
             f"  work_slices=[{slices}]",
             f"  core_id_to_work_slice=[{core_slice_map}]",
+            f"  padding_sizes=[{psizes}]",
+            f"  padding_sizes_per_core=[{psizes_per_core}]",
             f"  layouts=[\n{layouts}\n  ]",
             f"  args=[\n{args}\n  ]",
         ]
@@ -132,80 +187,76 @@ class SDSCSpec:
         return "SDSCSpec(\n" + "\n".join(parts) + "\n)"
 
 
-def _get_core_to_slice_mapping(
-    iteration_space, dim_splits: dict[Symbol, int], num_cores: int
-) -> dict[Symbol, Expr]:
-    core_id_sym = Symbol("core_id")
-
-    dim_to_expr: dict[str, object] = {}
-    inner_product = Integer(1)
-
-    for dim in iteration_space:
-        if dim_splits[dim] == 1:
-            expr = Integer(0)
-        elif inner_product == Integer(1):
-            expr = Mod(core_id_sym, Integer(dim_splits[dim]))
-        else:
-            expr = Mod(floor(core_id_sym / inner_product), Integer(dim_splits[dim]))
-        dim_to_expr[str(dim)] = expr
-        inner_product = inner_product * Integer(dim_splits[dim])
-
-    return dim_to_expr
-
-
-def _k_fast_core_to_slice_mapping(
-    iteration_space, dim_splits: dict[Symbol, int], num_cores: int
-) -> dict[Symbol, Expr]:
-    """K-cohort-adjacent core-to-slice mapping for matmul.
-
-    Computed directly from the same `(iteration_space, dim_splits, num_cores)`
-    inputs as `_get_core_to_slice_mapping`, by treating the K (reduction) dim
-    as the innermost/fastest-varying axis along `core_id`. K-cohort members
-    (varying `i_k`, fixed `i_m, i_n`) then sit at adjacent physical core IDs,
-    so the PSUM ring reduction traverses 1 hop per output tile instead of
-    `m * n`.
-
-    Caller is responsible for the gating decision (matmul + k_fast flag + k>1).
-    """
-    dim_list = list(iteration_space.keys())
-    k_dim = dim_list[-1]
-    reordered = {k_dim: iteration_space[k_dim]}
-    for d in dim_list[:-1]:
-        reordered[d] = iteration_space[d]
-    return _get_core_to_slice_mapping(reordered, dim_splits, num_cores)
-
-
-def _should_use_k_fast_mapping(
-    is_matmul: bool, iteration_space, dim_splits: dict[Symbol, int]
-) -> bool:
-    """Decide whether the k_fast mapping should be used for this op.
-
-    Fires only when all three hold: this op is a matmul, the feature flag is
-    on, and the planner has chosen a K-split (k > 1). When k == 1 the k_fast
-    mapping is identical to the default, so we just use the default to keep
-    the code path explicit.
-    """
-    if not is_matmul:
-        return False
-    if not _spyre_config.core_id_k_fast_emission:
-        return False
-    dim_list = list(iteration_space.keys())
-    if len(dim_list) < 3:
-        return False
-    return dim_splits[dim_list[-1]] > 1
+# Pointwise ops whose *output* padding lanes are seeded to a deterministic value
+# rather than left as allocator garbage. The mask covers the out-of-logical-range
+# padding lanes of every padded output dim of the op (see _get_coordinate_mask:
+# for an allowlisted op it masks each dim with padding > 0, not only the stick
+# dim), so seeding them is safe for ANY consumer:
+#   - a downstream contraction (matmul) reads them as an operand → the value is
+#     chosen contraction-neutral so they add nothing;
+#   - a downstream reduction masks its own padding anyway;
+#   - a direct host read-out never includes padding lanes.
+#
+# The motivating case is the flash-attention numerator matmul (exp_scores @
+# value): with an unpadded kv sequence (seqlen_kv % stick_size != 0) the final
+# kv-stick's padding lanes are uninitialized, exp() of that garbage overflows
+# fp16, and the overflow poisons the matmul. Value: SAMV substitutes it at the
+# masked input coordinate before the op runs (same semantics as the reduction
+# path, where "max" uses -inf), so exp(-inf) = 0 → the padded lanes contribute
+# nothing.
+#
+# BANDAGE — scope is deliberately narrow, do not read this as general support:
+#   - Only "exp" is covered: it is the one pointwise op on the SDPA kv axis that
+#     turns garbage into a non-finite value. Other overflow-prone ops
+#     (reciprocal, rsqrt, ...) are NOT handled and CANNOT be by this mechanism —
+#     SAMV masks the op's INPUT, and for those ops no finite input maps to a
+#     neutral output (there is no x with 1/x == 0). See #3290.
+#   - Multi-dim masking is UNTESTED. SDPA only pads the stick dim, so in practice
+#     _get_coordinate_mask emits a single-dim mask here. The comprehension will
+#     emit a mask per padded dim if an op ever has more than one, but that path
+#     has no test coverage — treat multi-padded-dim pointwise ops as unverified.
+#   - Masking is unconditional by op-name, not gated on whether the output
+#     actually feeds a contraction (that consumer analysis is not available at
+#     this point in codegen). Safe (padding lanes are never valid data), but
+#     broader than necessary. TODO(consumer-gating).
+#
+# STOPGAP: this op allowlist bakes a consumer-specific neutral value at
+# production time because SpyreTensorLayout carries no record of the padded-stick
+# state. The principled replacement is a padded-stick-state enum on the layout
+# (set at DMA-in and at buffer allocation), which would let the compiler pick the
+# right neutral value per consumer and elide pad/zero copies — tracked in #3290.
+# Retire this dict once that lands.
+_POINTWISE_PADDING_MASK_VALUE: dict[str, float] = {
+    "exp": float("-inf"),  # exp(-inf) == 0
+}
 
 
 def _get_mask_value(op: str) -> float:
-    return float("-inf") if op == "max" else float("inf") if op == "min" else 0
+    if op == "max":
+        return float("-inf")
+    if op == "min":
+        return float("inf")
+    if op in _POINTWISE_PADDING_MASK_VALUE:
+        return _POINTWISE_PADDING_MASK_VALUE[op]
+    return 0
 
 
 def _get_coordinate_mask(
-    iteration_space: dict, arg: SDSCArgs, dim_padding: dict
+    iteration_space: dict, arg: SDSCArgs, dim_padding: dict, op: str = ""
 ) -> dict:
+    # Reduction path: mask the stick dim being reduced (scale == -2), so the
+    # padding lanes take the reduction identity.
+    # Pointwise path: for allowlisted ops (e.g. exp feeding a matmul), also mask
+    # EVERY padded output dim so its lanes are contraction-neutral. In practice
+    # SDPA pads only the stick dim, so this emits a single-dim mask; the multi-dim
+    # case is unexercised (see the BANDAGE note on _POINTWISE_PADDING_MASK_VALUE).
+    mask_pointwise = op in _POINTWISE_PADDING_MASK_VALUE
     return {
         dim: [[iteration_space[dim] - padding, padding]]
         for dim, padding in dim_padding.items()
-        if padding > 0 and dim in arg.scales and arg.scales[dim] == -2
+        if padding > 0
+        and dim in arg.scales
+        and (arg.scales[dim] == -2 or mask_pointwise)
     }
 
 
@@ -213,30 +264,120 @@ def _calculate_device_stride(dev_dim_idx: int, device_size: list) -> int:
     return math.prod(device_size[-dev_dim_idx - 2 :])
 
 
+# SDSC dim labels for the conv2d padding (output-spatial) and window (kernel)
+# axes. These labels are owned by codegen -- see the note on CONV2D_DIM_LABELS in
+# constants.py -- so they are defined here rather than plumbed down from
+# ``lower_convolution`` through ``op_info``.
+_CONV2D_PAD_DIM_I = CONV2D_DIM_LABELS[2]
+_CONV2D_PAD_DIM_J = CONV2D_DIM_LABELS[3]
+_CONV2D_WINDOW_DIM_I = CONV2D_DIM_LABELS[-2]
+_CONV2D_WINDOW_DIM_J = CONV2D_DIM_LABELS[-1]
+
+_CONV2D_SPATIAL_DIM_NAMES = (_CONV2D_PAD_DIM_I, _CONV2D_PAD_DIM_J)
+
+
+def _is_conv2d_kernel_tensor(arg: TensorArg, tensor_position: int | None) -> bool:
+    """Check if a tensor is a kernel tensor for conv2d ops.
+
+    A conv2d kernel tensor is identified by its position in op_spec.args.
+    This function centralizes the kernel identification logic.
+    Called only for tensors in op_spec.args (via enumerate), so tensor_position is never -1.
+    """
+    return tensor_position == 1
+
+
 def _get_device_dim_order(
-    arg: TensorArg, symbol_mapping: dict
+    arg: TensorArg,
+    symbol_mapping: dict,
+    op_spec: OpSpec | None = None,
+    tensor_position: int | None = None,
 ) -> tuple[list[Symbol], Symbol | None]:
-    """Return (dim_order, stick_dim) for the arg's device layout after symbol substitution."""
+    """Return (dim_order, stick_dim) for the arg's device layout after symbol substitution.
+
+    For kernel tensors in conv ops (tensor_position==1):
+    - Excludes size-1 output-spatial dimensions (i, j) since kernels have no spatial-output dependence.
+    - Explicitly includes kernel dimensions (ki, kj) even if they don't appear in device_coordinates
+      (e.g., when kernel_size=1, they don't iterate naturally but are still structural dimensions).
+    """
     last_coord = arg.device_coordinates[-1].subs(symbol_mapping)
     free = sorted(last_coord.free_symbols, key=str)
     stick_dim = free[0] if free else None
 
     dim_order: list[Symbol] = []
     for i in range(len(arg.device_coordinates) - 2, -1, -1):
-        expr = arg.device_coordinates[i].subs(symbol_mapping)
+        coord = arg.device_coordinates[i]
+        # Handle coordinates containing IndirectAccess — extract symbols from index tensor.
+        if hasattr(coord, "has") and coord.has(IndirectAccess):
+            if op_spec is not None and is_indirect_value_tensor(arg):
+                index_arg = get_index_tensor_for_value(op_spec, arg)
+                if index_arg is not None:
+                    indirect_dims = get_indirect_dim_symbols(
+                        arg, index_arg, symbol_mapping
+                    )
+                    for sym in indirect_dims:
+                        if sym not in dim_order:
+                            dim_order.append(sym)
+            continue
+        expr = coord.subs(symbol_mapping)
         if expr == 0 and stick_dim is not None and stick_dim not in dim_order:
             dim_order.append(stick_dim)
         for sym in expr.free_symbols:
-            if sym not in dim_order:
+            # For kernel tensors in conv ops, exclude size-1 output-spatial dimensions.
+            # Kernels don't depend on output spatial position, so i and j (when size-1)
+            # are synthetic placeholders that shouldn't affect kernel layout.
+            skip_sym = False
+            if (
+                op_spec is not None
+                and _is_conv(op_spec.op)
+                and _is_conv2d_kernel_tensor(arg, tensor_position)
+                and str(sym) in ("i", "j")
+            ):
+                # sym is already mapped to "i" or "j", but iteration_space has the original c2/c3/z0/z1 names.
+                # Find which original symbol maps to this i/j by looking up the reverse mapping.
+                orig_sym = None
+                for orig, mapped in symbol_mapping.items():
+                    if str(mapped) == str(sym):
+                        orig_sym = orig
+                        break
+
+                if orig_sym is not None and orig_sym in op_spec.iteration_space:
+                    size_expr, _ = op_spec.iteration_space[orig_sym]
+                    sym_size = _concretize_for_sdsc(size_expr)
+                    if sym_size == 1:
+                        # Skip this synthetic placeholder
+                        skip_sym = True
+
+            if not skip_sym and sym not in dim_order:
                 dim_order.append(sym)
+
+    # For kernel tensors in conv ops, always explicitly add ki/kj dimensions.
+    # These are spatial dimensions of the kernel tensor and should be part of its layout.
+    # They may not appear in device_coordinates when kernel_size=1, but they should still
+    # be in layoutDimOrder and coordinates_.
+    if (
+        op_spec is not None
+        and _is_conv(op_spec.op)
+        and _is_conv2d_kernel_tensor(arg, tensor_position)
+        and op_spec.op_info
+        and "conv_params" in op_spec.op_info
+    ):
+        conv_params = op_spec.op_info["conv_params"]
+        # Add ki and kj to dim_order if they have non-zero kernel sizes
+        for window_sym_name, kernel_key in [("ki", "kernel_h"), ("kj", "kernel_w")]:
+            kernel_size = conv_params.get(kernel_key, 1)
+            if kernel_size > 0:
+                window_sym = Symbol(window_sym_name)
+                if window_sym not in dim_order:
+                    dim_order.insert(0, window_sym)
+
     return dim_order, stick_dim
 
 
 def _get_layout_label(
     layouts: dict,
     dim_order: list,
-    stick_dim_order: Symbol | None,
-    stick_size: int,
+    stick_dim_order: list,
+    stick_size: list,
     layout_labels: list[str],
 ) -> str:
     for label, layout in layouts.items():
@@ -271,31 +412,470 @@ def _get_padded_iteration_space(
     padding: dict = {}
     for sdsc_arg, op_spec_arg, dim_order in zip(sdsc_args, op_spec_args, dim_order):
         layout = layouts[sdsc_arg.layout]
-        stick_dim = layout["stick_dim_order"]
+        stick_dim_order = layout["stick_dim_order"]
+        stick_size = layout["stick_size"]
         dev_size = op_spec_arg.device_size[-2::-1]
         for idx, dim in enumerate(dim_order):
-            if idx >= len(dev_size) or dim != stick_dim:
+            if idx >= len(dev_size) or dim not in stick_dim_order:
                 continue
-            unaligned = sdsc_iteration_space[dim] % layout["stick_size"]
+            effective_stick_size = (
+                stick_size[0] if len(stick_size) == 1 else stick_size[0] * stick_size[1]
+            )
+            unaligned = sdsc_iteration_space[dim] % effective_stick_size
             if unaligned > 0:
-                padding[dim] = layout["stick_size"] - unaligned
+                padding[dim] = effective_stick_size - unaligned
                 sdsc_iteration_space[dim] += padding[dim]
     return padding
 
 
 def _is_matmul(op: str) -> bool:
-    return op in ("matmul", "batchmatmul")
+    return op in MATMUL_REDUCTION_OPS
+
+
+def _is_conv(op: str) -> bool:
+    return op in [DEPTHWISE_CONV2D_OP]
 
 
 def _is_topk(op: str) -> bool:
     return op in TOPK_OPS
 
 
-def _get_op_dim_labels(ndim: int, is_matmul: bool) -> list[str]:
+def _is_pool(op: str) -> bool:
+    return op in POOL_OPS
+
+
+# Canonical avgpool iteration-space order (NHWC) -> SDSC labels.  Codegen owns
+# these label strings; survival of each role is read from the node's live output
+# ranges (see _align_pool_dim_labels), so no size info leaks above codegen.
+# Order matches POOL_DIM_LABELS and the emitted (NHWC) iteration space.
+_POOL_ROLE_LABELS = list(
+    zip(["batch", "out_h", "out_w", "channel", "win_h", "win_w"], POOL_DIM_LABELS)
+)
+
+
+def _is_static_one(sz) -> bool:
+    try:
+        return int(sz) == 1
+    except (TypeError, ValueError):
+        return False  # symbolic/dynamic dim: never dropped
+
+
+def _align_pool_dim_labels(node_output_ranges, ndim: int) -> list[str]:
+    """Return the pool dim labels aligned to the (possibly squeezed) iteration space.
+
+    ``node_output_ranges`` is the reduction node's full logical output ranges in
+    **NCHW** order ``[N, C, H_out, W_out]`` (live IR, incl. unit dims) — see
+    ``OpSpec.node_output_ranges``.  Codegen owns the SDSC label for each role
+    (``_POOL_ROLE_LABELS``, in **NHWC** order).  The compilation pipeline drops
+    statically size-1 output dims (e.g. batch N=1) before parse_op_spec runs, so
+    a role whose live range is 1 has no surviving iteration-space dim and its
+    label is filtered out.  Survival is keyed by role name and emitted in NHWC
+    order; the window dims (win_h/win_w) always survive because the lowering
+    delegates to the in-tree path when kH==1 or kW==1, so a SpyreReduction always
+    has kH>1 and kW>1.  This keeps labels aligned to the real iteration space
+    using live node ranges rather than a lowering-time size snapshot.
+    """
+    if node_output_ranges is None or len(node_output_ranges) != 4:
+        raise ValueError(
+            "pool node_output_ranges must be NCHW [N, C, H_out, W_out]; got "
+            f"{node_output_ranges!r}"
+        )
+    # NCHW positions: 0=batch, 1=channel, 2=out_h, 3=out_w.
+    survives = {
+        "batch": not _is_static_one(node_output_ranges[0]),
+        "channel": not _is_static_one(node_output_ranges[1]),
+        "out_h": not _is_static_one(node_output_ranges[2]),
+        "out_w": not _is_static_one(node_output_ranges[3]),
+        "win_h": True,  # kH>1 guaranteed by the lowering delegation guard
+        "win_w": True,  # kW>1 guaranteed by the lowering delegation guard
+    }
+    labels = [label for role, label in _POOL_ROLE_LABELS if survives[role]]
+    if len(labels) != ndim:
+        raise ValueError(
+            f"pool dim label count {len(labels)} ({labels}) does not match "
+            f"iteration-space rank {ndim}; node_output_ranges {node_output_ranges!r} "
+            "are out of sync with the emitted iteration space"
+        )
+    return labels
+
+
+_CONV2D_ROLE_LABELS = list(
+    zip(
+        ["batch", "channel", "out_h", "out_w"],
+        [
+            CONV2D_DIM_LABELS[0],
+            CONV2D_DIM_LABELS[1],
+            _CONV2D_PAD_DIM_I,
+            _CONV2D_PAD_DIM_J,
+        ],
+    )
+)
+
+
+def _align_conv2d_dim_labels(
+    node_output_ranges,
+    ndim: int,
+    kernel_h,
+    kernel_w,
+) -> list[str]:
+    """Return conv2d dim labels aligned to the (possibly squeezed) iteration space.
+
+    ``node_output_ranges`` is the reduction node's full logical output ranges in
+    **NCHW** order ``[N, C, H_out, W_out]`` (live IR, incl. unit dims) -- see
+    ``OpSpec.node_output_ranges``.  Codegen owns the SDSC label for each role
+    (``_CONV2D_ROLE_LABELS``, emitted in canonical ``mb, out, i, j`` order).
+
+    A role whose live range is 1 is a *candidate* for having been squeezed out of
+    the iteration space, but the squeeze is **not unconditional**, so candidacy
+    alone cannot decide survival.  Two behaviours have to be reconciled:
+
+    - ``N == 1``  and ``kernel_size == 1`` really are
+      dropped, and the squeeze can land at the front, at the back, or in the
+      **middle** (``H_out == 1`` with ``mb`` surviving, dw-15).  No suffix slice
+      or count-from-one-end scheme can express a middle squeeze, which is why
+      survival is keyed per role rather than positionally.
+    - A **fully collapsed 1x1 output** *keeps*
+      its unit output-spatial dims: the iteration space stays rank 6 with the
+      kernel extents live and ``i``/``j`` present as size-1 dims.
+
+    So unit-range roles are dropped only in *reverse canonical order*, and only
+    as many as the iteration-space rank requires.  ``ndim`` is the ground truth;
+    the ranges only say which roles are *eligible* to be dropped.  Unlike
+    ``_align_pool_dim_labels`` this must also consider the **window** roles:
+    ``lower_avg_pool2d`` delegates to the in-tree lowering when
+    ``kH == 1 or kW == 1``, so a pool ``SpyreReduction`` always has both window
+    dims, but conv2d explicitly supports 1x1 / 1xN / Nx1 kernels.
+    """
+    if node_output_ranges is None or len(node_output_ranges) != 4:
+        raise ValueError(
+            "conv2d node_output_ranges must be NCHW [N, C, H_out, W_out]; got "
+            f"{node_output_ranges!r}"
+        )
+    # Full canonical label list with each entry's unit-ness, in iteration-space
+    # order: output roles (mb, out, i, j) then window roles (ki, kj).
+    candidates: list[tuple[str, bool]] = [
+        (label, _is_static_one(node_output_ranges[pos]))
+        for pos, (_role, label) in enumerate(_CONV2D_ROLE_LABELS)
+    ]
+    candidates.append((_CONV2D_WINDOW_DIM_I, _is_static_one(kernel_h)))
+    candidates.append((_CONV2D_WINDOW_DIM_J, _is_static_one(kernel_w)))
+
+    n_to_drop = len(candidates) - ndim
+    if n_to_drop < 0:
+        raise ValueError(
+            f"conv2d iteration-space rank {ndim} exceeds the {len(candidates)} "
+            f"canonical dim labels {[label for label, _ in candidates]}; "
+            f"node_output_ranges {node_output_ranges!r}, kernel "
+            f"{kernel_h}x{kernel_w}"
+        )
+    # Drop unit-range roles from the back: the pipeline squeezes the innermost
+    # eligible dims first, and a 1x1 output keeps i/j rather than dropping them.
+    dropped: set[int] = set()
+    for idx in range(len(candidates) - 1, -1, -1):
+        if len(dropped) == n_to_drop:
+            break
+        if candidates[idx][1]:
+            dropped.add(idx)
+    if len(dropped) != n_to_drop:
+        unit_labels = [label for label, is_unit in candidates if is_unit]
+        raise ValueError(
+            f"conv2d needs to drop {n_to_drop} dim label(s) to reach "
+            f"iteration-space rank {ndim}, but only {len(unit_labels)} "
+            f"unit-range role(s) {unit_labels} are eligible; node_output_ranges "
+            f"{node_output_ranges!r} and kernel {kernel_h}x{kernel_w} are out of "
+            "sync with the emitted iteration space"
+        )
+    return [label for idx, (label, _) in enumerate(candidates) if idx not in dropped]
+
+
+def _avgpool_sdsc_fields(iteration_space: dict, pool_params: dict) -> dict:
+    """Compute the pool-specific SDSC field values for an avgpool op.
+
+    Returns plain data that is threaded onto ``SDSCSpec`` and consumed
+    generically by ``generate_sdsc`` in compute_ops.py, which keeps no
+    pool-specific knowledge (see the generic ``padding``/``num_inputs``
+    fields for the established pattern).  ``iteration_space`` is the renamed
+    SDSC iteration space, so the spatial dims are keyed by ``Symbol("i")`` and
+    ``Symbol("j")``.
+    """
+    kH = int(pool_params["kernel_h"])
+    kW = int(pool_params["kernel_w"])
+    sH = int(pool_params.get("stride_h", 1))
+    sW = int(pool_params.get("stride_w", 1))
+    pH = int(pool_params.get("pad_h", 0))
+    pW = int(pool_params.get("pad_w", 0))
+    fullspan = "padded_fullspan_wunneeded"
+
+    # One entry per spatial axis whose pooling window actually survives in the
+    # iteration space.  kernel_size==1 makes that axis' reduction dim size-1,
+    # which the pipeline squeezes out (so its label was already dropped by
+    # _align_pool_dim_labels).  Such an axis is a plain pass-through: emitting a
+    # paddingSizes_/windowDim_ entry for it would reference a dim the SDSC no
+    # longer has, and dxp_standalone aborts with "Missing window size for padded
+    # size calculation".  So skip any axis whose window dim is absent.
+    axes = [
+        ("i", "ki", kH, sH, pH),
+        ("j", "kj", kW, sW, pW),
+    ]
+    padding_sizes: dict = {}
+    window_dims: set = set()
+    input_coord_padding: dict = {}
+    input_coord_sizes: dict = {}
+    for spatial, window, k, s, p in axes:
+        if Symbol(window) not in iteration_space:
+            continue
+        out = int(iteration_space.get(Symbol(spatial), 1))
+        in_size = (out - 1) * s + k
+        padding_sizes[spatial] = {
+            "padFront_": p,
+            "padBack_": p,
+            "totalSize_": in_size,
+            "stride_": s,
+            "dilation_": 1,
+            "windowDim_": window,
+        }
+        window_dims.add(window)
+        input_coord_padding[spatial] = fullspan
+        input_coord_sizes[spatial] = in_size
+
+    return {
+        "padding_sizes": padding_sizes,
+        "pds_reuse": True,
+        "stick_replication": True,
+        "window_dims": frozenset(window_dims),
+        "input_coord_padding": input_coord_padding,
+        "input_coord_sizes": input_coord_sizes,
+        "emit_memorg_padding": True,
+    }
+
+
+def _conv2d_sdsc_fields(
+    iteration_space: dict, conv_params: dict, dim_splits: dict
+) -> dict:
+    """Compute conv2d-specific SDSC field values for depthwise conv2d.
+
+    Computes paddingSizes_ for both top-level (full-size) and per-core (split-size)
+    variants, storing them in the returned dict as padding_sizes and
+    padding_sizes_per_core respectively. Both variants use the same inner structure
+    (flat dict keyed by spatial dim label), matching the shape already used by avgpool.
+    """
+    if not conv_params:
+        return {}
+
+    def compute_padding_for_dim(
+        suffix,
+        pad_dim,
+        kernel_key,
+        stride_key,
+        window_dim,
+        total_size_key,
+        dim_sizes=None,
+    ):
+        """Compute padding fields for a single dimension (i or j).
+
+        ``pad_dim`` and ``window_dim`` are SDSC dim labels supplied by codegen,
+        not keys to look up in ``conv_params``.
+        """
+        stride = conv_params[stride_key]
+        kernel_size = conv_params[kernel_key]
+        pad_amount = conv_params.get(f"pad_{suffix}", 0)
+
+        if dim_sizes is None:
+            total_size = conv_params[total_size_key]
+            full_output = (total_size - kernel_size) // stride + 1
+            per_core_output = full_output
+        else:
+            per_core_output = dim_sizes[Symbol(pad_dim)] // dim_splits[Symbol(pad_dim)]
+            num_splits = dim_splits[Symbol(pad_dim)]
+            if num_splits == 1:
+                total_size = conv_params[total_size_key]
+            else:
+                total_size = (per_core_output) * stride + kernel_size - 1
+
+        min_required_input = (per_core_output - 1) * stride + kernel_size
+        unneeded_pad = total_size - min_required_input
+
+        padFront = pad_amount
+        padBack = pad_amount
+        valid_size = total_size - padFront - padBack
+
+        unneeded_remaining = unneeded_pad
+        unneeded_pad_front = 0
+        unneeded_pad_back = 0
+
+        if padBack > 0 and unneeded_remaining > 0:
+            reduce_amount = min(padBack, unneeded_remaining)
+            unneeded_pad_back += reduce_amount
+            padBack -= reduce_amount
+            unneeded_remaining -= reduce_amount
+
+        if valid_size > 0 and unneeded_remaining > 0:
+            reduce_amount = min(valid_size, unneeded_remaining)
+            unneeded_remaining -= reduce_amount
+
+        if padFront > 0 and unneeded_remaining > 0:
+            reduce_amount = min(padFront, unneeded_remaining)
+            unneeded_pad_front += reduce_amount
+            padFront -= reduce_amount
+            unneeded_remaining -= reduce_amount
+
+        return {
+            "padFront_": padFront,
+            "padBack_": padBack,
+            "unneededPad_": unneeded_pad,
+            "unneededPadFront_": unneeded_pad_front,
+            "unneededPadBack_": unneeded_pad_back,
+            "totalSize_": total_size,
+            "stride_": stride,
+            "dilation_": conv_params.get(f"dilation_{suffix}", 1),
+            "windowDim_": window_dim,
+        }
+
+    def build_padding_sizes_variant(dim_sizes=None):
+        """Build paddingSizes_ for one variant (top-level or per-core).
+
+        Emits one entry per spatial axis whose output dim actually survives in
+        the iteration space, mirroring ``_avgpool_sdsc_fields``.  A collapsed
+        window (kernel extent 1) leaves its output-spatial label unassigned --
+        e.g. K=1x1 with N=1 yields no ``j`` -- and subscripting ``dim_sizes``
+        for the absent label would raise ``KeyError``.  Such an axis has no
+        pooling/conv window to describe, so it is correctly omitted rather than
+        defaulted.
+        """
+        variant = {}
+        for suffix, pad_dim, kernel_key, stride_key, window_dim, total_key in (
+            (
+                "i",
+                _CONV2D_PAD_DIM_I,
+                "kernel_h",
+                "stride_i",
+                _CONV2D_WINDOW_DIM_I,
+                "total_size_i",
+            ),
+            (
+                "j",
+                _CONV2D_PAD_DIM_J,
+                "kernel_w",
+                "stride_j",
+                _CONV2D_WINDOW_DIM_J,
+                "total_size_j",
+            ),
+        ):
+            if dim_sizes is not None and Symbol(pad_dim) not in dim_sizes:
+                continue
+            variant[str(pad_dim)] = compute_padding_for_dim(
+                suffix,
+                pad_dim,
+                kernel_key,
+                stride_key,
+                window_dim,
+                total_key,
+                dim_sizes,
+            )
+        return variant
+
+    return {
+        "padding_sizes": build_padding_sizes_variant(dim_sizes=None),
+        "padding_sizes_per_core": build_padding_sizes_variant(
+            dim_sizes=iteration_space
+        ),
+        "emit_memorg_padding": True,
+    }
+
+
+def _build_conv2d_symbol_mapping(
+    op_spec: OpSpec,
+    dim_labels: list[str],
+) -> dict[Any, Symbol]:
+    """Build the symbol mapping for depthwise conv2d from live dim roles.
+
+    Labels come from ``_align_conv2d_dim_labels``, which derives which roles
+    survived the pipeline's size-1 squeeze from the node's live NCHW output
+    ranges plus the kernel extents.  Those labels are already in
+    iteration-space order (output roles in canonical ``mb, out, i, j`` order,
+    then the surviving window dims), so symbols map onto them positionally.
+
+    This deliberately does **not** identify kernel dims by matching their extent
+    against ``kernel_h``/``kernel_w``.  An extent of 1 both collapses the dim
+    away and collides with any other unit dim, so extent matching cannot
+    distinguish a kernel dim from a unit spatial dim -- and a squeeze that lands
+    in the middle of the canonical order (``H_out == 1`` dropping ``i`` while
+    ``mb`` survives) is invisible to any positional or count-based scheme.
+
+    Falls back to the caller's positional labels only when the kernel extents
+    or live ranges are unavailable, which is the pre-existing behaviour for
+    op_specs that carry no ``conv_params``.
+    """
+    conv_params = op_spec.op_info.get("conv_params", {})
+    kernel_h = conv_params.get("kernel_h")
+    kernel_w = conv_params.get("kernel_w")
+    sym_list = list(op_spec.iteration_space.keys())
+
+    if kernel_h is None or kernel_w is None or op_spec.node_output_ranges is None:
+        # No kernel sizes or no live output ranges: keep the caller's positional
+        # mapping rather than guessing.
+        return {sym: Symbol(dim_labels[i]) for i, sym in enumerate(sym_list)}
+
+    labels = _align_conv2d_dim_labels(
+        op_spec.node_output_ranges, len(sym_list), kernel_h, kernel_w
+    )
+
+    # The label list is in canonical order (mb, out, i, j, ki, kj minus the
+    # squeezed roles), but the *iteration space* is not guaranteed to be.  It is
+    # built write-dep-first and then extended with read-only symbols, so when the
+    # output spatial dims collapse to 1x1 they drop out of the write dep and are
+    # re-appended AFTER the kernel dims.
+    # Assigning canonical labels positionally would swap i/j with ki/kj.
+    #
+    # Only a fully collapsed 1x1 output can reorder this way (a surviving spatial
+    # dim stays in the write dep and keeps its slot), so handle exactly that case:
+    # the unit-extent symbols are the output spatial dims and the kernel-extent
+    # symbols are the window.
+    window_labels = (_CONV2D_WINDOW_DIM_I, _CONV2D_WINDOW_DIM_J)
+    spatial_labels = (_CONV2D_PAD_DIM_I, _CONV2D_PAD_DIM_J)
+    needs_reorder = all(lbl in labels for lbl in window_labels) and all(
+        lbl in labels for lbl in spatial_labels
+    )
+    if needs_reorder and _is_static_one(op_spec.node_output_ranges[2]):
+        sym_to_size = {
+            sym: _concretize_for_sdsc(size)
+            for sym, (size, _) in op_spec.iteration_space.items()
+        }
+        # Symbols whose extent is 1 are the collapsed spatial dims; the rest, in
+        # order, take the remaining canonical labels.
+        unit_syms = [sym for sym in sym_list if sym_to_size.get(sym) == 1]
+        if len(unit_syms) == 2:
+            non_spatial = [lbl for lbl in labels if lbl not in spatial_labels]
+            non_spatial_iter = iter(non_spatial)
+            spatial_iter = iter(spatial_labels)
+            return {
+                sym: Symbol(
+                    next(spatial_iter) if sym in unit_syms else next(non_spatial_iter)
+                )
+                for sym in sym_list
+            }
+
+    return {sym: Symbol(labels[i]) for i, sym in enumerate(sym_list)}
+
+
+def _get_op_dim_labels(ndim: int, is_matmul: bool, is_conv2d: bool) -> list[str]:
     if is_matmul:
         return MATMUL_DIM_LABELS[len(MATMUL_DIM_LABELS) - ndim :]
+    elif is_conv2d:
+        return CONV2D_DIM_LABELS[len(CONV2D_DIM_LABELS) - ndim :]
     else:
         return INPUT_DIM_LABELS[: ndim - 1] + OUTPUT_DIM_LABELS[:1]
+
+
+def _get_tensor_layout_labels(use_op_dims: bool, op_name: str) -> list[str]:
+    layout_labels = (
+        LAYOUT_LABELS
+        if use_op_dims
+        else MATMUL_LAYOUT_LABELS
+        if _is_matmul(op_name)
+        else CONV2D_LAYOUT_LABELS
+    )
+    return layout_labels
 
 
 def _get_data_format(op, device_dtype):
@@ -316,79 +896,341 @@ def _get_data_format(op, device_dtype):
     return data_format.get((op, device_dtype), device_dtype)
 
 
+def _collect_index_tensor_layouts(
+    op_spec: OpSpec,
+    symbol_mapping: dict,
+    index_tensor_indices: set[int],
+    logger: object,
+    gather_mb_injected: bool = False,
+    mb_sym: Symbol | None = None,
+) -> tuple[dict, dict]:
+    """First pass: compute (dim_order, stick_dim) for each index tensor.
+
+    For P=1 gathers the index tensor has all-constant coordinates (no loop
+    variables), so its natural dim_order is empty.  When ``gather_mb_injected``
+    is True, override the layout to ``([mb_sym], mb_sym)`` so the KERNEL_IDX
+    has a valid non-empty layout.
+
+    Returns:
+        index_tensor_layouts: dict mapping tensor_idx -> (dim_order, stick_dim)
+        index_active_dims: dict mapping tensor_idx -> set of active (non-stick) dims
+    """
+    index_tensor_layouts: dict[int, tuple[list, object]] = {}
+    index_active_dims: dict[int, set] = {}
+
+    for i in index_tensor_indices:
+        arg = op_spec.args[i]
+        dim_order, stick_dim = _get_device_dim_order(arg, symbol_mapping)
+        if gather_mb_injected and not dim_order:
+            # P=1: index tensor has all-constant coords; use the synthetic dim.
+            dim_order = [mb_sym]
+            stick_dim = mb_sym
+        index_tensor_layouts[i] = (dim_order, stick_dim)
+        active_dims = {d for d in dim_order if d is not stick_dim}
+        index_active_dims[i] = active_dims
+        logger.debug(
+            f"Index tensor {i}: dim_order={dim_order}, stick_dim={stick_dim}, "
+            f"active_dims={sorted(map(str, active_dims))}"
+        )
+
+    return index_tensor_layouts, index_active_dims
+
+
 def _create_sdsc_tensors(
     op_spec: OpSpec,
     symbol_mapping: dict,
     iteration_space: dict,
     op_dim_order: list[Symbol],
     op_stick_dim: Symbol | None,
+    mb_sym: Symbol | None = None,
+    gather_mb_injected: bool = False,
 ) -> tuple[list[SDSCArgs], dict, Symbol | None]:
     dims = list(iteration_space.keys())
     layouts: dict = {}
-    use_op_dims = not _is_matmul(op_spec.op)
+    use_op_dims = not _is_matmul(op_spec.op) and not _is_conv(op_spec.op)
+
+    # Detect indirect access from device_coordinates: index tensors are those
+    # whose name is referenced by an IndirectAccess in another tensor's coordinates,
+    # and value tensors are those that contain IndirectAccess in their coordinates.
+    index_tensor_indices = {
+        i for i, arg in enumerate(op_spec.args) if is_index_tensor(arg, op_spec)
+    }
+    has_indirect_access = bool(index_tensor_indices)
+
+    # For indirect access: pre-compute index tensor layouts (first pass).
+    # Pass gather_mb_injected so index tensors with all-constant coordinates get
+    # their layout overridden to ([mb_sym], mb_sym) instead of ([], None).
+    index_tensor_layouts: dict[int, tuple[list, Any]] = {}
+    index_active_dims: dict[int, set] = {}
+    if has_indirect_access:
+        index_tensor_layouts, index_active_dims = _collect_index_tensor_layouts(
+            op_spec,
+            symbol_mapping,
+            index_tensor_indices,
+            logger,
+            gather_mb_injected=gather_mb_injected,
+            mb_sym=mb_sym,
+        )
 
     missing_dim = None
     sdsc_args: list[SDSCArgs] = []
-    for arg in op_spec.args:
-        dim_order, stick_dim = _get_device_dim_order(arg, symbol_mapping)
+
+    for i, arg in enumerate(op_spec.args):
+        is_fp8_mm_kernel_arg = arg.element_arrangement == ElementArrangement.QFP8WT
+
+        # Step 1: Determine dimension order and stick dimension.
+        # Index tensors use their pre-computed layout (their coords have no IndirectAccess).
+        if has_indirect_access and i in index_tensor_layouts:
+            dim_order, stick_dim = index_tensor_layouts[i]
+        else:
+            dim_order, stick_dim = _get_device_dim_order(
+                arg, symbol_mapping, op_spec, tensor_position=i
+            )
+
+        # Case 2 (MutationLayoutSHOULDREMOVE) ops carry an authoritative
+        # device-stride sympy.Expr for each coarse-tiled dim's per-iteration
+        # advance, stamped by coarse_tile._propagate_tiled_op (host-stride
+        # terms) and substituted to device-stride terms, per-arg, by
+        # spyre_kernel.create_tensor_arg. The per-iteration *advance* across
+        # levels is handled later, in compute_ops.generate_sdsc's
+        # affine_strides construction (which is structured per level). Here
+        # we only need the **iteration-0 base** fact -- the actual
+        # (innermost) tile extent this arg is written/read at per
+        # iteration, and the full extent it sits within -- to compute a
+        # correct base offset/backGap, since device_coordinates cannot
+        # represent "which supertile" for these ops (see
+        # coarse_tiling_loops.md's IR-rewiring appendix). The innermost
+        # level that tiles a given dim owns its true per-iteration
+        # tile_size; the full extent is that tile_size times every level's
+        # supertile_count for that dim.
+        sdsc_dim_advance: dict[Symbol, tuple[int, int]] = {}
+        if arg.device_tile_advance_expr is not None:
+            arg_elem_bytes = num_bytes(arg.device_dtype)
+            for level_syms in op_spec.tiled_symbols:
+                for sym in level_syms:
+                    if sym not in symbol_mapping:
+                        continue
+                    coeff = coeff_through_floor(arg.device_tile_advance_expr, sym)
+                    if not coeff:
+                        continue
+                    tile_size = int(coeff) * arg_elem_bytes
+                    trip_count = op_spec.tiled_symbol_trip_counts.get(sym, 1)
+                    sdsc_sym = symbol_mapping[sym]
+                    sdsc_dim_advance[sdsc_sym] = (tile_size, trip_count)
+
         scales: dict = {}
         strides: dict = {}
         offsets: dict = {}
         backGap: dict[Symbol, int] = {}
         max_dim_sizes: dict = {}
         reduced_dims: list = []
-        if use_op_dims and dim_order != dims and not _is_topk(op_spec.op):
-            reduced_dims = [d for d in op_dim_order if d not in dim_order]
-            dim_order = dim_order + reduced_dims
 
+        # Step 2: Handle reduced dimensions — skip for index tensors.
+        if use_op_dims and dim_order != dims and not _is_topk(op_spec.op):
+            if not (has_indirect_access and i in index_tensor_indices):
+                reduced_dims = [
+                    d for d in op_dim_order if d not in dim_order and d is not mb_sym
+                ]
+                dim_order = dim_order + reduced_dims
+
+        # Step 3: Handle missing stick dimension — skip for index tensors.
         if op_stick_dim is None:
-            # No stick dim found in op - add one
-            stick_dim = next(d for d in dims if d not in op_dim_order)
-            dim_order = dim_order + [stick_dim]
+            if not (has_indirect_access and i in index_tensor_indices):
+                stick_dim = next(d for d in dims if d not in op_dim_order)
+                # The chosen dim is absent from the *op*'s dim_order, but an
+                # individual arg may already carry it: a conv2d kernel tensor
+                # gets ki/kj added explicitly by _get_device_dim_order (they are
+                # structural for the weight even when they do not appear in its
+                # device_coordinates). Appending unconditionally would repeat the
+                # dim -- e.g. a single-channel depthwise weight [1, 1, 3, 3] has
+                # dim_order [kj, ki] and became [kj, ki, ki], which the scheduler
+                # rejects with "external allocations with repeated dimensions".
+                if stick_dim not in dim_order:
+                    dim_order = dim_order + [stick_dim]
+
         if op_spec.op == "layernormscale" and len(sdsc_args) == 0:
             reduced_dims = [stick_dim]
         stride_dim_order = [
             d for d in dim_order if d not in reduced_dims
         ] + reduced_dims
+
         for dim in dim_order:
             stride_idx = stride_dim_order.index(dim)
-            if dim in reduced_dims and op_spec.op != "layernormscale":
+
+            if has_indirect_access and (
+                i in index_tensor_indices or is_indirect_value_tensor(arg)
+            ):
+                scales[dim] = 1
+            elif dim in reduced_dims and op_spec.op != "layernormscale":
                 scales[dim] = -2 if (stick_dim is None and dim is op_stick_dim) else -1
             elif dim in reduced_dims and op_spec.op == "layernormscale":
                 scales[dim] = -2 if (dim is stick_dim) else -1
             else:
                 scales[dim] = 1
+
             strides[dim] = _calculate_device_stride(stride_idx, arg.device_size)
             offsets[dim] = 0
             dim_device_stride = math.prod(arg.device_size[-stride_idx - 1 :])
 
-            dev_dim_size = arg.device_size[-stride_idx - 2]
-            it_dim_size = iteration_space[dim]
-            if dim == stick_dim:
-                stick_size = arg.device_dtype.elems_per_stick()
-                dev_dim_size *= stick_size
-                it_dim_size = ((it_dim_size - 1) // stick_size + 1) * stick_size
+            if dim is stick_dim and dim in sdsc_dim_advance:
+                # Authoritative fact from coarse_tile.py: the stick dim's
+                # iteration-0 tile is tile_size elements out of
+                # supertile_count tiles total (supertile_count already folds
+                # in every nesting level that tiles this dim, when there is
+                # more than one -- see the accumulation above).
+                # _get_device_dim_order's dim_order walk can place the stick
+                # dim at a different position for this (Case 2 / mutated) arg
+                # than for its sibling args, which makes the stride_idx-based
+                # arg.device_size[-stride_idx-2] lookup below read the wrong
+                # slot for this arg specifically (see
+                # coarse_tiling_loops.md's IR-rewiring appendix). Use the
+                # authoritative supertile count for dev_dim_size instead of
+                # trusting that slot. Scoped to the stick dim only: other
+                # coarse-tiled dims (e.g. mb) already read the correct slot
+                # via the existing device_size lookup for every arg in this
+                # op, and overriding them too double-applies the tile split
+                # baked into arg.device_size, corrupting an already-correct
+                # stride (see the input mb regression this scoping fixes).
+                # This establishes only the iteration-0 base offset/backGap;
+                # the per-iteration advance across nesting levels is applied
+                # separately in compute_ops.generate_sdsc's affine_strides.
+                tile_size, supertile_count = sdsc_dim_advance[dim]
+                dev_dim_size = tile_size * supertile_count
+                it_dim_size = tile_size
+            else:
+                # A reduced dim (e.g. a conv's ki/kj on the output arg) has no
+                # physical axis here, so stride_idx can run past device_size once
+                # enough unit dims are squeezed out; fall back to the iteration
+                # extent, which skips the padding corrections below.
+                size_idx = -stride_idx - 2
+                if -size_idx > len(arg.device_size):
+                    dev_dim_size = iteration_space[dim]
+                else:
+                    dev_dim_size = arg.device_size[size_idx]
+                it_dim_size = iteration_space[dim]
+                if dim == stick_dim:
+                    stick_size = arg.device_dtype.elems_per_stick()
+                    dev_dim_size *= stick_size
+                    it_dim_size = ((it_dim_size - 1) // stick_size + 1) * stick_size
 
-            if dev_dim_size > it_dim_size:
-                dim_coord = arg.device_coordinates[-stride_idx - 2]
+            if has_indirect_access:
+                max_dim_sizes[dim] = compute_indirect_max_dim_sizes(
+                    i,
+                    dim,
+                    stick_dim,
+                    stride_idx,
+                    dev_dim_size,
+                    op_spec,
+                    symbol_mapping,
+                    index_tensor_indices,
+                    index_active_dims,
+                    logger,
+                )
+            else:
+                max_dim_sizes[dim] = -1
+
+            # Same out-of-range case as the device_size lookup above: such a dim
+            # has no device coordinate either, and this subscript would raise
+            # before the size comparison below could skip it.
+            coord_idx = -stride_idx - 2
+            dim_coord = (
+                arg.device_coordinates[coord_idx]
+                if -coord_idx <= len(arg.device_coordinates)
+                else None
+            )
+            if (
+                dim_coord is not None
+                and not isinstance(dim_coord, IndirectAccess)
+                and dev_dim_size > it_dim_size
+            ):
                 dim_offset = int(dim_coord.as_coeff_Add()[0])
                 offsets[dim] = dim_offset * dim_device_stride
-                backGap[dim] = dev_dim_size - it_dim_size
+                # conv2d addresses the difference between device and iteration space sizes
+                # in its spatial dims (i, j) through the
+                # window/padding machinery in _conv2d_sdsc_fields, which already
+                # accounts for the gap between the device extent and the
+                # iteration extent. Emitting a backGap for them double-counts
+                # that gap and corrupts the generated addressing.
+                #
+                if (
+                    not _is_conv(op_spec.op)
+                    and str(dim) not in _CONV2D_SPATIAL_DIM_NAMES
+                ):
+                    backGap[dim] = dev_dim_size - it_dim_size
                 strides[dim] = strides[dim] // dev_dim_size * it_dim_size
 
-            max_dim_sizes[dim] = -1
-
-        effective_stick = op_stick_dim if stick_dim is None else stick_dim
-        label = _get_layout_label(
-            layouts,
-            dim_order,
-            effective_stick,
-            arg.device_dtype.elems_per_stick(),
-            MATMUL_LAYOUT_LABELS if not use_op_dims else LAYOUT_LABELS,
+        # Prepend mb_sym to all tensors except the P=1 index tensor, which
+        # already has mb_sym set by _collect_index_tensor_layouts.
+        is_gather_index = (
+            gather_mb_injected and has_indirect_access and i in index_tensor_indices
         )
-        # Change dataFormat_ value if needed.
-        # This is a temporary workaround until the backend supports IEEE_INT32 in SDSC (deeptools issue #4307).
-        arg_data_format = _get_data_format(op_spec.op, arg.device_dtype)
+        if mb_sym is not None and not is_gather_index:
+            dim_order = [mb_sym] + dim_order
+            scales[mb_sym] = 1
+            strides[mb_sym] = _calculate_device_stride(0, arg.device_size)
+            offsets[mb_sym] = 0
+            # P=1 gather value tensor fetches exactly 1 row per iteration.
+            if gather_mb_injected and is_indirect_value_tensor(arg):
+                max_dim_sizes[mb_sym] = 1
+            else:
+                max_dim_sizes[mb_sym] = -1
+
+        effective_stick = [op_stick_dim if stick_dim is None else stick_dim]
+        layout_labels = _get_tensor_layout_labels(use_op_dims, op_spec.op)
+
+        # Special handling for FP8 matmul KERNEL tensor
+        dtype_stick_size = arg.device_dtype.elems_per_stick()
+        layout_stick_size = [dtype_stick_size]
+        if is_fp8_mm_kernel_arg:
+            # FP8 KERNEL needs 2D stick: [2, stick_size/2]
+            layout_stick_size = [2, dtype_stick_size // 2]
+            # Use the last two dimensions from dim_order for 2D stick
+            effective_stick = dim_order[-2:]
+
+        if has_indirect_access:
+            label = get_indirect_layout_label(
+                i,
+                index_tensor_indices,
+                layouts,
+                dim_order,
+                effective_stick,
+                layout_stick_size,
+                layout_labels,
+                _get_layout_label,
+                logger,
+            )
+        else:
+            label = _get_layout_label(
+                layouts,
+                dim_order,
+                effective_stick,
+                layout_stick_size,
+                layout_labels,
+            )
+
+        # Index tensors carry 32-bit integer indices; re-label as SENUINT32 since
+        # the backend doesn't yet accept IEEE_INT32 in SDSC (deeptools #4307).
+        arg_data_format = (
+            DataFormats.SENUINT32
+            if (has_indirect_access and i in index_tensor_indices)
+            else _get_data_format(op_spec.op, arg.device_dtype)
+        )
+
+        # allocation keys are mutually exclusive (see TensorArg.allocation
+        # docstring in op_spec.py); this chain just reads whichever one is
+        # present. Priority order here is cosmetic, not semantic.
+        start_addr = (
+            arg.allocation.get("hbm_pool")
+            if "hbm_pool" in arg.allocation
+            else arg.allocation.get("lx")
+            if "lx" in arg.allocation
+            else arg.allocation.get("hbm")
+        )
+
+        is_idx_tensor = has_indirect_access and i in index_tensor_indices
+        related_val_idx = (
+            get_value_tensor_idx_for_index(op_spec, i) if is_idx_tensor else -1
+        )
 
         sdsc_args.append(
             SDSCArgs(
@@ -400,12 +1242,12 @@ def _create_sdsc_tensors(
                 offsets=offsets,
                 max_dim_sizes=max_dim_sizes,
                 allocation=arg.allocation,
-                start_address=arg.allocation.get("pool")
-                if "pool" in arg.allocation
-                else arg.allocation.get("lx")
-                if "lx" in arg.allocation
-                else arg.allocation.get("hbm"),
+                start_address=start_addr,
                 backGap=backGap,
+                arg_index=arg.arg_index,
+                is_index_tensor=is_idx_tensor,
+                related_value_tensor_idx=related_val_idx,
+                device_tile_advance_expr=arg.device_tile_advance_expr,
             )
         )
 
@@ -413,10 +1255,13 @@ def _create_sdsc_tensors(
 
 
 def _get_op_func(op: str, is_reduction: bool, output_scales: dict) -> str:
+    if _is_pool(op):
+        return op
     if (
         is_reduction
         and not _is_matmul(op)
         and not _is_topk(op)
+        and not _is_conv(op)
         and -2 not in output_scales.values()
     ):
         return op + "nonstick"
@@ -441,8 +1286,27 @@ def _concretize_for_sdsc(expr: Expr) -> int:
     if isinstance(expr, Integer):
         return int(expr)
     if hasattr(expr, "free_symbols") and expr.free_symbols:
-        return V.graph.sizevars.size_hint(expr)
+        # This is a correctness-critical boundary: the SDSC JSON / DeepTools
+        # backend needs the *true* concrete size, not an optimization heuristic.
+        # guarding_hint_or_throw resolves backed symbols and raises on unbacked
+        # ones, rather than silently emitting a fallback (e.g. sys.maxsize) size.
+        return V.graph.sizevars.guarding_hint_or_throw(expr)
     return int(expr)
+
+
+def _resolve_sdsc_size(expr: Expr, symbolic_dim_bounds: dict) -> int:
+    """Resolve an iteration-space size for SDSC generation.
+
+    For symbolic dims, reads the max from symbolic_dim_bounds (computed at
+    codegen time from ShapeEnv, serialized as plain ints into the generated
+    file) so this works during the reload phase when ShapeEnv is gone.
+    Falls back to _concretize_for_sdsc for concrete expressions.
+    """
+    if hasattr(expr, "free_symbols") and expr.free_symbols:
+        sym_name = str(next(iter(expr.free_symbols)))
+        if sym_name in symbolic_dim_bounds:
+            return symbolic_dim_bounds[sym_name][0]  # max
+    return _concretize_for_sdsc(expr)
 
 
 def _ref_arg(op_spec):
@@ -526,40 +1390,215 @@ def _extend_matmul_k_to_padded(
         sdsc_iteration_space[k_sym] = k_padded
 
 
+def _inject_implicit_conv_kernel_dims(
+    is_conv2d: bool,
+    op_spec: OpSpec,
+    sdsc_iteration_space: dict,
+    dim_splits: dict,
+    work_slices: dict,
+) -> None:
+    """Inject implicit kernel dimensions (ki, kj) for conv2d when kernel_size=1.
+
+    When kernel_size=1, the kernel dimensions don't iterate naturally (they'd be
+    0..0), so they don't appear in op_spec.iteration_space. We inject them here
+    with their actual kernel sizes so they appear in sdsc_iteration_space and
+    can be included in the kernel tensor's layoutDimOrder and coordinates_.
+    """
+    if not is_conv2d:
+        return
+
+    conv_params = op_spec.op_info.get("conv_params", {})
+    kernel_h = conv_params.get("kernel_h", 1)
+    kernel_w = conv_params.get("kernel_w", 1)
+
+    ki_sym = Symbol("ki")
+    kj_sym = Symbol("kj")
+
+    # Inject missing kernel dimensions. For 1xN or Nx1 kernels, one dimension iterates
+    # naturally (already in iteration_space) and the other is implicit (needs injection).
+    if ki_sym not in sdsc_iteration_space:
+        sdsc_iteration_space[ki_sym] = kernel_h
+        dim_splits[ki_sym] = 1
+        work_slices[ki_sym] = 1
+
+    if kj_sym not in sdsc_iteration_space:
+        sdsc_iteration_space[kj_sym] = kernel_w
+        dim_splits[kj_sym] = 1
+        work_slices[kj_sym] = 1
+
+
 def parse_op_spec(op_spec: OpSpec) -> tuple["SDSCSpec", "dict"]:
     is_matmul = _is_matmul(op_spec.op)
+    is_conv2d = _is_conv(op_spec.op)
+    is_pool = _is_pool(op_spec.op)
     ndim = len(op_spec.iteration_space)
-
-    dim_labels = _get_op_dim_labels(ndim, is_matmul)
-    symbol_mapping = {
-        sym: Symbol(dim_labels[i]) for i, sym in enumerate(op_spec.iteration_space)
+    # Detect indirect access from device_coordinates: index tensors are those
+    # whose name is referenced by an IndirectAccess in another tensor's coordinates,
+    # and value tensors are those that contain IndirectAccess in their coordinates.
+    index_tensor_indices = {
+        i for i, arg in enumerate(op_spec.args) if is_index_tensor(arg, op_spec)
     }
+    has_indirect_access = bool(index_tensor_indices)
+
+    if is_pool:
+        dim_labels = _align_pool_dim_labels(op_spec.node_output_ranges, ndim)
+    else:
+        dim_labels = _get_op_dim_labels(ndim, is_matmul, is_conv2d)
+
+    # Build symbol mapping: use size-based matching for conv2d, positional for others
+    if is_conv2d and op_spec.op_info and "conv_params" in op_spec.op_info:
+        symbol_mapping = _build_conv2d_symbol_mapping(op_spec, dim_labels)
+    else:
+        symbol_mapping = {
+            sym: Symbol(dim_labels[i]) for i, sym in enumerate(op_spec.iteration_space)
+        }
+
+    logger.debug(
+        "symbol mapping: %s",
+        ", ".join(f"{k} -> {v}" for k, v in symbol_mapping.items()),
+    )
+    # Minted per-(op, level) tile-advance symbols (see spyre_kernel.py's
+    # _get_or_mint_level_symbol) are not iteration-space dimensions -- they are
+    # loop-nesting-level markers -- so they have no dim label to rename to.
+    # Register each as an identity mapping instead, so compile_op_spec's
+    # `symbol_mapping[s]` lookup for op_spec.tiled_symbols does not silently
+    # drop them. setdefault never overwrites a real-symbol entry above, and
+    # collides with none: minted names (`_tile_adv_{op_name}_lvl{n}`) can
+    # never equal a dim label or a real Inductor `d{i}` symbol name.
+    for level in op_spec.tiled_symbols:
+        for sym in level:
+            symbol_mapping.setdefault(sym, sym)
     logger.debug(
         "symbol mapping: %s",
         ", ".join(f"{k} -> {v}" for k, v in symbol_mapping.items()),
     )
 
+    # For symbolic dims, use the max from symbolic_dim_bounds as the iteration-space size
+    # so the emitted SDSC JSON is generated max sizes baked in, not symbols.
     sdsc_iteration_space = {
-        symbol_mapping[sym]: _concretize_for_sdsc(size)
+        symbol_mapping[sym]: _resolve_sdsc_size(size, op_spec.symbolic_dim_bounds)
         for sym, (size, _) in op_spec.iteration_space.items()
     }
 
+    # Build the SDSC dim name -> (pytorch_sym_name, granularity, max_val) map
+    # for any iteration-space dims.
+    # This drives symbolicDimInfo_ and dimToSymbolMapping_ in the generated JSON.
+    symbolic_dims: dict[str, tuple[str, int, int]] = {}
+    for sym, (size_expr, _) in op_spec.iteration_space.items():
+        sdsc_dim_name = str(symbol_mapping[sym])
+        sym_str = str(size_expr)
+        if sym_str in op_spec.symbolic_dim_bounds:
+            max_val, granularity = op_spec.symbolic_dim_bounds[sym_str]
+            symbolic_dims[sdsc_dim_name] = (sym_str, granularity, max_val)
+
     dim_splits = {
-        symbol_mapping[dim]: value[-1] for dim, value in op_spec.iteration_space.items()
+        symbol_mapping[dim]: value[-1] if not has_indirect_access else 1
+        for dim, value in op_spec.iteration_space.items()
     }
     num_cores = math.prod(dim_splits.values())
 
     work_slices = {
-        symbol_mapping[sym]: wk_slice
+        symbol_mapping[sym]: wk_slice if not has_indirect_access else 1
         for sym, (_, wk_slice) in op_spec.iteration_space.items()
     }
+
+    # Inject implicit kernel dimensions for conv2d when kernel_size=1
+    _inject_implicit_conv_kernel_dims(
+        is_conv2d, op_spec, sdsc_iteration_space, dim_splits, work_slices
+    )
 
     ref_arg = _ref_arg(op_spec)
     op_dim_order, op_stick_dim = _get_device_dim_order(ref_arg, symbol_mapping)
 
+    # On-device type-conversion ops (DL16TOFP32/FP32TODL16, not identity)
+    # require at least one outer spatial dim beyond the stick; inject a
+    # virtual mb=1 row when the op's tensor has only the stick dim.
+    mb_sym: Symbol | None = None
+    if (
+        (DtypeOpTable.is_dtype_op(op_spec.op) or op_spec.op == "qfp8ch")
+        and op_spec.op != IDENTITY_OP
+        and op_stick_dim is not None
+        and all(d is op_stick_dim for d in op_dim_order)
+    ):
+        mb_sym = Symbol(INPUT_DIM_LABELS[0])
+        sdsc_iteration_space = {mb_sym: 1, **sdsc_iteration_space}
+        dim_splits = {mb_sym: 1, **dim_splits}
+        work_slices = {mb_sym: 1, **work_slices}
+        op_dim_order = [mb_sym] + op_dim_order
+
+    # P=1 gather: when the index has only 1 element, Inductor eliminates the
+    # mb loop, leaving the index tensor with all-constant coordinates and no
+    # loop variable.  Inject a synthetic dim=1 so the KERNEL_IDX gets a valid
+    # non-empty layout, and the backend executes exactly one gather iteration.
+    gather_mb_injected: bool = False
+    if has_indirect_access and mb_sym is None:
+        for idx in index_tensor_indices:
+            idx_arg = op_spec.args[idx]
+            idx_dim_order, _ = _get_device_dim_order(idx_arg, symbol_mapping)
+            if not idx_dim_order:
+                # All-constant coords → P=1. Use 1, not stick_size: stick_size
+                # iterations would overflow a 1-row output tensor.
+                stick_size = idx_arg.device_dtype.elems_per_stick()
+                # Pick the first label not already in op_dim_order to avoid
+                # collisions when a higher-rank gather has consumed "mb".
+                _existing_names = {s.name for s in op_dim_order}
+                _p1_label = next(
+                    lbl for lbl in INPUT_DIM_LABELS if lbl not in _existing_names
+                )
+                mb_sym = Symbol(_p1_label)
+                sdsc_iteration_space = {mb_sym: 1, **sdsc_iteration_space}
+                dim_splits = {mb_sym: 1, **dim_splits}
+                work_slices = {mb_sym: 1, **work_slices}
+                op_dim_order = [mb_sym] + op_dim_order
+                gather_mb_injected = True
+                logger.debug(
+                    "P=1 gather detected (index tensor %d, stick_size=%d): "
+                    "injecting virtual %s=1 into SDSC iteration space",
+                    idx,
+                    stick_size,
+                    _p1_label,
+                )
+                break
+
     if op_stick_dim is None:
-        stick_sym = Symbol(INPUT_DIM_LABELS[ndim])
-        sdsc_iteration_space[stick_sym] = op_spec.args[0].device_dtype.elems_per_stick()
+        if is_pool or is_conv2d:
+            # Pool/conv op where C fits in one stick (e.g. C=1): the "out"
+            # (channel) dimension was dropped from the iteration space because
+            # its size is 1, but the SDSC still needs it.  Take the channel count
+            # from the node's live NCHW output ranges (position 1) rather than the
+            # physical device layout, which rounds channel up to a full stick and
+            # so cannot recover C when C < elems_per_stick.  (Using
+            # INPUT_DIM_LABELS[ndim] would collide with the dim labels "i", "j",
+            # "ki", "kj".)
+            stick_sym = Symbol("out")
+            # _align_pool_dim_labels / _align_conv2d_dim_labels already rejected a
+            # None here; restate the invariant so the index is well-typed.
+            assert op_spec.node_output_ranges is not None
+            if is_conv2d:
+                # Front-insert for conv2d, append for pool.  ``_create_sdsc_tensors``
+                # step 3 takes the stick as the FIRST iteration-space dim missing
+                # from ``op_dim_order``.  Both ops have ki/kj in the iteration
+                # space, but they differ in the reference arg (args[0], the input):
+                #   pool  op_dim_order = [kj, j, ki, i]  -- window dims present
+                #   conv  op_dim_order = [j, i]          -- window dims absent
+                # So pool skips ki/kj and reaches "out" wherever it sits, while for
+                # conv an appended "out" loses to ki -- whose cardinality is the
+                # kernel extent (e.g. 3), and the scheduler then aborts with
+                # "[distributeElemArrToTemporalLoops] Not enough elements to
+                # distribute ... requires 64 elements".  Front-inserting makes the
+                # channel dim the first candidate, so the input and the weight both
+                # get a full-width channel stick.
+                sdsc_iteration_space = {
+                    stick_sym: int(op_spec.node_output_ranges[1]),
+                    **sdsc_iteration_space,
+                }
+            else:
+                sdsc_iteration_space[stick_sym] = int(op_spec.node_output_ranges[1])
+        else:
+            stick_sym = Symbol(INPUT_DIM_LABELS[ndim])
+            sdsc_iteration_space[stick_sym] = op_spec.args[
+                0
+            ].device_dtype.elems_per_stick()
         work_slices[stick_sym] = 1
         dim_splits[stick_sym] = 1
 
@@ -572,6 +1611,8 @@ def parse_op_spec(op_spec: OpSpec) -> tuple["SDSCSpec", "dict"]:
         sdsc_iteration_space,
         op_dim_order,
         op_stick_dim,
+        mb_sym,
+        gather_mb_injected=gather_mb_injected,
     )
     if missing_dim is not None:
         # A dimension was added to the iteration space, update splits and work slices
@@ -593,6 +1634,14 @@ def parse_op_spec(op_spec: OpSpec) -> tuple["SDSCSpec", "dict"]:
             [args[0]],
             [args[0].dim_order],
         )
+    elif op_spec.op == RESTICKIFY_OP:
+        # Pad iteration space using all args so both the old stick (input) and
+        # new stick (output) are rounded up to the nearest stick boundary.
+        pad_args, pad_sdsc_args, dim_order = (
+            list(op_spec.args),
+            args,
+            [arg.dim_order for arg in args],
+        )
     else:
         pad_args, pad_sdsc_args, dim_order = (
             [op_spec.args[-1]],
@@ -602,8 +1651,49 @@ def parse_op_spec(op_spec: OpSpec) -> tuple["SDSCSpec", "dict"]:
     padding = _get_padded_iteration_space(
         pad_args, pad_sdsc_args, sdsc_iteration_space, layouts, dim_order
     )
-    constants = dict(op_spec.op_info.get("constants", {})) if op_spec.op_info else {}
-    coordinate_masking = _get_coordinate_mask(sdsc_iteration_space, args[-1], padding)
+
+    # For restickify, update backGaps based on the padded iteration space,
+    # since non-stick dimensions may now have it_dim_size > dev_dim_size.
+    if op_spec.op == RESTICKIFY_OP:
+        for sdsc_arg, op_spec_arg in zip(args, op_spec.args):
+            layout = layouts[sdsc_arg.layout]
+            stick_dim = layout["stick_dim_order"]
+            for coord_idx, coord in enumerate(op_spec_arg.device_coordinates):
+                mapped_coord = coord.subs(symbol_mapping)
+                dim_sym = next(
+                    (
+                        s
+                        for s in symbol_mapping.values()
+                        if s in mapped_coord.free_symbols
+                    ),
+                    None,
+                )
+                if dim_sym is None or dim_sym in stick_dim:
+                    continue
+                padded_it_size = sdsc_iteration_space[dim_sym]
+                dev_dim_size = op_spec_arg.device_size[coord_idx]
+                if dev_dim_size < padded_it_size:
+                    sdsc_arg.backGap[dim_sym] = padded_it_size - dev_dim_size
+        for dim in padding:
+            dim_splits[dim] = 1
+            work_slices[dim] = 1
+        num_cores = math.prod(dim_splits.values())
+
+    conv_params = (
+        dict(op_spec.op_info.get("conv_params", {})) if op_spec.op_info else {}
+    )
+    pool_params_out: dict = {}
+    if is_pool and op_spec.op_info:
+        pool_params_out = dict(op_spec.op_info.get("constants", {}))
+        scaling_factor = pool_params_out.get("scaling_factor", 1.0)
+        constants = {"nmap": scaling_factor}
+    else:
+        constants = (
+            dict(op_spec.op_info.get("constants", {})) if op_spec.op_info else {}
+        )
+    coordinate_masking = _get_coordinate_mask(
+        sdsc_iteration_space, args[-1], padding, op_spec.op
+    )
     if coordinate_masking:
         constants["samv-maskvalue"] = _get_mask_value(op_spec.op)
 
@@ -612,22 +1702,79 @@ def parse_op_spec(op_spec: OpSpec) -> tuple["SDSCSpec", "dict"]:
     if _is_topk(op_spec.op):
         num_inputs = 1  # topk has exactly 1 input tensor and 1 output tensor
 
-    if _should_use_k_fast_mapping(is_matmul, sdsc_iteration_space, dim_splits):
-        core_id_to_work_slice = _k_fast_core_to_slice_mapping(
-            sdsc_iteration_space, dim_splits, num_cores
-        )
-    else:
-        core_id_to_work_slice = _get_core_to_slice_mapping(
-            sdsc_iteration_space, dim_splits, num_cores
-        )
+    if is_pool:
+        num_inputs = 1  # avgpool has exactly 1 input tensor and 1 output tensor
+        # The pool hardware accumulates the full kernel window on each core.
+        # Splitting ki/kj across cores produces partial sums, giving wrong results.
+        for _k_sym in (Symbol("ki"), Symbol("kj")):
+            if _k_sym in dim_splits:
+                dim_splits[_k_sym] = 1
+                work_slices[_k_sym] = 1
+        num_cores = math.prod(dim_splits.values())
+
+    if is_conv2d and disable_conv2d_spatial_split:
+        # Splitting the spatial image dims (i, j) of a strided conv2d across
+        # cores produces incorrect numerical results in some cases. The split is
+        # suppressed upstream by ``conv_spatial_blocked_vars`` in
+        # work_division.py, so those cores go to dims that can absorb them
+        # instead of being dropped here. Span reduction outranks the flag: if
+        # the hardware span limit forces a spatial split, work division logs a
+        # warning and keeps it, so this only checks the dims it did block.
+        if conv_params.get("stride_i", 1) > 1 or conv_params.get("stride_j", 1) > 1:
+            for _spatial_sym in (Symbol("i"), Symbol("j")):
+                if dim_splits.get(_spatial_sym, 1) > 1:
+                    logger.warning(
+                        f"strided conv2d {op_spec.op}: spatial dim "
+                        f"{_spatial_sym} is split {dim_splits[_spatial_sym]} "
+                        f"ways; expected work division to block it unless the "
+                        f"memory-span limit required the split."
+                    )
+
+    # Pool-specific SDSC field values.  Computed here (where the op is already
+    # identified) as plain data threaded onto SDSCSpec; generate_sdsc consumes
+    # them generically.  Empty for non-pool ops -> SDSCSpec defaults apply.
+    pool_sdsc_fields = (
+        _avgpool_sdsc_fields(sdsc_iteration_space, pool_params_out) if is_pool else {}
+    )
+
+    # Project dim_splits into final SDSC iteration-space order; normalization
+    # can add unit axes to either mapping independently.
+    mapping_dims = tuple(sdsc_iteration_space)
+    mapping_splits = tuple(int(dim_splits[dim]) for dim in mapping_dims)
+    # Generic reductions do not yet define the same physical cohort contract as
+    # matmul partial sums.
+    contiguous_dim = (
+        len(mapping_splits) - 1
+        if is_matmul and _spyre_config.core_id_k_fast_emission
+        else None
+    )
+    # TODO: Choose the mapping before LX planning and pass it through to codegen.
+    core_id_to_work_slice = core_to_slice_mapping(
+        mapping_dims,
+        mapping_splits,
+        num_cores,
+        contiguous_dim=contiguous_dim,
+    )
+
+    # Collect index tensor indices for indirect access
+    indirect_access_indices = [
+        i for i, arg in enumerate(op_spec.args) if is_index_tensor(arg, op_spec)
+    ]
+
+    # Conv2d-specific SDSC fields (compute both top-level and per-core padding sizes)
+    conv2d_sdsc_fields = (
+        _conv2d_sdsc_fields(sdsc_iteration_space, conv_params, work_slices)
+        if is_conv2d and conv_params
+        else {}
+    )
 
     return (
         SDSCSpec(
             opfunc=_get_op_func(op_spec.op, op_spec.is_reduction, args[-1].scales),
             execution_unit="pt" if is_matmul else "sfp",
             data_format=args[
-                0
-            ].data_format,  # TODO: op_spec needs operation data format
+                1 if indirect_access_indices else 0
+            ].data_format,  # TODO: op_spec needs operation data format. Use value tensor (args[1]) for indirect access ops
             num_inputs=num_inputs,
             iteration_space=sdsc_iteration_space,
             num_cores=num_cores,
@@ -637,7 +1784,13 @@ def parse_op_spec(op_spec: OpSpec) -> tuple["SDSCSpec", "dict"]:
             layouts=layouts,
             args=args,
             constants=constants,
+            conv_params=conv_params,
             coordinate_masking=coordinate_masking,
+            symbolic_dims=symbolic_dims,
+            indirect_access_indices=indirect_access_indices,
+            debug_handle=op_spec.debug_handle,
+            **pool_sdsc_fields,
+            **conv2d_sdsc_fields,
         ),
         symbol_mapping,
     )
@@ -649,19 +1802,22 @@ def compile_op_spec(
     symbols: list[int],
     symbol_id_offset: int = 0,
     use_symbols: bool = False,
-) -> tuple[Any, list[int], list[dict]]:
+) -> tuple[Any, list[int], list[list[dict]], list[SymbolKind]]:
     sdsc_spec, symbol_mapping = parse_op_spec(op_spec)
     logger.debug("%s", sdsc_spec)
-    # Translate tiled_symbols from OpSpec's inductor symbols to the renamed
-    # SDSC symbols via the same mapping used to build sdsc_spec.
-    tiled_symbols = [
-        symbol_mapping[s] for s in op_spec.tiled_symbols if s in symbol_mapping
+    # Translate tiled_symbols from OpSpec's per-level inductor symbols (innermost-
+    # first) to the renamed SDSC symbols via the same mapping used to build
+    # sdsc_spec.  generate_sdsc expects outermost-first, so reverse.
+    tiled_symbols_per_level = [
+        [symbol_mapping[s] for s in level if s in symbol_mapping]
+        for level in reversed(op_spec.tiled_symbols)
     ]
-    return generate_sdsc(
+    result = generate_sdsc(
         idx,
         sdsc_spec,
         symbols,
         symbol_id_offset,
-        tiled_symbols=tiled_symbols,
+        tiled_symbols=tiled_symbols_per_level,
         use_symbols=use_symbols,
     )
+    return result

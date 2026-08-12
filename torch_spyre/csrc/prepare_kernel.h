@@ -21,15 +21,20 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "flex/flex.hpp"
+#include "job_plan.h"
 #include "spyre_stream.h"
 
 namespace spyre {
 
-// Forward declarations
-class JobPlan;
-class JobPlanStep;
+// flex's callback mirror and libaiupti's AIUpti_ActivityCompute::name are
+// assumed to have the same extent. The profiler-enabled build exercises both
+// sides of this transport contract.
+inline constexpr size_t kAIUptiActivityNameMaxBytes =
+    sizeof(flex::aiupti::AIUpti_ActivityCB::name) - 1;
 
 /**
  * @brief Builder class for constructing JobPlan from SpyreCode
@@ -46,8 +51,11 @@ class JobPlanBuilder {
    * @param spyrecode_dir Path to the SpyreCode directory
    * @param stream Optional stream to use for init transfers. If nullptr, uses
    * the current stream from getCurrentStream()
+   * @param profiler_name Optional bounded base name for profiler-visible
+   * compute events. A JobExecPlan step suffix is added to each compute command.
    */
-  JobPlanBuilder(const std::string& spyrecode_dir, const SpyreStream* stream);
+  JobPlanBuilder(const std::string& spyrecode_dir, const SpyreStream* stream,
+                 std::optional<std::string> profiler_name = std::nullopt);
 
   /**
    * @brief Build the JobPlan
@@ -61,17 +69,93 @@ class JobPlanBuilder {
   std::unique_ptr<JobPlan> build();
 
  private:
+  /**
+   * @brief Severity level for validation messages
+   */
+  enum class Severity {
+    ERROR,    // Critical issue that prevents execution
+    WARNING,  // Non-critical issue that may affect behavior
+    INFO      // Informational message
+  };
+
+  /**
+   * @brief A single validation message with severity
+   */
+  struct ValidationMessage {
+    Severity severity;
+    std::string message;
+  };
+
+  /**
+   * @brief Result of JobPlan validation
+   *
+   * Contains the list of validation messages found during JobPlan validation.
+   * An empty message list indicates successful validation.
+   */
+  struct ValidationResult {
+    /**
+     * @brief List of validation messages
+     *
+     * Each message describes a validation finding with its severity level.
+     * Empty vector indicates the JobPlan passed all validation checks.
+     */
+    std::vector<ValidationMessage> messages;
+
+    /**
+     * @brief Check if validation was successful
+     *
+     * @return true if no error-level messages were found, false otherwise
+     */
+    bool isValid() const {
+      for (const auto& msg : messages) {
+        if (msg.severity == Severity::ERROR) {
+          return false;
+        }
+      }
+      return true;
+    }
+  };
+
+  /**
+   * @brief Validate the JobPlan structure and configuration
+   *
+   * Runs all validation checks (P2-13 through P2-16) and collects all messages.
+   * This method is called during build() after JobPlan construction to
+   * ensure the plan is well-formed before returning it.
+   *
+   * Validation checks include:
+   * - P2-13: expected_input_shapes validation (blocked - not yet implemented)
+   * - P2-14: JobPlan step ordering validation (blocked - not yet implemented)
+   * - P2-15: host compute metadata validation (blocked - not yet implemented)
+   * - P2-16: Additional structural validation (blocked - not yet implemented)
+   *
+   * @param job_plan The JobPlan to validate
+   * @return ValidationResult containing list of validation messages with
+   * severity. Empty message list indicates successful validation.
+   *
+   * @note This is currently a skeleton implementation that auto-validates
+   *       (returns empty message list). Full validation logic will be added
+   *       once the blocked dependencies are resolved.
+   */
+  ValidationResult validate(const JobPlan& job_plan) const;
+
   /// Path to the SpyreCode directory containing kernel artifacts
   const std::filesystem::path spyrecode_dir_;
   /// Parsed SpyreCode JSON containing preparation and execution plans
   nlohmann::json spyrecode_json_;
   /// Stream used for initialization transfers during preparation
   const SpyreStream stream_;
+  /// Optional compiler-generated base name for profiler-visible compute events
+  const std::optional<std::string> profiler_name_;
   /// Device memory allocation for the job (set during preparation and moved to
   /// JobPlan in translation)
-  std::optional<flex::CompositeAddress> job_allocation_;
+  std::vector<flex::CompositeAddress> job_allocation_;
   /// Whether to bind inputs and outputs addresses for compute
   bool bind_io_addresses_;
+
+  std::unordered_map<std::string, HostBuffer> pinned_buffer_map_;
+
+  std::vector<std::string> inits_;
 
   /// Execute the job preparation plan (allocate + init transfers)
   void executeJobPreparationPlan();
@@ -82,11 +166,14 @@ class JobPlanBuilder {
 
   /// Translate the job execution plan to a JobPlan
   std::unique_ptr<JobPlan> translateJobExecPlan();
-  /// Translate a single command from the execution plan to a JobPlanStep
-  std::unique_ptr<JobPlanStep> translateCommand(const nlohmann::json& cmd);
+  /// Translate a single command from the execution plan to a JobPlanStep.
+  /// step_idx is the command's position within JobExecPlan; threaded through
+  /// so compute steps can disambiguate their profiler kernel name.
+  std::unique_ptr<JobPlanStep> translateCommand(const nlohmann::json& cmd,
+                                                size_t step_idx);
   /// Translate a ComputeOnDevice command to a JobPlanStepCompute
   std::unique_ptr<JobPlanStep> translateComputeOnDevice(
-      const nlohmann::json& cmd);
+      const nlohmann::json& cmd, size_t step_idx);
   /// Translate a ComputeOnHost command to a JobPlanStepHostCompute
   std::unique_ptr<JobPlanStep> translateComputeOnHost(
       const nlohmann::json& cmd);
@@ -102,9 +189,12 @@ class JobPlanBuilder {
  * @param spyrecode_dir Path to the SpyreCode directory
  * @param stream Optional stream to use for init transfers. If nullptr, uses the
  * current stream from getCurrentStream()
+ * @param profiler_name Optional bounded base name for profiler-visible compute
+ * events. A JobExecPlan step suffix is added to each compute command.
  * @return Prepared JobPlan
  */
-std::unique_ptr<JobPlan> prepareKernel(const std::string& spyrecode_dir,
-                                       const SpyreStream* stream = nullptr);
+std::unique_ptr<JobPlan> prepareKernel(
+    const std::string& spyrecode_dir, const SpyreStream* stream = nullptr,
+    std::optional<std::string> profiler_name = std::nullopt);
 
 }  // namespace spyre

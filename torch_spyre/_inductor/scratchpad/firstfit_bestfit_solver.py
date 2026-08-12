@@ -19,11 +19,15 @@ from typing import Optional, Callable
 from torch_spyre._inductor.scratchpad.plan_solver import (
     LifetimeBoundBuffer,
     MemoryPlanSolver,
+    _assert_in_place_relationships,
 )
+from torch_spyre._inductor.scratchpad.utils import round_up_to_alignment
 
-
-def round_up_to_alignment(arg: int, alignment: int) -> int:
-    return ((arg + alignment - 1) // alignment) * alignment
+__all__ = [
+    "FirstFitLayoutSolver",
+    "BestFitLayoutSolver",
+    "_assert_in_place_relationships",
+]
 
 
 @dataclass(frozen=True)
@@ -33,25 +37,9 @@ class Gap:
     in_place_parents: list[str] = field(default_factory=list)
 
 
-def _assert_in_place_relationships(buffers: list[LifetimeBoundBuffer]) -> None:
-    """Assert that all declared in-place parent/child pairs satisfy required invariants."""
-    buf_by_name = {b.name: b for b in buffers}
-    for child in buffers:
-        for parent_name in child.in_place_parents:
-            parent = buf_by_name[parent_name]
-            assert parent.end_time == child.start_time + 1, (
-                f"In-place parent {parent_name}.end_time={parent.end_time} must equal "
-                f"child {child.name}.start_time+1={child.start_time + 1}"
-            )
-            assert child.size <= parent.size, (
-                f"In-place child {child.name}.size={child.size} "
-                f"must be <= parent {parent_name}.size={parent.size}"
-            )
-
-
 def _topological_sort(
     buffers: list[LifetimeBoundBuffer],
-    f: Callable[[LifetimeBoundBuffer], int] = lambda b: 0,
+    f: Callable[[LifetimeBoundBuffer], float] = lambda b: 0,
 ) -> list[LifetimeBoundBuffer]:
     """Topological sort via Kahn's algorithm; ties broken by (f, original_index)."""
     name_to_idx = {b.name: i for i, b in enumerate(buffers)}
@@ -60,11 +48,16 @@ def _topological_sort(
 
     for i, child in enumerate(buffers):
         for parent_name in child.in_place_parents:
-            p = name_to_idx[parent_name]
+            # A parent barred from LX (or otherwise absent from the candidate
+            # set) imposes no ordering: there is no slot for the child to
+            # inherit, so it is placed on its own like any other buffer.
+            p = name_to_idx.get(parent_name)
+            if p is None:
+                continue
             children[p].append(i)
             in_degree[i] += 1
 
-    heap: list[tuple[int, int]] = []
+    heap: list[tuple[float, int]] = []
     for i, buf in enumerate(buffers):
         if in_degree[i] == 0:
             heapq.heappush(heap, (f(buf), i))
@@ -76,8 +69,9 @@ def _topological_sort(
         for j in children[i]:
             in_degree[j] -= 1
             if in_degree[j] == 0:
-                buf = buffers[j]
-                heapq.heappush(heap, (buf.end_time - buf.start_time, j))
+                # Use the same key function as the roots so the tie-break is
+                # consistent across the whole sort, not just the initial frontier.
+                heapq.heappush(heap, (f(buffers[j]), j))
 
     assert len(result) == len(buffers), (
         "Cycle detected in in-place parent relationships"
@@ -86,14 +80,19 @@ def _topological_sort(
 
 
 class FirstFitLayoutSolver(MemoryPlanSolver):
-    """Allocates buffers shortest-lifetime-first, placing each in the first gap that fits.
+    """Allocates buffers by priority score, placing each in the first gap that fits.
 
     Buffers are sorted topologically (parents before children) with ties broken by ascending
-    lifetime, then placed one at a time. For each buffer, free address gaps during its lifetime
-    are computed; the buffer is placed at the start of the first gap large enough to hold it
-    (rounded up to alignment). In-place reuse is attempted first: if a declared parent has already
-    been placed and its address falls within a free gap, the child inherits that address.
-    Buffers that cannot fit within self.limit are evicted (address=None).
+    ``(end_time - start_time - discount) / (len(uses) + write_bonus)``. ``discount`` is 0.25 for
+    each in-place relationship the buffer participates in (as a child, as a parent, or both,
+    capped at 0.5); ``write_bonus`` is 0.5 when the buffer's first use is a write (i.e.
+    ``not first_use_is_read``) and 0 otherwise, since pinning such a buffer also saves the more
+    expensive first write to HBM. Lower score = higher priority = placed first.  For each buffer,
+    free address gaps during its lifetime are computed; the buffer is placed at the start of the
+    first gap large enough to hold it (rounded up to alignment). In-place reuse is attempted
+    first: if a declared parent has already been placed and its address falls within a free gap,
+    the child inherits that address.  Buffers that cannot fit within self.limit are evicted
+    (address=None).
     """
 
     def _all_minus(
@@ -126,16 +125,19 @@ class FirstFitLayoutSolver(MemoryPlanSolver):
         self,
         buffer: LifetimeBoundBuffer,
         placed: list[LifetimeBoundBuffer],
+        *,
+        reuse_in_place_parents: bool = True,
     ) -> list[Gap]:
         """Build free gaps for buffer, annotated with valid in-place parent addresses.
 
         Pass 1: subtract address intervals of all already-placed buffers that overlap
-        buffer's lifetime, except declared in-place parents (their slots are candidates
-        for reuse, not conflicts).
+        buffer's lifetime. During the in-place attempt, declared parents are kept as
+        reuse candidates rather than conflicts. During ordinary fallback placement,
+        they are conflicts like every other live buffer.
         Pass 2: for each remaining gap, record which declared parents fit entirely within it.
         """
         gaps: list[Gap] = [Gap(0, self.limit)]
-        parent_names = set(buffer.in_place_parents)
+        parent_names = set(buffer.in_place_parents) if reuse_in_place_parents else set()
 
         for other in placed:
             if other.address is None:
@@ -154,7 +156,10 @@ class FirstFitLayoutSolver(MemoryPlanSolver):
         placed_by_name = {b.name: b for b in placed}
         for i, gap in enumerate(gaps):
             new_parents = list(gap.in_place_parents)
-            for parent_name in parent_names:
+            # Don't use the set for iteration: plan_layout reuses in_place_parents[0], so a
+            # hash-ordered append here would pick a different in-place parent (hence
+            # a different address) run-to-run under PYTHONHASHSEED.
+            for parent_name in buffer.in_place_parents:
                 parent = placed_by_name.get(parent_name)
                 if parent is None or parent.address is None:
                     continue
@@ -177,9 +182,8 @@ class FirstFitLayoutSolver(MemoryPlanSolver):
                 return gap
         return None
 
-    def plan_layout(
-        self, buffers: list[LifetimeBoundBuffer]
-    ) -> list[LifetimeBoundBuffer]:
+    def plan_layout(self, log_lx_usage: bool = False) -> list[LifetimeBoundBuffer]:
+        buffers = self.buffers
         if not buffers:
             return []
         assert all(buf.address is None for buf in buffers), (
@@ -187,12 +191,27 @@ class FirstFitLayoutSolver(MemoryPlanSolver):
         )
         _assert_in_place_relationships(buffers)
 
+        # Barred buffers keep address=None and are never candidates for a gap,
+        # nor obstacles in one (they occupy no LX).
+        placeable, _ = self.partition()
         buffers_filtered = [
-            buffer for buffer in buffers if buffer.end_time >= buffer.start_time + 1
+            buffer for buffer in placeable if buffer.end_time >= buffer.start_time + 1
         ]
-        buffers_sorted = _topological_sort(
-            buffers_filtered, lambda b: b.end_time - b.start_time
-        )
+        parent_names = {p for b in buffers_filtered for p in b.in_place_parents}
+
+        def _sort_key(b: LifetimeBoundBuffer) -> tuple[float, int]:
+            span = b.end_time - b.start_time
+            discount = 0.25 * bool(b.in_place_parents) + 0.25 * (b.name in parent_names)
+            # A buffer whose first use is a write (not first_use_is_read) also
+            # saves a *write* to HBM on its first step when pinned in LX, on top
+            # of the reads saved on later steps. Writes are more expensive than
+            # reads, so count that first write as worth 0.5 of an extra use,
+            # inflating the denominator to give such buffers a better score.
+            uses = len(b.uses) + (0.0 if b.first_use_is_read else 0.5)
+            return (span - discount) / uses, span
+
+        buffers_filtered.sort(key=_sort_key)
+        buffers_sorted = _topological_sort(buffers_filtered)
 
         names_to_addresses: dict[str, int] = {}
         for i, buffer in enumerate(buffers_sorted):
@@ -207,12 +226,21 @@ class FirstFitLayoutSolver(MemoryPlanSolver):
                 buffer.address = names_to_addresses[parent]
                 names_to_addresses[buffer.name] = buffer.address
             else:
+                # Exact parent-slot reuse was not legal, usually because a third
+                # live buffer occupies part of that slot. Rebuild the ordinary
+                # gaps with the parent treated as a conflict; otherwise a shifted
+                # placement can partially overlap the still-live parent.
+                gaps = self._build_gaps(
+                    buffer,
+                    placed,
+                    reuse_in_place_parents=False,
+                )
                 gap = self._pick_gap(gaps, buffer.size)
                 if gap is not None:
                     buffer.address = round_up_to_alignment(gap.start, self.alignment)
                     names_to_addresses[buffer.name] = buffer.address
 
-        return buffers
+        return list(buffers)
 
 
 class BestFitLayoutSolver(FirstFitLayoutSolver):

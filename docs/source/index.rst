@@ -42,6 +42,13 @@ It enables standard PyTorch models to run on the Spyre device with full
    contributing/index
    rfcs/index
 
+.. toctree::
+   :caption: Explorer
+   :maxdepth: 2
+
+   explorer/index
+   explorer/using_the_explorer
+
 Indices and tables
 ------------------
 

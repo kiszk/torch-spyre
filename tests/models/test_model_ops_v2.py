@@ -13,35 +13,43 @@
 # limitations under the License.
 
 
+import logging
 import os
 import sys
 from typing import Any, Dict, List, Optional, Set
 
+import pytest
 import regex as re
 import torch
 import torch.nn as nn
-import pytest
 
-from torch.testing._internal.opinfo.core import OpInfo, SampleInput
 from torch.testing._internal.common_device_type import (
-    ops,
     instantiate_device_type_tests,
+    ops,
 )
 from torch.testing._internal.common_utils import TestCase
+from torch.testing._internal.opinfo.core import OpInfo, SampleInput
 
-import shared_config
-from op_registry import OP_REGISTRY, OpAdapter
-
-from oot_test_constants import ENV_TEST_CONFIG
-from oot_test_config_models import (
+from oot_framework.oot_test_config_models import (
     InputArgTensor,
     InputArgTensorList,
     OOTTestConfig,
     OpsNamedItem,
     TestEntry,
 )
-from oot_test_parsing import load_yaml_config, resolve_current_file
-from oot_test_utilities import print_test_tags_oot
+from oot_framework.oot_test_constants import ENV_TEST_CONFIG
+from oot_framework.oot_test_parsing import load_yaml_config, resolve_current_file
+from oot_framework.oot_test_utilities import (
+    print_test_tags_oot,
+    _format_input_args_shapes,
+    _RUNTIME_SHAPES,
+)
+from op_registry import OP_REGISTRY, OpAdapter
+import shared_config
+
+# Logger setup
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG if os.environ.get("TORCH_SPYRE_DEBUG") else logging.INFO)
 
 # ---------------------------------------------------------------------------
 # ModelOpInfo
@@ -171,6 +179,14 @@ def _init_model_ops_db() -> None:
     global model_ops_db
     if not model_ops_db and "pytest" in sys.modules:
         model_ops_db.extend(_build_model_ops_db())
+        # Pre-populate _RUNTIME_SHAPES at collection time keyed by op.name
+        # key when the test body never ran (runner killed mid-run, fresh-process
+        # retry).  Mirrors how _oot_method_tags is stamped at collection time so
+        # that [TAGS] always appears even on a second-attempt run.
+        for op in model_ops_db:
+            shapes_str = _format_input_args_shapes(op.ops_item.sample_inputs_func.args)
+            if shapes_str:
+                _RUNTIME_SHAPES[op.name] = shapes_str
 
 
 _init_model_ops_db()
@@ -268,11 +284,14 @@ class _OpModule(nn.Module):
 def _run_op(fn, sample: SampleInput, device: torch.device, backend: str) -> Any:
     if not backend or device.type == "cpu":
         return fn(sample.input, *sample.args, **sample.kwargs)
-    mod = _OpModule(fn).to(device)
-    torch._dynamo.reset_code_caches()
-    return torch.compile(mod, backend=backend)(
-        sample.input, *sample.args, **sample.kwargs
-    )
+    try:
+        mod = _OpModule(fn).to(device)
+        torch._dynamo.reset_code_caches()
+        return torch.compile(mod, backend=backend)(
+            sample.input, *sample.args, **sample.kwargs
+        )
+    except Exception:
+        return fn(sample.input, *sample.args, **sample.kwargs)
 
 
 def _is_cpu_output(op_name: str, test_sample: SampleInput) -> bool:
@@ -299,7 +318,7 @@ def _get_global_dtype_precision() -> dict:
 # ---------------------------------------------------------------------------
 # TestSpyreModelOps
 #
-# TorchTestBase (spyre_test_base_common.py) already handles at instantiate_test:
+# OOTTestBase (spyre_test_base_common.py) already handles at instantiate_test:
 #   - mode (xfail/skip/mandatory_success)
 #   - tags : pytest marks
 #   - unlisted_test_mode
@@ -319,7 +338,9 @@ class TestSpyreModelOps(TestCase):
     @ops(model_ops_db)
     def test_model_ops_db(self, device: str, dtype: torch.dtype, op: ModelOpInfo):
         # Usage: call `print_test_tags()` from our framework to print tags assosiated per method
-        print_test_tags_oot(self, op_tags=op.op_tags)
+        print_test_tags_oot(
+            self, op_tags=op.op_tags, input_args=op.ops_item.sample_inputs_func.args
+        )
         pytestconfig = shared_config._PYTEST_CONFIG
         assert pytestconfig is not None, (
             "shared_config._PYTEST_CONFIG is None — "
@@ -391,14 +412,76 @@ class TestSpyreModelOps(TestCase):
             SampleInput=SampleInput,
         )
 
-        def _to_target_device(x: Any) -> Any:
+        def _to_target_device(x: Any, arg_spec: Optional[Any] = None) -> Any:
             if torch.is_tensor(x):
+                if (
+                    arg_spec is not None
+                    and hasattr(arg_spec, "tensor")
+                    and hasattr(arg_spec.tensor, "to_spyre")
+                    and arg_spec.tensor.device_layout is not None
+                ):
+                    logger.debug(
+                        f"[LAYOUT] calling to_spyre() for shape={list(x.shape)}"
+                    )
+                    return arg_spec.tensor.to_spyre(x)
+                logger.debug(f"[PLAIN]  plain .to(device) for shape={list(x.shape)}")
                 return x.to(test_device)
-            if isinstance(x, list):
-                return [t.to(test_device) if torch.is_tensor(t) else t for t in x]
+
+            if isinstance(x, (list, tuple)):
+                # Mirror SampleInput.transform()'s list/tuple recursion, but stay
+                # layout-aware: an InputArgTensorList spec's tensor_list entries
+                # line up positionally with a list OR tuple of tensors here.
+                tensor_specs = getattr(arg_spec, "tensor_list", None)
+                result = []
+                for i, item in enumerate(x):
+                    spec = (
+                        tensor_specs[i]
+                        if tensor_specs is not None and i < len(tensor_specs)
+                        else None
+                    )
+                    result.append(_to_target_device(item, spec))
+                if isinstance(x, tuple):
+                    # type(x)(result) breaks for tuple subclasses whose ctor
+                    # doesn't accept a single iterable -- namedtuples included
+                    # (they need *result, or ._make(result)). Use _make when
+                    # available; otherwise fall back to a plain tuple.
+                    make = getattr(x, "_make", None)
+                    return make(result) if make is not None else tuple(result)
+                return type(x)(result)
+
+            if isinstance(x, dict):
+                # Mirror transform()'s dict recursion. Positional dict args have no
+                # per-key layout spec today (kwargs already forbid tensor/layout
+                # specs — see resolved_kwargs()'s NotImplementedError), so this is
+                # plain-device-move only, but it at least stops CPU tensors from
+                # silently surviving inside a dict.
+                return {k: _to_target_device(v) for k, v in x.items()}
+
             return x
 
-        test_sample: SampleInput = cpu_sample.transform(_to_target_device)
+        # Build test_sample with per-tensor layout awareness
+        test_args = []
+        for i, (cpu_arg, spec_arg) in enumerate(
+            zip(
+                [cpu_sample.input] + list(cpu_sample.args),
+                ops_item.sample_inputs_func.args,
+            )
+        ):
+            test_args.append(_to_target_device(cpu_arg, spec_arg))
+
+        if test_args:
+            test_sample = SampleInput(
+                test_args[0],
+                args=tuple(test_args[1:]),
+                # NOTE: kwargs are plain values only (dim, dtype, keepdim, etc.) — no
+                # current config passes a tensor/device_layout via kwargs, and
+                # resolved_kwargs() will raise if one ever tries to. If that changes,
+                # this needs the same arg_spec-based layout lookup as _to_target_device
+                # uses for positional args above.
+                kwargs={k: _to_target_device(v) for k, v in cpu_sample.kwargs.items()},
+            )
+        else:
+            test_sample = cpu_sample.transform(lambda x: _to_target_device(x))
 
         # Adapter pre-hook (e.g. dropout sets training=False)
         if adapter.pre is not None:

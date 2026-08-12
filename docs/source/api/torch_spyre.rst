@@ -54,6 +54,16 @@ Device Management
 
    Returns ``True`` if the Spyre runtime has been initialized.
 
+.. function:: torch.spyre.get_amp_supported_dtype() -> list[torch.dtype]
+
+   Returns the dtypes supported by ``torch.autocast`` on Spyre. Used by the
+   PyTorch AMP machinery to validate the autocast dtype.
+
+   .. code-block:: python
+
+      >>> torch.spyre.get_amp_supported_dtype()
+      [torch.float16, torch.bfloat16]
+
 .. note::
 
    ``torch.spyre.get_device_properties()`` is not yet exposed on the public
@@ -93,6 +103,33 @@ that your code is portable across backends (CUDA, Spyre, etc.):
 
    :param int seed: The desired seed.
 
+.. function:: torch.spyre.get_rng_state(device="spyre") -> torch.Tensor
+
+   Returns the random number generator state for the given Spyre device
+   as a ``torch.ByteTensor``.
+
+   :param device: Device to query. Accepts ``int``, ``str``, or
+       ``torch.device``. Default: ``"spyre"``.
+   :type device: int or str or torch.device, optional
+
+.. function:: torch.spyre.set_rng_state(new_state, device="spyre")
+
+   Sets the random number generator state for the given Spyre device.
+
+   :param torch.Tensor new_state: The desired state (a ``ByteTensor``).
+   :param device: Target device. Accepts ``int``, ``str``, or
+       ``torch.device``. Default: ``"spyre"``.
+   :type device: int or str or torch.device, optional
+
+.. function:: torch.spyre.initial_seed(device="spyre") -> int
+
+   Returns the initial seed used to initialize the random number generator
+   on the given Spyre device.
+
+   :param device: Device to query. Accepts ``int``, ``str``, or
+       ``torch.device``. Default: ``"spyre"``.
+   :type device: int or str or torch.device, optional
+
 Streams
 -------
 
@@ -116,6 +153,12 @@ Streams allow overlapping execution of operations. The API mirrors
        the low-priority pool; any non-zero value selects the
        high-priority pool. Each pool has 32 streams per device,
        allocated round-robin. Default: ``0``.
+
+       The constructor input and the ``.priority`` getter use different
+       conventions: a stream constructed with ``priority=5`` is placed
+       in the high-priority pool, and its ``.priority`` attribute then
+       reports ``-1`` rather than ``5``. See the ``priority`` attribute
+       below.
 
    .. code-block:: python
 
@@ -146,8 +189,10 @@ Streams allow overlapping execution of operations. The API mirrors
    .. attribute:: priority
       :type: int
 
-      The stream priority class (read-only). ``0`` for low-priority,
-      anything non-zero for high-priority.
+      The stream priority class (read-only). Reports ``0`` for low-priority
+      streams (IDs 0--32) and ``-1`` for high-priority streams (IDs 33--64),
+      matching the convention used by ``torch.cuda.Stream.priority``. The
+      attribute does not echo the integer passed to the constructor.
 
 .. function:: torch.spyre.stream(stream)
 
@@ -192,6 +237,77 @@ Streams allow overlapping execution of operations. The API mirrors
       >>> torch.spyre.synchronize()          # sync all devices
       >>> torch.spyre.synchronize("spyre:0") # sync device 0
 
+Distributed
+-----------
+
+Torch-Spyre registers a ``c10d::Backend`` named ``spyreccl`` for cross-card
+collective communication. Standard PyTorch distributed setup applies:
+
+.. code-block:: python
+
+   import torch
+   import torch.distributed as dist
+
+   dist.init_process_group(backend="cpu:gloo,spyre:spyreccl")
+
+   x = torch.zeros(1024, dtype=torch.float16, device="spyre")
+   dist.broadcast(x, src=0)
+
+The backend follows a one-device-per-process model: each rank attaches to a
+single Spyre device and reuses the rank's existing flex runtime instance.
+Supported collectives, the list of process-group entries that raise
+``SpyreCCLNotSupportedException``, and the placement of
+``SpyreCCLBackend`` in the runtime stack are documented in
+:doc:`../runtime/index`.
+
+Memory
+------
+
+``torch.spyre.memory`` re-exports ``torch.accelerator.memory``, so the
+standard accelerator memory API is available against Spyre devices:
+
+.. code-block:: python
+
+   torch.spyre.memory.memory_allocated()        # bytes currently allocated
+   torch.spyre.memory.max_memory_allocated()    # peak since the last reset
+   torch.spyre.memory.reset_peak_memory_stats()
+
+A worked example is in :doc:`../user_guide/profiling/index`.
+
+Profiler
+--------
+
+.. function:: torch_spyre.profiler.is_available() -> bool
+
+   Returns ``True`` when the Spyre profiler integration is built into the
+   current package and the device can be profiled. Returns ``False`` in the
+   default build today; the in-tree profiler package is a scaffold whose
+   collection backends are still landing. See
+   :doc:`../user_guide/profiling/index` for the current state and the
+   profiling tooling that is available in the meantime.
+
+FFDC (First Failure Data Capture)
+---------------------------------
+
+.. function:: torch.spyre.get_diagnostic_report(output_dir=None) -> dict | None
+
+   Return the most recent FFDC diagnostic report, or ``None`` if no reports
+   exist. Reports are written automatically when a failure is captured and
+   ``USE_SPYRE_PROFILER=1`` is set.
+
+   Args:
+      output_dir: Directory to search. Defaults to
+         ``~/.cache/torch/inductor/torch-spyre/ffdc_reports`` (respecting
+         ``TORCHINDUCTOR_CACHE_DIR``), with a fallback to the system temp dir.
+
+   Example::
+
+      import torch
+
+      report = torch.spyre.get_diagnostic_report()
+      if report is not None:
+          print(report["failure"]["category"], report["failure"]["message"])
+
 Tensor Operations
 -----------------
 
@@ -215,17 +331,68 @@ laid out in device memory.
 Compilation
 -----------
 
-Spyre models are compiled using ``torch.compile`` with the ``"spyre"``
-backend:
+Spyre models are compiled using ``torch.compile``. Inductor routes to
+the Spyre backend automatically when the model is on a Spyre device:
 
 .. code-block:: python
 
    model = MyModel().to("spyre")
-   compiled = torch.compile(model, backend="spyre")
+   compiled = torch.compile(model)
    output = compiled(inputs)
 
 See :doc:`../user_guide/running_models` for details and
 :doc:`../user_guide/supported_operations` for the list of supported ops.
+
+Model Loading Utilities
+-----------------------
+
+The ``torch_spyre.model_utils`` module provides utilities that transfer a
+model to Spyre with optimal weight layout. For ``nn.Linear`` layers, weights
+are stickified along ``out_features`` (using ``dim_order=[1, 0]``) so that
+matrix multiplications can run at full throughput without a host-side
+transpose.
+
+.. function:: torch_spyre.model_utils.load_model_to_spyre(model, dtype=None)
+
+   Transfer all parameters and buffers of *model* to Spyre. ``nn.Linear``
+   weights use a dimension-swapped layout (``dim_order=[1, 0]``); all other
+   tensors use the default layout. Idempotent: parameters already on Spyre
+   are skipped.
+
+   :param model: The model to transfer.
+   :type model: torch.nn.Module
+   :param dtype: Target dtype on Spyre (default: the parameter's existing
+       dtype).
+   :type dtype: torch.dtype or None
+   :returns: The model with all parameters on Spyre.
+   :rtype: torch.nn.Module
+
+   Example:
+
+   .. code-block:: python
+
+      from torch_spyre.model_utils import load_model_to_spyre
+
+      model = MyModel()
+      load_model_to_spyre(model)
+      compiled = torch.compile(model)
+
+.. function:: torch_spyre.model_utils.patch_module_to_for_spyre()
+
+   Monkeypatch ``nn.Module.to`` so that ``model.to("spyre")`` automatically
+   applies the optimal weight layout described above. Non-Spyre destinations
+   fall through to the original ``to`` implementation.
+
+   Call this once at program startup before any ``.to("spyre")`` call.
+
+   Example:
+
+   .. code-block:: python
+
+      from torch_spyre.model_utils import patch_module_to_for_spyre
+
+      patch_module_to_for_spyre()
+      model = MyModel().to("spyre")  # uses optimal layout automatically
 
 Tensor Layouts
 --------------
@@ -241,12 +408,20 @@ manipulation of device tensor layouts. See
    ``SpyreTensorLayout`` captures the tiling, padding, and dimension
    mapping required by the hardware.
 
-   Can be constructed in two ways:
+   Can be constructed in three ways:
 
    .. code-block:: python
 
       # From host tensor metadata (automatic layout computation)
       layout = SpyreTensorLayout(host_size=[4, 128], dtype=torch.float16)
+
+      # From host metadata with explicit dimension order
+      layout = SpyreTensorLayout(
+          host_size=[512, 768],
+          host_strides=[768, 1],
+          dtype=torch.float16,
+          dim_order=[1, 0],  # stickify along the second dimension
+      )
 
       # From explicit device layout parameters
       layout = SpyreTensorLayout(
@@ -254,6 +429,11 @@ manipulation of device tensor layouts. See
           stride_map=[128, 64, 1],
           device_dtype=DataFormats.SEN169_FP16,
       )
+
+   The ``dim_order`` parameter controls which logical dimension is
+   stickified first. For example, ``dim_order=[1, 0]`` stickifies the
+   second dimension, which is the optimal layout for ``nn.Linear`` weights
+   on Spyre (see :func:`torch_spyre.model_utils.load_model_to_spyre`).
 
    .. attribute:: device_size
       :type: list[int]
@@ -271,9 +451,24 @@ manipulation of device tensor layouts. See
 
       The on-device data format (e.g., ``SEN169_FP16``).
 
+   .. attribute:: element_arrangement
+      :type: ElementArrangement
+
+      How elements are packed within a stick. Defaults to ``STANDARD``
+      and appears in the ``repr`` only when it is non-standard.
+
    .. method:: elems_per_stick() -> int
 
       Returns the number of elements per stick for this layout's dtype.
+
+   .. method:: with_element_arrangement(element_arrangement) -> SpyreTensorLayout
+
+      Return a new layout with the given element arrangement, preserving
+      all other fields.
+
+      :param element_arrangement: The new element arrangement.
+      :type element_arrangement: ElementArrangement
+      :rtype: SpyreTensorLayout
 
 .. class:: torch_spyre._C.DataFormats
 
@@ -343,11 +538,11 @@ Warnings
 
 .. function:: torch_spyre._C.get_downcast_warning() -> bool
 
-   Returns whether float32 → float16 downcast warnings are enabled.
+   Returns whether int64 → int32 downcast warnings are enabled.
 
 .. function:: torch_spyre._C.set_downcast_warning(enabled)
 
-   Enable or disable float32 → float16 downcast warnings.
+   Enable or disable int64 → int32 downcast warnings.
 
    :param bool enabled: ``True`` to enable warnings, ``False`` to suppress.
 
@@ -362,6 +557,12 @@ Constants
 
    The device name string used to register Spyre with PyTorch.
 
+.. data:: torch_spyre.constants.DISTRIBUTED_BACKEND_NAME
+   :value: "spyreccl"
+
+   The backend name used to register the Spyre distributed backend with
+   ``torch.distributed``. Pass this string to ``init_process_group(backend=...)``.
+
 Environment Variables
 ---------------------
 
@@ -374,15 +575,21 @@ Environment Variables
    * - Variable
      - Purpose
    * - ``TORCH_SPYRE_DEBUG=1``
-     - Enable C++ debug logging and ``-O0`` builds
+     - Build-time: enable C++ debug logging and ``-O0`` builds.
+       Runtime: deprecated, use ``TORCH_LOGS='spyre:DEBUG'`` instead
+       (see ``torch_spyre.logging_config``)
    * - ``TORCH_SPYRE_DOWNCAST_WARN=0``
-     - Suppress float32 → float16 downcast warnings
+     - Suppress int64 → int32 downcast warnings
    * - ``SPYRE_INDUCTOR_LOG=1``
-     - Enable Spyre Inductor logging
+     - *Deprecated*. Use ``TORCH_LOGS='spyre.inductor:INFO'``. Enables Spyre
+       Inductor logging
    * - ``SPYRE_INDUCTOR_LOG_LEVEL=DEBUG``
-     - Set Spyre Inductor log verbosity (DEBUG, INFO, WARNING, ERROR)
+     - *Deprecated*. Set the level in ``TORCH_LOGS`` (e.g.
+       ``spyre.inductor:DEBUG``). Sets Spyre Inductor log verbosity (DEBUG,
+       INFO, WARNING, ERROR)
    * - ``SPYRE_LOG_FILE=path``
-     - Redirect Spyre Inductor logs to a file
+     - *Deprecated*. Mapped to the top-level ``spyre`` logger file handler.
+       Redirects Spyre Inductor logs to a file
    * - ``TORCH_SENDNN_LOG``
      - SendNN library logging level (default: ``CRITICAL``)
    * - ``DT_DEEPRT_VERBOSE``
@@ -400,10 +607,48 @@ Environment Variables
      - Purpose
    * - ``SENCORES``
      - Number of Spyre cores (1--32, default 32)
-   * - ``LX_PLANNING=1``
-     - Enable LX scratchpad memory planning during the pre-scheduling pass
    * - ``DXP_LX_FRAC_AVAIL``
-     - Fraction of LX scratchpad available to the planner
+     - Fraction of LX scratchpad available to the planner (default ``0.2``)
+   * - ``LX_PLANNING``
+     - Enable LX scratchpad planning (default ``1``; set ``0`` to skip the
+       ``scratchpad_planning`` pass)
+   * - ``CO_OPTIMIZING_LX_PLANNING``
+     - Use the co-optimizing LX allocator strategy (default ``0``)
+   * - ``HBM_POOL_PLANNING``
+     - Enable HBM-pool planning for intermediates not in LX
+       (default ``1``)
+   * - ``GLOBAL_STICK_OPTIMIZER``
+     - Enable the global stick-dimension optimizer (default ``1``)
+   * - ``SPYRE_CORE_ID_K_FAST_EMISSION``
+     - Permute physical core IDs at SDSC emission so K-collaborator cores
+       sit on adjacent ring positions, reducing PSUM chain hops (default
+       ``1``)
+   * - ``BUNDLE_SYMBOLIC_ARGS``
+     - Emit LPDDR5 tensor addresses as runtime symbols rather than baked
+       integers (default ``1``)
+   * - ``LAYOUT_SOLVER``
+     - LX scratchpad layout solver strategy: ``greedy`` (default),
+       ``bestfit``, ``firstfit``, ``cpsat``, ``simulated_annealing``.
+       See :doc:`/compiler/scratchpad_planning`
+   * - ``SPYRE_INDUCTOR_ENABLE_REDUCTION_TILING``
+     - Enable reduction tiling in the pre-scheduling pipeline (default
+       ``1``)
+   * - ``SPYRE_LOG_PASSES``
+     - Comma-separated list of pass names after which to log the
+       op-spec IR at pipeline stage boundaries (default empty)
+   * - ``MAX_BUCKETS``
+     - Maximum number of work division buckets (default ``32``)
+   * - ``MIN_DEFAULT_GRANULARITY``
+     - Minimum default granularity for work division (default ``4``)
+   * - ``SPYRE_INDUCTOR_IGNORE_HINTS``
+     - Ignore ``spyre_hint`` annotations: ``work_div={...}``
+       work-division hints, hint-based working-set reduction, and
+       span-overflow coarse-tiling hints (default ``0``)
+   * - ``SPYRE_INDUCTOR_IGNORE_SPAN_OVERFLOW_HINTS``
+     - Ignore only span-overflow coarse-tiling hints; a narrower
+       alternative to ``SPYRE_INDUCTOR_IGNORE_HINTS``.  Defaults to
+       ``1`` (disabled/opt-in): set to ``0`` to enable automatic
+       span-overflow coarse tiling.
 
 **Device enumeration** (``torch_spyre/csrc/spyre_device_enum.cpp``):
 
@@ -418,7 +663,8 @@ Environment Variables
    * - ``SPYRE_DEVICES``
      - Comma-separated list of device indices to expose
    * - ``FLEX_DEVICE``
-     - Select the underlying flex runtime mode (PF / VF)
+     - Select the underlying flex runtime mode (``PF``, ``VF``, or
+       ``MOCK``)
 
 **Internal:**
 

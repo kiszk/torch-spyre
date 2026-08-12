@@ -26,9 +26,9 @@ from . import config
 from .logging_utils import get_inductor_logger
 
 from torch._inductor.dependencies import MemoryDep
+from torch._inductor.graph import GraphLowering
 from torch._inductor.ir import (
     InputBuffer,
-    MutationLayoutSHOULDREMOVE,
     StorageBox,
     TensorBox,
 )
@@ -55,8 +55,10 @@ class EdgeCostMap:
         in_layouts: list,
         target_layouts: list,
         target_dep: "MemoryDep",
+        op,
     ):
         self.dep = dep
+        self._op = op
         self._in_layouts = in_layouts
         self._target_layouts = target_layouts
         self._target_dep = target_dep
@@ -73,24 +75,35 @@ class EdgeCostMap:
             defaultdict(dict)
         )
 
+    # Sentinel stored in _layout when a restickify is needed but infeasible.
+    # Distinct from None ("compatible, no restickify needed") so finalize_layouts
+    # can raise instead of silently skipping.
+    INFEASIBLE: "SpyreTensorLayout" = object()  # type: ignore[assignment]
+
     def _compute_and_cache_cost(
         self, in_stl: "SpyreTensorLayout", target_stl: "SpyreTensorLayout"
     ) -> None:
         """Populate _cost and _layout for (in_stl, target_stl).
 
         Cost is 0 if stick-compatible, the input element count if restickifiable, or INF if infeasible.
+        _layout stores:
+          None               — compatible, no restickify needed
+          INFEASIBLE         — restickify needed but compute_restickify_target_layout returned None
+          SpyreTensorLayout  — feasible restickify target layout
         """
         needed, tgt = compute_restickify_needed(
-            in_stl, self._dep_layout, self.dep, target_stl, self._target_dep
+            in_stl, self._dep_layout, self.dep, target_stl, self._target_dep, self._op
         )
         if not needed:
             cost = 0.0
+            self._layout[in_stl][target_stl] = None
         elif tgt is None:
             cost = INF  # infeasible restickify
+            self._layout[in_stl][target_stl] = EdgeCostMap.INFEASIBLE
         else:
             cost = float(math.prod(in_stl.device_size))
+            self._layout[in_stl][target_stl] = tgt
         self._cost[in_stl][target_stl] = cost
-        self._layout[in_stl][target_stl] = tgt
 
     def cost(
         self, in_stl: "SpyreTensorLayout", target_stl: "SpyreTensorLayout"
@@ -103,7 +116,13 @@ class EdgeCostMap:
     def layout(
         self, in_stl: "SpyreTensorLayout", target_stl: "SpyreTensorLayout"
     ) -> "SpyreTensorLayout | None":
-        """Return target STL for restickifying in_stl to be compatible with target_stl, or None if no restickify needed."""
+        """Return target STL for restickifying in_stl to be compatible with target_stl.
+
+        Returns:
+          None               — compatible, no restickify needed
+          INFEASIBLE         — restickify needed but infeasible (caller must handle)
+          SpyreTensorLayout  — the target layout for the restickify op
+        """
         if target_stl not in self._cost[in_stl]:
             self._compute_and_cache_cost(in_stl, target_stl)
         return self._layout[in_stl][target_stl]
@@ -132,6 +151,18 @@ class RestickNodeCost(abc.ABC):
         """Return (edge_cost, required_input_stl) pairs for finalize_layouts to schedule restickifies."""
         ...
 
+    @abc.abstractmethod
+    def min_input_cost(
+        self, dep_name: str, in_stl: "SpyreTensorLayout", out_stl: "SpyreTensorLayout"
+    ) -> float:
+        """Cost contribution from input dep_name (with in_stl) toward output candidate out_stl.
+
+        Used by the backward DP, which knows one input's STL at a time but not the others.
+        Returns INF if out_stl is infeasible — either this input can't be restickified,
+        or some other input has no feasible STL for out_stl.
+        """
+        ...
+
     def first_blocking_edge(self, out_stl: "SpyreTensorLayout") -> "EdgeCostMap | None":
         """Return the first EdgeCostMap that has at least one input STL with infinite cost against out_stl.
 
@@ -148,10 +179,10 @@ class AllSameNode(RestickNodeCost):
     """Cost node for ops that require all inputs and the output to be stick compatible (eg pointwise ops)."""
 
     @classmethod
-    def from_args(cls, args, out_layouts, out_dep):
+    def from_args(cls, args, out_layouts, out_dep, op):
         assert out_layouts, "AllSameNode.from_args: out_layouts is empty"
         edge_costs = [
-            EdgeCostMap(arg.dep, arg.layouts, out_layouts, out_dep) for arg in args
+            EdgeCostMap(arg.dep, arg.layouts, out_layouts, out_dep, op) for arg in args
         ]
         return cls(edge_costs)
 
@@ -162,6 +193,20 @@ class AllSameNode(RestickNodeCost):
 
     def required_input_stls(self, out_stl):
         return [(ec, out_stl) for ec in self.edge_costs]
+
+    def min_input_cost(self, dep_name, in_stl, out_stl):
+        # next() takes the first match; if dep_name appears twice (x+x), both edges
+        # are identical so the cost is the same either way.
+        ec = next(e for e in self.edge_costs if e.dep.name == dep_name)
+        edge_c = ec.cost(in_stl, out_stl)
+        if edge_c == INF:
+            return INF
+        other_ok = all(
+            any(e.cost(other_c, out_stl) < INF for other_c in e._in_layouts)
+            for e in self.edge_costs
+            if e.dep.name != dep_name
+        )
+        return edge_c if other_ok else INF
 
 
 class FixedInOutNode(RestickNodeCost):
@@ -180,10 +225,10 @@ class FixedInOutNode(RestickNodeCost):
         )
 
     @classmethod
-    def from_args(cls, args, out_stl, req_stls):
+    def from_args(cls, args, out_stl, req_stls, op):
         assert req_stls, "FixedInOutNode.from_args: req_stls is empty"
         edge_costs = [
-            EdgeCostMap(arg.dep, arg.layouts, [req], arg.dep)
+            EdgeCostMap(arg.dep, arg.layouts, [req], arg.dep, op)
             for arg, req in zip(args, req_stls)
         ]
         return cls(edge_costs, required_out_stl=out_stl, required_in_stls=req_stls)
@@ -200,6 +245,26 @@ class FixedInOutNode(RestickNodeCost):
 
     def required_input_stls(self, out_stl):
         return list(zip(self.edge_costs, self.required_in_stls))
+
+    def min_input_cost(self, dep_name, in_stl, out_stl):
+        if out_stl != self.required_out_stl:
+            return INF
+        # Returns on first match. If dep_name appears twice (e.g. matmul(x, x)),
+        # the two positions may have different required_in_stls — this would return
+        # the wrong cost. All current FixedInOutNode ops require the same STL for
+        # both positions of a self-matmul, so this is safe today.
+        for ec, req in zip(self.edge_costs, self.required_in_stls):
+            if ec.dep.name == dep_name:
+                edge_c = ec.cost(in_stl, req)
+                if edge_c == INF:
+                    return INF
+                other_ok = all(
+                    any(e.cost(other_c, r) < INF for other_c in e._in_layouts)
+                    for e, r in zip(self.edge_costs, self.required_in_stls)
+                    if e.dep.name != dep_name
+                )
+                return edge_c if other_ok else INF
+        return INF
 
 
 class AnyInNode(RestickNodeCost):
@@ -221,6 +286,9 @@ class AnyInNode(RestickNodeCost):
     def required_input_stls(self, out_stl):
         return []
 
+    def min_input_cost(self, dep_name, in_stl, out_stl):
+        return 0.0
+
 
 def _stick_incompatibility_reason(
     in_stick: "sympy.Expr",
@@ -237,7 +305,7 @@ def _stick_incompatibility_reason(
 
 
 def _fmt_buf(layout: Any, dep: "MemoryDep") -> str:
-    h_coords = host_coordinates(layout, dep)
+    h_coords = host_coordinates(layout, dep, None)
     return (
         f"size={list(layout.size)}  stride={list(layout.stride)}  h_coords={h_coords}"
     )
@@ -267,13 +335,15 @@ def _no_feasible_layout_error(op) -> NotImplementedError:
         lines.append(f"    {ec.dep.name}:  {_fmt_buf(host_layout, ec.dep)}")
         for j, stl in enumerate(ec._in_layouts):
             lines.append(
-                f"      STL {j}:  {_fmt_stl(device_coordinates(stl, ec.dep), stl)}"
+                f"      STL {j}:  {_fmt_stl(device_coordinates(stl, ec.dep, None), stl)}"
             )
         lines.append("")
 
     lines.append(f"  Output:  {_fmt_buf(out_layout, out_dep)}")
     for i, stl in enumerate(op.layouts):
-        lines.append(f"    STL {i}:  {_fmt_stl(device_coordinates(stl, out_dep), stl)}")
+        lines.append(
+            f"    STL {i}:  {_fmt_stl(device_coordinates(stl, out_dep, None), stl)}"
+        )
 
     analysis = []
     for i, candidate_stl in enumerate(op.layouts):
@@ -281,10 +351,10 @@ def _no_feasible_layout_error(op) -> NotImplementedError:
         if blocking_ec is None:
             analysis.append(f"    STL {i}: no blocking input identified")
         else:
-            out_stick = device_coordinates(candidate_stl, out_dep)[-1]
+            out_stick = device_coordinates(candidate_stl, out_dep, None)[-1]
             for j, in_stl in enumerate(blocking_ec._in_layouts):
                 if blocking_ec.cost(in_stl, candidate_stl) == INF:
-                    in_stick = device_coordinates(in_stl, blocking_ec.dep)[-1]
+                    in_stick = device_coordinates(in_stl, blocking_ec.dep, None)[-1]
                     reason = _stick_incompatibility_reason(in_stick, out_stick)
                     reason_str = f": {reason}" if reason else ""
                     analysis.append(
@@ -367,9 +437,17 @@ def greedy_local_min_cost(operations: list) -> None:
 # by a "beam width". When beam width is exceeded, the highest cost states are trimmed. Optimal cost is
 # only achieved if the optimal state always remains in the beam.
 #
-# Future improvements include (a) using live node analysis to prune dead states and (b) back-propagating
-# a "min_cost" to avoid dropping states that become important later. These will be added only once
-# we see evidence it matters in the models we are targeting.
+# A*-style backward pass: before the forward beam runs, compute_future_min_cost does a backward DP
+# over the op graph to estimate the minimum remaining cost achievable from each (op, candidate_stl)
+# pair onward. The forward beam then trims by lower_bound = cost_so_far + future_min_cost instead of
+# cost_so_far alone. This is admissible: the backward DP independently minimizes each downstream
+# consumer's cost (treating other inputs optimistically), so it underestimates true remaining cost.
+# States with a high future cost (e.g. buf30=cand1 which leads to INF at a join) are de-prioritized
+# relative to states with low future cost, even if their cost_so_far is currently lower.
+#
+# Liveness merge: after expanding states for each op, states whose live buffer slots are identical
+# are equivalent (their futures are identical). Only the lowest-lower_bound one is kept per live key.
+# A slot is live if its last downstream consumer has not yet been committed.
 
 
 @dataclass
@@ -378,13 +456,16 @@ class BeamState:
 
     assignments is a tuple parallel to a shared buf_names list — index i holds the
     chosen SpyreTensorLayout for buf_names[i], or None for passthrough ops.
+    lower_bound = cost + future_min_cost for the last assigned op's candidate.
     """
 
     assignments: tuple  # tuple[SpyreTensorLayout | None, ...]
     cost: float
+    lower_bound: float = 0.0
 
 
-BEAM_WIDTH = 64
+BEAM_WIDTH = 200
+MAX_BEAM_STATES_LOGGED = 10
 
 
 class Frontier:
@@ -406,10 +487,11 @@ class Frontier:
         return state.assignments[idx]
 
     def best(self) -> BeamState:
-        return self.states[0]
+        # At end of search, future costs are 0; use actual cost for final selection.
+        return min(self.states, key=lambda s: s.cost)
 
     def trim(self) -> None:
-        self.states.sort(key=lambda s: s.cost)
+        self.states.sort(key=lambda s: s.lower_bound)
         before = len(self.states)
         self.states = self.states[: self.K]
         if len(self.states) < before:
@@ -421,16 +503,108 @@ class Frontier:
             )
 
 
+def compute_future_min_cost(
+    operations: list,
+) -> dict:
+    """Backward DP: returns future_min_cost[op_name][stl] = admissible lower bound on
+    remaining restickify cost from this op onward, if this op commits to stl.
+
+    Processes ops in reverse topological order. For each op and each of its output
+    candidates, sums over all downstream consumers the minimum edge cost achievable
+    from that candidate to any of the consumer's output candidates (recursively).
+
+    The bound is admissible (never overestimates) because each downstream consumer's
+    cost is minimized independently — ignoring cross-consumer pairwise constraints.
+    """
+    downstream: dict[str, list] = defaultdict(list)
+    downstream_seen: dict[str, set] = defaultdict(set)
+    for op in operations:
+        if not hasattr(op, "layouts"):
+            continue
+        for dep in op.get_read_writes().reads:
+            if (
+                isinstance(dep, MemoryDep)
+                and op.get_name() not in downstream_seen[dep.name]
+            ):
+                downstream[dep.name].append(op)
+                downstream_seen[dep.name].add(op.get_name())
+
+    future: dict[str, dict] = {}  # op_name -> {stl -> float}
+
+    for op in reversed(operations):
+        if not hasattr(op, "layouts"):
+            continue
+        name = op.get_name()
+        future[name] = {}
+
+        for candidate in op.layouts:
+            total_future = 0.0
+            for d_op in downstream.get(name, []):
+                if not hasattr(d_op, "layouts"):
+                    continue
+                cost_fn = d_op.restick_cost_fn
+                if not any(e.dep.name == name for e in cost_fn.edge_costs):
+                    continue
+                best = INF
+                for d_cand in d_op.layouts:
+                    edge_c = cost_fn.min_input_cost(name, candidate, d_cand)
+                    if edge_c == INF:
+                        continue
+                    # d_op is always in future (reverse topo order); .get fallback is defensive.
+                    tail = future.get(d_op.get_name(), {}).get(d_cand, 0.0)
+                    best = min(best, edge_c + tail)
+                # Cap INF at a large finite value so it de-prioritizes but doesn't hard-block.
+                if best == INF:
+                    best = 1e18  # large but finite: larger than any real cost, smaller than math.inf
+                total_future += best
+
+            future[name][candidate] = total_future
+
+    return future
+
+
+def _compute_last_use(operations: list, step_of: "dict[str, int]") -> "dict[str, int]":
+    """Return last_use[op_name] = step of its last consumer. Graph outputs are absent;
+    callers use .get(name, -1) so absent entries never satisfy > current_step."""
+    last_use: dict[str, int] = {}
+    for op in operations:
+        if not hasattr(op, "layouts"):
+            continue
+        for dep in op.get_read_writes().reads:
+            if isinstance(dep, MemoryDep) and dep.name in step_of:
+                consumer_step = step_of[op.get_name()]
+                if last_use.get(dep.name, -1) < consumer_step:
+                    last_use[dep.name] = consumer_step
+    return last_use
+
+
 def beam_global_min_cost(operations: list) -> None:
     """Global beam search layout selection.
 
     Processes ops in topological order. For each op with a restick_cost_fn,
     expands every current state by branching over candidate output STLs and
-    accumulating cost. After each op the beam is pruned to K best states.
+    accumulating cost. After each op the beam is pruned to K best states
+    sorted by lower_bound = cost_so_far + future_min_cost (A*-style).
+
+    After expansion, states whose live assignments are identical are merged
+    (keeping only the lowest lower_bound one). A slot is live if its last
+    downstream consumer has not yet been committed.
+
     At the end, the best state's assignments are committed to the ops.
     """
+    future_min_cost = compute_future_min_cost(operations)
+
+    step_of: dict[str, int] = {}
+    step_counter = 0
+    for op in operations:
+        if hasattr(op, "layouts"):
+            step_of[op.get_name()] = step_counter
+            step_counter += 1
+    last_use = _compute_last_use(operations, step_of)
+
     frontier = Frontier(BEAM_WIDTH)
     # Commit graph inputs and seed into the frontier so input_stl() works uniformly for all deps.
+    total_inp_future = 0.0
     for name in V.graph.graph_input_names:
         tb = V.graph.graph_inputs[name]
         if (
@@ -442,17 +616,32 @@ def beam_global_min_cost(operations: list) -> None:
             stl = next(iter(tb.layouts))
             tb.data.data.committed_stl = stl
             frontier.add_buf(name)
+            total_inp_future += future_min_cost.get(name, {}).get(stl, 0.0)
             frontier.states = [
-                BeamState(assignments=state.assignments + (stl,), cost=state.cost)
+                BeamState(
+                    assignments=state.assignments + (stl,),
+                    cost=state.cost,
+                    lower_bound=state.cost,
+                )
                 for state in frontier.states
             ]
+    frontier.states = [
+        BeamState(
+            assignments=state.assignments,
+            cost=state.cost,
+            lower_bound=state.cost + total_inp_future,
+        )
+        for state in frontier.states
+    ]
 
     max_states = 1
+    merged_total = 0
 
     for op in operations:
         if not hasattr(op, "layouts"):
             continue
 
+        current_step = step_of[op.get_name()]
         frontier.add_buf(op.get_name())
 
         assert hasattr(op, "restick_cost_fn"), (
@@ -461,6 +650,7 @@ def beam_global_min_cost(operations: list) -> None:
         cost_fn = op.restick_cost_fn
         deps = [dep for dep in op.get_read_writes().reads if isinstance(dep, MemoryDep)]
 
+        op_future = future_min_cost.get(op.get_name(), {})
         next_states = []
         for state in frontier.states:
             in_layouts = [frontier.input_stl(state, dep.name) for dep in deps]
@@ -468,12 +658,45 @@ def beam_global_min_cost(operations: list) -> None:
             for candidate_stl in op.layouts:
                 extra_cost = cost_fn.cost(in_layouts, candidate_stl)
                 if extra_cost < INF:
+                    new_cost = state.cost + extra_cost
+                    lb = new_cost + op_future.get(candidate_stl, 0.0)
                     next_states.append(
                         BeamState(
                             assignments=state.assignments + (candidate_stl,),
-                            cost=state.cost + extra_cost,
+                            cost=new_cost,
+                            lower_bound=lb,
                         )
                     )
+
+        # Liveness merge: keep only the lowest-lower_bound state per live-slot key.
+        # Absent from last_use = graph output; treated as dead (cost already sunk).
+        live_indices = frozenset(
+            i
+            for i, name in enumerate(frontier.buf_names)
+            if last_use.get(name, -1) > current_step
+        )
+        before_merge = len(next_states)
+        canon: dict[tuple, BeamState] = {}
+        for s in next_states:
+            key = tuple(
+                s.assignments[i] if i in live_indices else None
+                for i in range(len(s.assignments))
+            )
+            if key not in canon or s.lower_bound < canon[key].lower_bound:
+                canon[key] = s
+        next_states = list(canon.values())
+        merged = before_merge - len(next_states)
+        merged_total += merged
+        if merged > 0:
+            logger.debug(
+                "liveness merge after %s: %d -> %d states (%d merged, %d live slots / %d total)",
+                op.get_name(),
+                before_merge,
+                len(next_states),
+                merged,
+                len(live_indices),
+                len(frontier.buf_names),
+            )
 
         frontier.states = next_states
         frontier.trim()
@@ -482,28 +705,32 @@ def beam_global_min_cost(operations: list) -> None:
         max_states = max(max_states, len(frontier.states))
         if logger.isEnabledFor(logging.DEBUG):
             lines = [f"beam after {op.get_name()} [{len(frontier.states)} states]:"]
-            for i, s in enumerate(frontier.states):
+            for i, s in enumerate(frontier.states[:MAX_BEAM_STATES_LOGGED]):
                 lines.append(f"  state {i} (cost={s.cost}):")
                 for name, stl in zip(frontier.buf_names, s.assignments):
                     lines.append(f"    {name}: stride_map={list(stl.stride_map)}")
+            extra = len(frontier.states) - MAX_BEAM_STATES_LOGGED
+            if extra > 0:
+                lines.append(f"    ... {extra} additional states not logged")
             logger.debug("\n".join(lines))
 
     logger.info(
-        "beam search done: max states = %d, best cost = %s",
+        "beam search done: max states = %d, best cost = %s, total liveness-merged = %d",
         max_states,
         frontier.best().cost,
+        merged_total,
     )
 
     # Commit the best state's assignments to all ops.
     best = frontier.best()
     for name, stl in zip(frontier.buf_names, best.assignments):
         op = V.graph.get_buffer(name)
-        if not isinstance(op.layout, MutationLayoutSHOULDREMOVE):
-            op.committed_stl = stl
+        op.committed_stl = stl
 
 
-def optimize_restickify_locations(operations: list) -> None:
+def optimize_restickify_locations(graph: GraphLowering) -> None:
     """Select restickify locations for all ops, minimizing total restickify cost."""
+    operations = graph.operations
     if config.global_stick_optimizer:
         logger.info("optimizer: beam (global)")
         beam_global_min_cost(operations)

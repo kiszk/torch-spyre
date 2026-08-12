@@ -11,4 +11,6 @@ For compiler-specific patterns such as adding new operation support, see
    :maxdepth: 2
 
    guidelines
+   op_enablement
    profiling
+   is_power_z_dev_label_guide

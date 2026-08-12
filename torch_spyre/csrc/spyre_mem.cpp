@@ -363,14 +363,33 @@ auto get_device_stride_infos(c10::IntArrayRef sizes,
 auto generate_dci(const at::Tensor* cpu_tensor, const at::Tensor* dev_tensor,
                   SpyreTensorLayout stl, int64_t cpu_offset, bool host2device)
     -> DataConversionInfo {
-  auto str_type = torchScalarToString[cpu_tensor->scalar_type()];
-  const auto [dtype_cpu, dtype_dev] = stringToDTDataFormatPair(str_type);
+  // Support dtype conversion: populate DCI with both source and destination
+  // dtype formats
+  auto cpu_str_type = torchScalarToString[cpu_tensor->scalar_type()];
+  auto dev_str_type = torchScalarToString[dev_tensor->scalar_type()];
+  const auto [cpu_format_host, cpu_format_dev] =
+      stringToDTDataFormatPair(cpu_str_type);
+  TORCH_CHECK(cpu_format_host != DataFormats::INVALID &&
+                  cpu_format_dev != DataFormats::INVALID,
+              "Unsupported CPU tensor dtype for DMA transfer: ", cpu_str_type);
+  const auto [dev_format_host, dev_format_dev] =
+      stringToDTDataFormatPair(dev_str_type);
+  TORCH_CHECK(
+      dev_format_host != DataFormats::INVALID &&
+          dev_format_dev != DataFormats::INVALID,
+      "Unsupported Spyre tensor dtype for DMA transfer: ", dev_str_type);
 
   DataConversionInfo dci{};
   dci.dci_dsName_ = "DCI-Tensor-0";
   dci.isHostToSen_ = host2device;
-  dci.dataformat_src_ = host2device ? dtype_cpu : dtype_dev;
-  dci.dataformat_dst_ = host2device ? dtype_dev : dtype_cpu;
+  dci.dataformat_src_ = host2device ? cpu_format_host : dev_format_dev;
+  dci.dataformat_dst_ = host2device ? dev_format_dev : cpu_format_host;
+  TORCH_CHECK(
+      isDCIConversionSupported(dci.dataformat_src_, dci.dataformat_dst_),
+      "Unsupported DCI data format conversion: src=",
+      static_cast<int>(dci.dataformat_src_),
+      " dst=", static_cast<int>(dci.dataformat_dst_),
+      " (cpu_type=", cpu_str_type, ", dev_type=", dev_str_type, ")");
 
   std::vector<int64_t> cpu_shape;
   std::vector<int64_t> dev_shape = stl.device_size;
@@ -418,7 +437,7 @@ auto generate_dci(const at::Tensor* cpu_tensor, const at::Tensor* dev_tensor,
 
   dci.input_shape_ = host2device ? cpu_shape : dev_shape;
   dci.output_shape_ = host2device ? dev_shape : cpu_shape;
-  if (g_debug_info_enabled) {
+  if (torch_spyre::logging::legacy::is_legacy_debug_enabled()) {
     std::stringstream s;
     dci.exportJson(s);
     DEBUGINFO("DataConversionInfo: ", s.str());
@@ -695,10 +714,93 @@ at::Tensor py_empty_with_layout(
                            pin_memory_opt, memory_format_opt);
 }
 
+const at::Tensor& spyre_resize_(
+    const at::Tensor& self, c10::SymIntArrayRef size,
+    std::optional<c10::MemoryFormat> memory_format_opt) {
+  auto size_int = c10::asIntArrayRefUnchecked(size);
+  // Case 1: No-op.
+  if (self.sizes() == size_int && self.is_contiguous()) {
+    return self;
+  }
+  TORCH_CHECK(memory_format_opt != c10::MemoryFormat::Preserve,
+              "aten::resize_ does not support MemoryFormat::Preserve");
+  TORCH_CHECK(!memory_format_opt.has_value() ||
+                  *memory_format_opt == c10::MemoryFormat::Contiguous,
+              "aten::resize_ on Spyre only supports contiguous memory format");
+  const auto dtype = c10::typeMetaToScalarType(self.dtype());
+  TORCH_CHECK(spyre::is_supported_dtype(dtype),
+              "Spyre backend does not support dtype ", dtype);
+
+  auto* self_impl = static_cast<SpyreTensorImpl*>(self.unsafeGetTensorImpl());
+  // Use STL device bytes (stick-padded) to determine if existing allocation
+  // suffices.
+  auto new_layout = SpyreTensorLayout(size_int.vec(), dtype);
+  const size_t new_device_bytes = get_device_size_in_bytes(new_layout);
+  const size_t new_cpu_bytes =
+      at::detail::computeStorageNbytesContiguous(size_int, self.itemsize());
+  const size_t new_size_bytes = std::max(new_device_bytes, new_cpu_bytes);
+  // Case 2: Same-numel or shrink — reinterpret storage in-place, no data moved.
+  // Only valid when new last dim ≤ old last dim; otherwise D2H reads into stick
+  // padding.
+  const int64_t new_numel = c10::multiply_integers(size_int);
+  const bool last_dim_ok = size_int.empty() || self.sizes().empty() ||
+                           size_int.back() <= self.sizes().back();
+  if (new_size_bytes <= self.storage().nbytes() && new_numel <= self.numel() &&
+      last_dim_ok) {
+    self_impl->set_sizes_contiguous(size_int);
+    self_impl->spyre_layout = new_layout;
+    self_impl->dma_sizes = size_int.vec();
+    self_impl->dma_strides = self_impl->strides().vec();
+    DEBUGINFO("resize_ to shape=", size_int,
+              " layout=", self_impl->spyre_layout.toString());
+    return self;
+  }
+  // Case 3: Reallocate — D2H → CPU resize_ → H2D. Handles expand and any
+  // reshape where the new last dim > old last dim (stick-layout incompatible).
+  // TODO(kunuruabhishek): avoid round-trip once restickify supports
+  // cross-layout D2D copies.
+  at::Tensor cpu_buf = self.cpu();
+  cpu_buf.resize_(size_int);
+  auto new_storage_impl = c10::make_intrusive<SpyreStorageImpl>(
+      c10::StorageImpl::use_byte_size_t(), new_size_bytes,
+      &SpyreAllocator::instance(), /*resizeable=*/true);
+  self_impl->set_storage_keep_dtype(c10::Storage(new_storage_impl));
+  self_impl->set_sizes_contiguous(size_int);
+  self_impl->spyre_layout = new_layout;
+  self_impl->dma_sizes = size_int.vec();
+  self_impl->dma_strides = self_impl->strides().vec();
+  at::_copy_from(cpu_buf, self, /*non_blocking=*/false);
+  DEBUGINFO("resize_ expand to shape=", size_int,
+            " layout=", self_impl->spyre_layout.toString());
+  return self;
+}
+
+at::Tensor spyre_fill_tensor(const at::Tensor& self, double value) {
+  TORCH_CHECK(self.is_privateuseone(),
+              "spyre_fill_tensor: tensor must be on spyre device");
+  TORCH_CHECK(self.numel() > 0, "spyre_fill_tensor: cannot fill empty tensor");
+
+  // Get the device allocation (CompositeAddress) from the spyre tensor
+  auto* spyre_impl = static_cast<SpyreTensorImpl*>(self.unsafeGetTensorImpl());
+  auto& storage = spyre_impl->storage();
+  auto* ctx = static_cast<SharedOwnerCtx*>(storage.data_ptr().get_context());
+
+  // Map torch dtype to DataFormats for the value->pattern conversion, which
+  // fillAsync performs internally.
+  DataFormats dtype = get_device_dtype(self.scalar_type());
+
+  // Launch a device-side MEMORY_FILL DMA via the typed fillAsync overload.
+  SpyreStream stream;
+  stream.fillAsync(&ctx->composite_addr, value, dtype, /*use_dmai=*/true);
+
+  return self;
+}
+
 TORCH_LIBRARY_IMPL(aten, PrivateUse1, m) {
   m.impl("empty.memory_format", TORCH_FN(spyre_empty));
   m.impl("empty_strided", TORCH_FN(spyre_empty_strided));
   m.impl("set_.source_Storage_storage_offset", TORCH_FN(spyre_set_storage));
+  m.impl("resize_", TORCH_FN(spyre_resize_));
 }
 
 }  // namespace spyre

@@ -98,8 +98,7 @@ LPDDR5
 LX planning
   The compiler pass that decides which tensors live in the
   {term}`LX scratchpad` versus {term}`LPDDR5` at each point in the
-  computation. Gated by `config.lx_planning` (env var
-  `LX_PLANNING=1`). See [Scratchpad Planning](../compiler/scratchpad_planning.md).
+  computation. See [Scratchpad Planning](../compiler/scratchpad_planning.md).
 
 LX scratchpad
   The 2 MB SRAM scratchpad on each Spyre core. Compiler-managed —
@@ -121,7 +120,7 @@ PrivateUse1
   PyTorch's official extension mechanism for out-of-tree backends.
   Torch-Spyre uses it to register `"spyre"` as a first-class device
   name without forking PyTorch. See
-  [Runtime Overview](../runtime/overview.md).
+  [Runtime](../runtime/index.md).
 
 PT
   The Processing Tensor execution unit on each corelet. Backed by the

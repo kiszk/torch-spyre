@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import torch
+from torch._inductor.graph import GraphLowering
 from torch._inductor.ir import ComputedBuffer, Operation
 from torch._inductor.virtualized import V
 
 from .ir import SpyreConstantFallback
 from .insert_restickify import NameSwapHandler
 from .logging_utils import get_inductor_logger
+from .provenance import merge_provenance
 
 logger = get_inductor_logger("dedup_constants")
 
@@ -86,6 +88,12 @@ def _drop_constant(
     D = dup.get_name()
     C = canonical.get_name()
     op_name = dup.get_operation_name()
+    merge_provenance(
+        [canonical, dup],
+        canonical,
+        pass_name="dedup_and_promote_constants",
+        reason="duplicate constant",
+    )
     operations.remove(dup)
     V.graph.removed_buffers.add(D)
     V.graph.name_to_buffer.pop(D, None)
@@ -98,7 +106,7 @@ def _drop_constant(
     logger.debug("dedup_and_promote_constants: merged %s into canonical %s", D, C)
 
 
-def dedup_and_promote_constants(operations: list[Operation]) -> None:
+def dedup_and_promote_constants(graph: GraphLowering) -> None:
     """Deduplicate SpyreConstantFallback ops and move them to the head of operations.
 
     Steps:
@@ -111,6 +119,7 @@ def dedup_and_promote_constants(operations: list[Operation]) -> None:
 
     Mutates operations in place.
     """
+    operations = graph.operations
     # --- Step 1: group by identity key ---
     groups: dict[tuple, list[SpyreConstantFallback]] = {}
     for op in operations:

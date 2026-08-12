@@ -496,9 +496,17 @@ class ParameterizedTestMeta(type):
                             f"Test name conflict: {test_name}"
                         )
                         namespace[test_name] = make_test(base_func, op, params)
-                        if test_case in expect_fail:
+                        # An expect_fail entry may target either the bare param
+                        # key (xfails every op for that shape) or the specific
+                        # ``{op_name}_{test_case}`` combination (xfails just that
+                        # op), so a single op can be marked without affecting the
+                        # others sharing the shape.
+                        op_case = f"{op_name}_{test_case}"
+                        op_case_match = op_case in expect_fail
+                        if test_case in expect_fail or op_case_match:
+                            marked = op_case if op_case_match else test_case
                             namespace[test_name] = pytest.mark.xfail(
-                                reason=f"Expected fail for {test_case}", strict=True
+                                reason=f"Expected fail for {marked}", strict=True
                             )(namespace[test_name])
                 else:
                     # ---- Original per-case expansion ----
@@ -710,7 +718,7 @@ def compare_with_pytorch(fn, fn_pytorch, *args, atol=0.1, rtol=0.1, target=None)
     _assert_results_close(target, pytorch_result, atol, rtol, "pytorch")
 
 
-def copy_tests(my_cls, other_cls, suffix, test_failures=None, xfail_prop=None):  # noqa: B902
+def copy_tests(my_cls, other_cls, suffix, test_failures=None, xfail_prop=None):
     for name, value in my_cls.__dict__.items():
         if name.startswith("test_"):
             # You cannot copy functions in Python, so we use closures here to

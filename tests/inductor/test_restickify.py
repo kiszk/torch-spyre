@@ -29,6 +29,7 @@ from unittest.mock import patch
 
 import torch
 from torch._inductor.virtualized import V
+from torch.spyre import SpyreTensorLayout
 
 import torch_spyre._inductor.optimize_restickify as _optimize_restickify
 from torch._inductor.exc import InductorError
@@ -55,8 +56,8 @@ def _compile_and_run_plan_capture(fn, *args):
     captured = {}
     finalize_layouts = _passes.finalize_layouts
 
-    def capturing_finalize_layouts(operations):
-        finalize_layouts(operations)
+    def capturing_finalize_layouts(graph):
+        finalize_layouts(graph)
         captured["plan"] = dict(V.graph.restickify_plan)
 
     with patch.object(_passes, "finalize_layouts", capturing_finalize_layouts):
@@ -65,21 +66,34 @@ def _compile_and_run_plan_capture(fn, *args):
     return spyre_result, captured.get("plan", {})
 
 
-def _compare(fn, *args, check_strides=True, optimal_cost=None, skip_correctness=False):
+def _compare(
+    fn,
+    *args,
+    device_args=None,
+    check_strides=True,
+    optimal_cost=None,
+    skip_correctness=False,
+):
     """Run fn on Spyre, assert correctness against CPU, and optionally assert the restickify
     plan has cost == optimal_cost.
+
+    device_args: if provided, used for the Spyre run instead of args (allows pre-placed
+    tensors with custom layouts). args are still used for the CPU reference.
     """
+    run_args = device_args if device_args is not None else args
     if optimal_cost is None:
-        spyre_result = _compile_and_run(fn, args, DEVICE)
+        spyre_result = _compile_and_run(fn, run_args, DEVICE)
     else:
-        spyre_result, plan = _compile_and_run_plan_capture(fn, *args)
+        spyre_result, plan = _compile_and_run_plan_capture(fn, *run_args)
         actual_cost = _compute_cost(plan)
         assert actual_cost == optimal_cost, (
             f"restickify cost: expected {optimal_cost}, got {actual_cost}"
         )
     if not skip_correctness:
         compare_with_cpu(fn, *args, target=spyre_result, run_eager=False)
-    if check_strides:
+    if (
+        check_strides and device_args is None
+    ):  # skip when device_args differ from CPU args: strides intentionally won't match
         cpu_result = fn(*args)
         assert cpu_result.stride() == spyre_result.stride(), (
             f"Stride mismatch: CPU {cpu_result.stride()} vs Spyre {spyre_result.stride()}"
@@ -504,7 +518,7 @@ def test_opt_parens_one_conflict():
     """((a + b) + (c.t() + d)) + (e + f) — conflict only in inner group."""
     a, b, c, d, e, f = _make_tensors(6, S, S)
     _compare(
-        lambda a, b, c, d, e, f: (((a + b) + (c.t() + d)) + (e + f)),
+        lambda a, b, c, d, e, f: ((a + b) + (c.t() + d)) + (e + f),
         a,
         b,
         c,
@@ -519,7 +533,7 @@ def test_opt_adds_then_matmul_x():
     """(a + b.t() + c.t() + d.t()) @ e — upstream optimal + forced matmul x cost."""
     a, b, c, d, e = _make_tensors(5, S, S)
     _compare(
-        lambda a, b, c, d, e: ((a + b.t() + c.t() + d.t()) @ e),
+        lambda a, b, c, d, e: (a + b.t() + c.t() + d.t()) @ e,
         a,
         b,
         c,
@@ -532,14 +546,14 @@ def test_opt_adds_then_matmul_x():
 def test_opt_adds_then_matmul_y():
     """a @ (b + c.t()) — beam picks upstream stick to avoid extra matmul cost."""
     a, b, c = _make_tensors(3, S, S)
-    _compare(lambda a, b, c: (a @ (b + c.t())), a, b, c, optimal_cost=S * S)
+    _compare(lambda a, b, c: a @ (b + c.t()), a, b, c, optimal_cost=S * S)
 
 
 def test_opt_adds_then_matmul_y_long_chain():
     """a @ (b + c.t() + d.t() + e.t()) — majority transposed going into y."""
     a, b, c, d, e = _make_tensors(5, S, S)
     _compare(
-        lambda a, b, c, d, e: (a @ (b + c.t() + d.t() + e.t())),
+        lambda a, b, c, d, e: a @ (b + c.t() + d.t() + e.t()),
         a,
         b,
         c,
@@ -552,34 +566,32 @@ def test_opt_adds_then_matmul_y_long_chain():
 def test_opt_matmul_x_and_y_conflict():
     """a.t() @ (b + c.t()) — x wrong stick + y upstream conflict."""
     a, b, c = _make_tensors(3, S, S)
-    _compare(lambda a, b, c: (a.t() @ (b + c.t())), a, b, c, optimal_cost=2 * S * S)
+    _compare(lambda a, b, c: a.t() @ (b + c.t()), a, b, c, optimal_cost=2 * S * S)
 
 
 def test_opt_matmul_then_adds():
     """(a @ b) + c.t() — matmul output stick vs transposed input."""
     a, b, c = _make_tensors(3, S, S)
-    _compare(lambda a, b, c: ((a @ b) + c.t()), a, b, c, optimal_cost=S * S)
+    _compare(lambda a, b, c: (a @ b) + c.t(), a, b, c, optimal_cost=S * S)
 
 
 def test_opt_matmul_then_long_adds():
     """(a @ b) + c.t() + d.t() — keep matmul stick, restickify one input."""
     a, b, c, d = _make_tensors(4, S, S)
-    _compare(
-        lambda a, b, c, d: ((a @ b) + c.t() + d.t()), a, b, c, d, optimal_cost=S * S
-    )
+    _compare(lambda a, b, c, d: (a @ b) + c.t() + d.t(), a, b, c, d, optimal_cost=S * S)
 
 
 def test_opt_chained_matmuls():
     """(a @ b) @ c — no restickify needed."""
     a, b, c = _make_tensors(3, S, S)
-    _compare(lambda a, b, c: ((a @ b) @ c), a, b, c, optimal_cost=0)
+    _compare(lambda a, b, c: (a @ b) @ c, a, b, c, optimal_cost=0)
 
 
 def test_opt_two_independent_conflicts():
     """(a+b.t()) + (e.t()+f.t()+g) — two separate conflicts."""
     a, b, e, f, g = _make_tensors(5, S, S)
     _compare(
-        lambda a, b, e, f, g: ((a + b.t()) + (e.t() + f.t() + g)),
+        lambda a, b, e, f, g: (a + b.t()) + (e.t() + f.t() + g),
         a,
         b,
         e,
@@ -616,7 +628,7 @@ def test_opt_matmul_rect_x_wrong_stick():
     M, K, N = 64, 128, 192
     (a,) = _make_tensors(1, M, K)
     (b,) = _make_tensors(1, M, N)
-    _compare(lambda a, b: (a.t() @ b), a, b, optimal_cost=M * K)
+    _compare(lambda a, b: a.t() @ b, a, b, optimal_cost=M * K)
 
 
 def test_opt_sum_between_pointwise():
@@ -628,7 +640,7 @@ def test_opt_sum_between_pointwise():
     # of sparse/non-sparse sticks in a pointwise op.  Disabling correctness
     # check until that is resolved
     _compare(
-        lambda a, b, c: ((a + b.t()).sum(0) + c),
+        lambda a, b, c: (a + b.t()).sum(0) + c,
         a,
         b,
         c,
@@ -640,7 +652,7 @@ def test_opt_sum_between_pointwise():
 def test_opt_chain_transposed_intermediate():
     """(a.t() + b).t() + c — intermediate consumed transposed."""
     a, b, c = _make_tensors(3, S, S)
-    _compare(lambda a, b, c: ((a.t() + b).t() + c), a, b, c, optimal_cost=S * S)
+    _compare(lambda a, b, c: (a.t() + b).t() + c, a, b, c, optimal_cost=S * S)
 
 
 def test_opt_beam_trim(monkeypatch):
@@ -665,7 +677,7 @@ def test_opt_4d_one_conflict():
     """a.transpose(0,3) + b + c + d — one input with stick on dim 0."""
     a, b, c, d = _make_tensors(4, T, T, T, T)
     _compare(
-        lambda a, b, c, d: (a.transpose(0, 3) + b + c + d),
+        lambda a, b, c, d: a.transpose(0, 3) + b + c + d,
         a,
         b,
         c,
@@ -708,7 +720,7 @@ def test_opt_4d_chain_transposed_intermediate():
     """(a.transpose(2,3) + b).transpose(2,3) + c — 4D version of transposed intermediate."""
     a, b, c = _make_tensors(3, T, T, T, T)
     _compare(
-        lambda a, b, c: ((a.transpose(2, 3) + b).transpose(2, 3) + c),
+        lambda a, b, c: (a.transpose(2, 3) + b).transpose(2, 3) + c,
         a,
         b,
         c,
@@ -720,7 +732,7 @@ def test_opt_two_matmuls_wrong_inputs():
     """(a.t() @ b) + (c @ d.t()) — each matmul has one wrong-stick input."""
     a, b, c, d = _make_tensors(4, S, S)
     _compare(
-        lambda a, b, c, d: ((a.t() @ b) + (c @ d.t())),
+        lambda a, b, c, d: (a.t() @ b) + (c @ d.t()),
         a,
         b,
         c,
@@ -733,7 +745,7 @@ def test_opt_matmul_both_inputs_upstream_conflict():
     """(a + b.t()) @ (c + d.t()) — both inputs have upstream stick conflicts."""
     a, b, c, d = _make_tensors(4, S, S)
     _compare(
-        lambda a, b, c, d: ((a + b.t()) @ (c + d.t())),
+        lambda a, b, c, d: (a + b.t()) @ (c + d.t()),
         a,
         b,
         c,
@@ -822,23 +834,251 @@ def test_arange_plus_xt():
     """
     x = torch.randn((S, S), dtype=torch.float16)
     _compare(
-        lambda x: torch.arange(S * S, dtype=torch.float16, device=x.device).view(S, S)
-        + x.t(),
+        lambda x: (
+            torch.arange(S * S, dtype=torch.float16, device=x.device).view(S, S) + x.t()
+        ),
         x,
     )
+
+
+# ------- Constant-fill inputs ---------
+
+
+def test_amax_full_and_amax_live_maximum():
+    """maximum(amax(full(-inf), dim=-1), amax(t, dim=-1)) — zero-stick output from
+    constant-fill reduction must be a valid candidate for the pointwise output."""
+    B, H, Lq, Lk = 1, 32, 128, 256
+    t = torch.randn((B, H, Lq, Lk), dtype=torch.float16)
+
+    def f(t):
+        full = torch.full((B, H, Lq, Lk), float("-inf"), device=t.device, dtype=t.dtype)
+        t_max = torch.amax(full, dim=-1)
+        u_max = torch.amax(t, dim=-1)
+        return torch.maximum(t_max, u_max)
+
+    _compare(f, t, optimal_cost=0)
 
 
 # ------- Unsupported stick configurations ---------
 
 
-def test_sparse_dense_pointwise_unsupported():
-    """a.sum(1) + b - pointwise of sparse and dense tensors not yet supported.
-
-    There is no restickify resolution for this configuration so we must catch this and report error
-    """
-    a = torch.randn((S, S), dtype=torch.float16).to(DEVICE)
+def test_sparse_dense_pointwise():
+    """a.sum(-1) + b - reduction followed by pointwise without broadcasting."""
+    a = torch.randn((S, S, S), dtype=torch.float16).to(DEVICE)
     b = torch.randn((S, S), dtype=torch.float16).to(DEVICE)
+
     with pytest.raises(
         InductorError, match="No mechanism to gather elements from multiple sticks"
     ):
-        _compare(lambda a, b: a.sum(1) + b, a, b)
+        _compare(lambda a, b: a.amin(-1) + b, a, b)
+
+
+def test_2d_sparse_broadcast_dense_pointwise():
+    """a.sum(-1) + b - reduction output broadcast into pointwise with dense b."""
+    a = torch.randn((S, S), dtype=torch.float16)
+    b = torch.randn((S, S), dtype=torch.float16)
+    _compare(lambda a, b: a.amin(-1) + b, a, b, optimal_cost=S * S)
+
+
+def test_3d_sparse_broadcast_dense_pointwise():
+    """a.sum(-1) + b - reduction output broadcast into pointwise with dense b."""
+    a = torch.randn((S, S, S), dtype=torch.float16)
+    b = torch.randn((S, S, S), dtype=torch.float16)
+    _compare(lambda a, b: a.amin(-1) + b, a, b, optimal_cost=S * S * S)
+
+
+def test_sparse_dense_pointwise_d0_stick():
+    """a.sum(-1) + b where b has a d0 stick — verifies sparse detection with alt-dim candidate."""
+
+    a = torch.randn((S, S, S), dtype=torch.float16).to(DEVICE)
+    b_layout = SpyreTensorLayout([S, S], [S, 1], torch.float16, [1, 0])
+    b = torch.randn((S, S), dtype=torch.float16).to(device_layout=b_layout)
+    with pytest.raises(
+        InductorError, match="No mechanism to gather elements from multiple sticks"
+    ):
+        _compare(lambda a, b: a.amin(-1) + b, a, b)
+
+
+def test_sparse_broadcast_dense_pointwise_d0_stick():
+    """a.sum(-1) + b where b has a d0 stick — verifies sparse detection with alt-dim candidate."""
+
+    a = torch.randn((S, S), dtype=torch.float16)
+    b = torch.randn((S, S), dtype=torch.float16)
+    b_layout = SpyreTensorLayout([S, S], [S, 1], torch.float16, [1, 0])
+    b_dev = b.to(device_layout=b_layout)
+    _compare(
+        lambda a, b: a.amin(-1) + b,
+        a,
+        b,
+        device_args=[a.to(DEVICE), b_dev],
+        optimal_cost=0,
+    )
+
+
+def test_broadcast_dense_pointwise():
+    a = torch.randn((S), dtype=torch.float16)
+    b = torch.randn((S, S), dtype=torch.float16)
+    _compare(lambda a, b: a + b, a, b, optimal_cost=0)
+
+
+def test_broadcast_3d_dense_pointwise():
+    a = torch.randn((S, S), dtype=torch.float16)
+    b = torch.randn((S, S, S), dtype=torch.float16)
+    _compare(lambda a, b: a + b, a, b, optimal_cost=0)
+
+
+def test_unsqueeze_broadcast_dense_pointwise():
+    """a.unsqueeze(-1) + b - unsqueeze broadcast followed by pointwise."""
+    a = torch.randn((S,), dtype=torch.float16)
+    b = torch.randn((S, S), dtype=torch.float16)
+    _compare(lambda a, b: a.unsqueeze(-1) + b, a, b, optimal_cost=S * S)
+
+
+def test_unsqueeze_broadcast_dense_pointwise_d0_stick():
+    """a.unsqueeze(-1) + b where b has a d0 stick — verifies sparse detection with alt-dim candidate."""
+
+    a = torch.randn((S,), dtype=torch.float16)
+    b = torch.randn((S, S), dtype=torch.float16)
+    b_layout = SpyreTensorLayout([S, S], [S, 1], torch.float16, [1, 0])
+    b_dev = b.to(device_layout=b_layout)
+    _compare(
+        lambda a, b: a.unsqueeze(-1) + b,
+        a,
+        b,
+        device_args=[a.to(DEVICE), b_dev],
+        optimal_cost=0,
+    )
+
+
+def test_unsqueeze_expand_broadcast_dense_pointwise():
+    """a.unsqueeze(-1).expand(S, S) + b - unsqueeze+expand broadcast followed by pointwise."""
+    a = torch.randn((S,), dtype=torch.float16)
+    b = torch.randn((S, S), dtype=torch.float16)
+    _compare(lambda a, b: a.unsqueeze(-1).expand(S, S) + b, a, b, optimal_cost=S * S)
+
+
+def test_unsqueeze_expand_broadcast_dense_pointwise_d0_stick():
+    """a.unsqueeze(-1).expand(S, S) + b where b has a d0 stick — verifies sparse detection with alt-dim candidate."""
+
+    a = torch.randn((S,), dtype=torch.float16)
+    b = torch.randn((S, S), dtype=torch.float16)
+    b_layout = SpyreTensorLayout([S, S], [S, 1], torch.float16, [1, 0])
+    b_dev = b.to(device_layout=b_layout)
+    _compare(
+        lambda a, b: a.unsqueeze(-1).expand(S, S) + b,
+        a,
+        b,
+        device_args=[a.to(DEVICE), b_dev],
+        optimal_cost=0,
+    )
+
+
+# ------- Broadcast outer-product tests ---------
+
+
+def test_broadcast_outer_diff():
+    """acs.unsqueeze(-1) - acs.unsqueeze(-2): outer-product subtraction over [BH, C].
+
+    Both reads of acs conflict (stick on d1 vs d2); the optimizer picks stick on
+    dim 0 (BH) at cost 2 * acs.numel() — two restickifies of the 2D input.
+    """
+    BH, C = 64, 64
+    acs = torch.randn((BH, C), dtype=torch.float16)
+    _compare(
+        lambda acs: torch.exp(acs.unsqueeze(-1) - acs.unsqueeze(-2)),
+        acs,
+        optimal_cost=2 * acs.numel(),
+        check_strides=False,
+    )
+
+
+def test_broadcast_expand_first():
+    """expand on unsqueeze(-1) only — one input expanded, one bare unsqueeze."""
+    BH, C = 64, 64
+    acs = torch.randn((BH, C), dtype=torch.float16)
+    _compare(
+        lambda acs: torch.exp(acs.unsqueeze(-1).expand(-1, -1, C) - acs.unsqueeze(-2)),
+        acs,
+        optimal_cost=2 * acs.numel(),
+        check_strides=False,
+    )
+
+
+def test_broadcast_expand_second():
+    """expand on unsqueeze(-2) only — one input expanded, one bare unsqueeze."""
+    BH, C = 64, 64
+    acs = torch.randn((BH, C), dtype=torch.float16)
+    _compare(
+        lambda acs: torch.exp(acs.unsqueeze(-1) - acs.unsqueeze(-2).expand(-1, C, -1)),
+        acs,
+        optimal_cost=2 * acs.numel(),
+        check_strides=False,
+    )
+
+
+def test_broadcast_expand_both():
+    """expand on both unsqueezes — both inputs fully expanded to [BH, C, C]."""
+    BH, C = 64, 64
+    acs = torch.randn((BH, C), dtype=torch.float16)
+    _compare(
+        lambda acs: torch.exp(
+            acs.unsqueeze(-1).expand(-1, -1, C) - acs.unsqueeze(-2).expand(-1, C, -1)
+        ),
+        acs,
+        optimal_cost=2 * acs.numel(),
+        check_strides=False,
+    )
+
+
+# ------- Single-arg op with a size-1 interior dim ---------
+
+
+def test_single_arg_size1_interior_dim():
+    """Slicing one position out of a [B, H, L, D] tensor yields a size-1 interior dim.
+
+    The size-1 seq dim is offered as a stick candidate for the single-arg op that
+    produces it; its stick expression concretizes to 1, which device_coordinates
+    rejects. That candidate must be skipped, not abort the compile. Mirrors the
+    per-position KV-cache write in decoder inference (input [1, 2, L, 128] ->
+    [1, 2, 1, 128]).
+    """
+    x = torch.randn((1, 2, T, 128), dtype=torch.float16)
+    _compare(lambda x: x[:, :, 1:2, :].contiguous(), x)
+
+
+def test_single_arg_size1_after_staggered_ea():
+    """RoPE output written into a KV cache at a single token position.
+
+    A RoPE-style mul+sum produces a staggered 7-dim device layout for k of
+    shape [1, NKV, T, HD]. The single-position KV write slices k to
+    [1, NKV, 1, HD] and scatters it into the cache via copy_. The mutation op
+    is a single-arg op whose output is [1, NKV, 1, HD]; when propagate_layouts
+    evaluates the staggered input STL against this op's dep, the stick
+    expression concretizes to the literal 1 (the size-1 seq dim). That
+    candidate must be skipped via try_device_coordinates, not abort the compile.
+
+    test_single_arg_size1_interior_dim does not cover this because its input
+    STL is plain row-major; here the input STL is a committed staggered-EA
+    layout from the RoPE op.
+    """
+    NKV, HD = 2, 128
+    half = HD // 2
+    KVLEN = 3 * T  # cache longer than one block
+
+    def fn(x, sf, kc):
+        # RoPE: [1, NKV, T, HD] -> staggered-EA output
+        B, H, L, D = x.shape
+        h = D // 2
+        x_ = x.transpose(1, 2).reshape(B, L, H, 2, h)
+        sf6 = sf[:, :, None, :, :, :]
+        k = sf6.mul(x_.unsqueeze(-3)).sum(4, keepdim=True).flatten(3)
+        k = k.transpose(1, 2)
+        # Single-position KV write: slice [1, NKV, 1, HD] into cache
+        kw = k[:, :, 1:2, :]
+        kc[:, :, T : T + 1, :] = kw
+        return kc
+
+    x = torch.randn((1, NKV, T, HD), dtype=torch.float16)
+    sf = torch.randn((1, T, 2, 2, half), dtype=torch.float16)
+    kc = torch.randn((1, NKV, KVLEN, HD), dtype=torch.float16)
+    _compare(fn, x, sf, kc)
