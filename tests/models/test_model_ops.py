@@ -133,8 +133,8 @@ class TestSpyreModelOps(TestCase):
         device_replace_disabled = bool(
             pytestconfig.getoption("--no-device-replace", default=False)
         )
-        no_test_tensors_cpu = bool(
-            pytestconfig.getoption("--include-cpu-tensor-tests", default=True)
+        include_cpu_tensor_tests = bool(
+            pytestconfig.getoption("--include-cpu-tensor-tests", default=False)
         )
 
         method_name = self._testMethodName
@@ -176,7 +176,7 @@ class TestSpyreModelOps(TestCase):
                 pytest.skip(f"Skipped by marker expression: {mark_expr}")
 
         # 4) check whether tensor's device is cpu
-        if no_test_tensors_cpu:
+        if not include_cpu_tensor_tests:
             tensor_on_cpu = False
             for inp in case.get("inputs", []):
                 if "tensor" in inp:
