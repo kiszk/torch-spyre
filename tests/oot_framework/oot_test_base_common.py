@@ -109,6 +109,54 @@ remove_builtin_privateuse1_test_base()
 
 
 # ---------------------------------------------------------------------------
+# YAML-named ModuleInfo
+# ---------------------------------------------------------------------------
+
+
+def _make_named_module_info_cls(module_info_cls: type) -> type:
+    """Build a ``ModuleInfo`` subclass whose ``name`` comes from the YAML entry.
+
+    Upstream derives ``name`` -- and therefore the generated test name, see
+    ``common_modules.py`` ``test_name = module_info.formatted_name`` -- from
+    ``module_cls.__name__``. That makes two entries for the same class collide:
+    the second registration raises ``AssertionError: Redefinition of test ...``
+    from ``common_device_type.py``.
+
+    A YAML may legitimately register the same class more than once, each entry
+    carrying its own captured shapes. Today that is one entry per decoder layer;
+    the same need arises for any other axis a generator splits on (e.g. one entry
+    per execution phase). This wrapper is deliberately agnostic about WHY there
+    are several: it only makes the YAML's ``name`` authoritative, so a generator
+    can encode any distinction in the name with no further framework change.
+
+    Built lazily by a factory because ``ModuleInfo`` is imported inside
+    ``_register_custom_modules_from_edits`` (torch's test internals are optional
+    at import time), so the subclass cannot be declared at module scope without
+    making that import mandatory.
+
+    ``name`` is a read-only property upstream, so it is overridden rather than
+    assigned. Seed derivation is deliberately NOT touched: the seed comes from
+    ``input_config.seed`` plus an invocation-index offset and never from the name,
+    so renaming an entry must not change the tensors it builds.
+    """
+
+    class _OOTNamedModuleInfo(module_info_cls):  # type: ignore[valid-type,misc]
+        def __init__(self, *args, oot_name: Optional[str] = None, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._oot_name = oot_name
+
+        @property
+        def name(self) -> str:
+            return self._oot_name if self._oot_name else super().name
+
+        @property
+        def formatted_name(self) -> str:
+            return self.name.replace(".", "_")
+
+    return _OOTNamedModuleInfo
+
+
+# ---------------------------------------------------------------------------
 # OOTTestBase
 # ---------------------------------------------------------------------------
 
@@ -282,6 +330,11 @@ class OOTTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa: F
             )
             return
 
+        # The YAML's `name` has to win over the class-derived one so several
+        # entries for the same class (one per layer, per phase, ...) each get a
+        # distinct test name instead of colliding.
+        named_module_info_cls = _make_named_module_info_cls(ModuleInfo)
+
         # Get existing module names to avoid duplicates
         existing_names = {m.name for m in module_db}
         for i, module_item in enumerate(modules_named_items):
@@ -339,12 +392,13 @@ class OOTTestBase(PrivateUse1TestBase):  # type: ignore[name-defined]  # noqa: F
                     if resolved_dtypes
                     else (torch.float32, torch.float16, torch.bfloat16)
                 )
-                module_info = ModuleInfo(
+                module_info = named_module_info_cls(
                     module_cls,
                     module_inputs_func=create_module_inputs_func_from_yaml(module_item),
                     skips=(),
                     decorators=None,
                     dtypes=dtypes,
+                    oot_name=module_name,
                 )
                 # ModuleInfo has no field for this, and upstream never looks at
                 # it; attach it so device-specific tests can read the YAML's
