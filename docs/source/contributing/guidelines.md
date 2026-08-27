@@ -75,7 +75,7 @@ git branch -d my-feature-branch
 ## Code Quality Standards
 
 * Follow the **Google Python Style Guide** and **Google C++ Style Guide**.
-* **Use `import regex as re`, never `import re`.** The `enforce-import-regex-instead-of-re` pre-commit hook enforces this. Using the standard-library `re` module will fail pre-commit.
+* **Use `import regex` (aliased as `re` when needed), never `import re`.** The `enforce-import-regex-instead-of-re` pre-commit hook enforces this. Importing the standard-library `re` module will fail pre-commit.
 * **Line length** is 88 characters, enforced by ruff.
 * **Run pre-commit** before submitting to make sure linting passes:
 
@@ -84,13 +84,13 @@ git branch -d my-feature-branch
   pre-commit run --all-files
   ```
 
-  See the [pre-commit docs](https://pre-commit.com/#usage) if this is new to you. The configured hooks include `ruff`, `clang-format`, `cpplint`, `mypy`, `pymarkdown`, `yamlfmt`, and `actionlint`, plus local hooks for the `import regex` rule, DCO sign-off, filename checks, and pinned `requirements/dev.txt` validation.
+  See the [pre-commit docs](https://pre-commit.com/#usage) if this is new to you. The configured hooks include `ruff-check`, `ruff-format`, `clang-format`, `cpplint`, `mypy`, `pymarkdown`, `yamlfmt`, and `actionlint`, plus local hooks for `forbid-pytest-ini`, the `import regex` rule, DCO sign-off, filename checks, and pinned `requirements/dev.txt` validation.
 
 * **Write tests**, both unit and integration, to keep the project correct and robust. The test suite is organized into four tiers, all of which run in CI on every PR:
 
   | Tier | Where | What it covers |
   |---|---|---|
-  | Upstream PyTorch compatibility | OpInfo-based tests instantiated against the `spyre` device via `instantiate_device_type_tests` (see `tests/test_spyre.py` and `tests/spyre_test_base_common.py`). | Confirms Spyre tensors behave correctly at the PyTorch API level. An allowlist tracks which test variants pass; update it with each PR. |
+  | Upstream PyTorch compatibility | OpInfo-based tests instantiated against the `spyre` device via `instantiate_device_type_tests` (see `tests/oot_framework/`). `tests/test_spyre.py` covers Spyre tensor behavior (fill, copy, dtype, allocation). | Confirms Spyre tensors behave correctly at the PyTorch API level. An allowlist tracks which test variants pass; update it with each PR. |
   | Op-level | `tests/inductor/test_inductor_ops.py` | Each op compared against a CPU reference output. |
   | Building blocks | `tests/inductor/test_building_blocks.py` | Composed transformer subgraphs such as attention heads, FFN, and normalization. |
   | Model-level | `tests/models/test_model_ops.py`, `tests/models/test_model_ops_v2.py` | Full model forward passes with real Granite weights, validated against YAML-specified tolerance profiles. |
@@ -112,11 +112,14 @@ If your PR touches documentation, build and preview it locally before submitting
 
 ```bash
 pip install -r docs/requirements.txt
-python -m sphinx docs/source docs/build/html -W --keep-going
-python -m http.server 8080 --directory docs/build/html
+cd docs
+make html SPHINXOPTS="-W --keep-going"
+python -m http.server 8000 --directory build/html
 ```
 
-Then open `http://localhost:8080` in your browser.
+Then open `http://localhost:8000` in your browser. For a live-reload
+preview that rebuilds on save, run `make livehtml` instead (requires
+`sphinx-autobuild`, already in `docs/requirements.txt`).
 
 > **Note:** Do not open the HTML files directly from the filesystem (`file://`).
 > Browsers block CSS and JavaScript when loading local files, resulting in an

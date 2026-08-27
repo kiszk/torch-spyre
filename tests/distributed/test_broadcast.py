@@ -44,11 +44,6 @@ except ValueError:
         allow_module_level=True,
     )
 
-# ------------
-# Temporary hack
-torch.spyre._impl._lazy_init()
-# ------------
-
 DEVICE = torch.device(f"spyre:{os.getenv('RANK', '0')}")
 C10D_BACKEND = "spyreccl"
 
@@ -79,7 +74,7 @@ class TestBroadcast(TestCase):
         if dist.is_initialized():
             dist.destroy_process_group()
 
-    def _test_broadcast_helper(self, shape, dtype, root, fill_value):
+    def _test_broadcast_helper(self, shape, dtype, root, fill_value, async_op=False):
         """
         Helper method to test broadcast with specific parameters.
 
@@ -88,6 +83,8 @@ class TestBroadcast(TestCase):
             dtype: Tensor data type
             root: Root rank for broadcast
             fill_value: Value to fill the tensor at root rank
+            async_op: If True, launch the collective asynchronously and call
+                      work.wait() before inspecting the result
         """
         # Create expected tensor (what all ranks should have after broadcast)
         expected_tensor = torch.zeros(shape, dtype=dtype)
@@ -104,15 +101,19 @@ class TestBroadcast(TestCase):
         x_device = x.to(DEVICE)
 
         # Broadcast from root rank
-        dist.broadcast(x_device, root)
+        work = dist.broadcast(x_device, root, async_op=async_op)
+
+        if async_op:
+            self.assertIsNotNone(work, "async_op=True must return a Work handle")
+            work.wait()
+            self.assertTrue(work.is_completed())
+        else:
+            self.assertIsNone(work, "async_op=False must return None")
 
         # Get result back to CPU for verification
         result = x_device.to("cpu")
 
         # Verify result matches expected tensor at ALL ranks (including root)
-        # print(f"Shape: {shape}")
-        # print(f"Expected {expected_tensor}")
-        # print(f"Got {result}")
         self.assertTrue(
             torch.allclose(result, expected_tensor, rtol=1e-5, atol=1e-5),
             f"Rank {self.comm_rank}: Broadcast result incorrect. "
@@ -195,11 +196,34 @@ class TestBroadcast(TestCase):
             return
 
         invalid_root = self.comm_size + 10  # Invalid rank (out of bounds)
-        x = torch.ones(10, dtype=torch.float32, device=DEVICE)
-
         # This should raise an error
         with self.assertRaises(Exception):
-            dist.broadcast(x, invalid_root)
+            self._test_broadcast_helper(
+                shape=(10,), dtype=torch.float32, root=invalid_root, fill_value=1.0
+            )
+
+    def test_broadcast_from_rank_zero_float16_async(self):
+        """Test broadcast from rank 0 with float16 and async_op=True."""
+        self._test_broadcast_helper(
+            shape=(128,), dtype=torch.float16, root=0, fill_value=2.0, async_op=True
+        )
+
+    def test_broadcast_from_rank_zero_float32_async(self):
+        """Test broadcast from rank 0 with float32 and async_op=True."""
+        self._test_broadcast_helper(
+            shape=(256,), dtype=torch.float32, root=0, fill_value=3.5, async_op=True
+        )
+
+    def test_broadcast_from_non_zero_root_async(self):
+        """Test broadcast from a non-zero root rank with async_op=True."""
+        root_rank = 1 if self.comm_size > 1 else 0
+        self._test_broadcast_helper(
+            shape=(256,),
+            dtype=torch.float32,
+            root=root_rank,
+            fill_value=7.5,
+            async_op=True,
+        )
 
 
 if __name__ == "__main__":

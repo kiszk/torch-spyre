@@ -424,27 +424,102 @@ Utility for printing per-test tags at run time alongside PASS/FAIL output.
 
 # To store method_name -> full tag list set during test execution
 _RUNTIME_TAGS: Dict[str, List[str]] = {}
+# To store method_name -> formatted shape/stride string set during test execution
+_RUNTIME_SHAPES: Dict[str, str] = {}
 
 
-def print_test_tags_oot(test_instance: Any, op_tags: List[str] = []) -> None:
-    """Print [TAGS = ...] for a test method at run time.
+def _format_input_args_shapes(input_args: List[Any]) -> str:
+    """Return a human-readable string of shape/stride info for each InputArg.
+
+    Handles InputArgTensor, InputArgTensorList, InputArgConfig, InputArgValue,
+    and InputArgPy. Falls back to a type label for unknown arg types.
+
+    Args:
+        input_args: List of InputArg objects from InputsEdits.args.
+
+    Returns:
+        A formatted multi-line string, or an empty string if input_args is empty.
+    """
+    if not input_args:
+        return ""
+
+    try:
+        from .oot_test_config_models import (
+            InputArgTensor,
+            InputArgTensorList,
+            InputArgConfig,
+            InputArgValue,
+            InputArgPy,
+        )
+    except ImportError:
+        return ""
+
+    lines: List[str] = []
+    for i, arg in enumerate(input_args):
+        if isinstance(arg, InputArgTensor):
+            spec = arg.tensor
+            stride_str = f", stride={spec.stride}" if spec.stride is not None else ""
+            lines.append(
+                f"  arg[{i}]: Tensor(shape={spec.shape}, dtype={spec.dtype}{stride_str})"
+            )
+        elif isinstance(arg, InputArgTensorList):
+            inner = ", ".join(
+                (
+                    f"Tensor(shape={s.shape}, dtype={s.dtype}"
+                    + (f", stride={s.stride}" if s.stride is not None else "")
+                    + ")"
+                )
+                for s in arg.tensor_list
+            )
+            lines.append(f"  arg[{i}]: TensorList[{inner}]")
+        elif isinstance(arg, InputArgConfig):
+            lines.append(
+                f"  arg[{i}]: Config(config_path={arg.config_path!r}, "
+                f"config_kwargs={arg.config_kwargs!r})"
+            )
+        elif isinstance(arg, InputArgValue):
+            lines.append(f"  arg[{i}]: value={arg.value!r}")
+        elif isinstance(arg, InputArgPy):
+            lines.append(f"  arg[{i}]: py={arg.py!r}")
+        else:
+            lines.append(f"  arg[{i}]: {type(arg).__name__}")
+
+    return "\n".join(lines)
+
+
+def print_test_tags_oot(
+    test_instance: Any,
+    op_tags: List[str] = [],
+    input_args: Optional[List[Any]] = None,
+) -> None:
+    """Print [TAGS = ...] and optional per-arg shape/stride info at run time.
 
     Combines method-level tags (test-level + dynamic op__/dtype__/module__) stored
-    at collection time with per-op tags available only at run time.
+    at collection time with per-op tags available only at run time.  When
+    *input_args* is supplied (``op.ops_item.sample_inputs_func.args``), each
+    argument's shape and stride are stored for the pytest reporting hook and
+    also written to stderr (visible with -s / --capture=no).
 
     Usage in a test method:
-        from oot_test_utilities import print_test_tags_oot
-        print_test_tags_oot(self, op_tags=op.op_tags)
+        from oot_framework.oot_test_utilities import print_test_tags_oot
+        print_test_tags_oot(self, op_tags=op.op_tags,
+                            input_args=op.ops_item.sample_inputs_func.args)
     """
     method_name = test_instance._testMethodName
     _method_fn = getattr(test_instance.__class__, method_name, None)
     _method_tags = getattr(_method_fn, "_oot_method_tags", [])
     _per_op_tags = [t for t in op_tags if t not in set(_method_tags)]
     _all_tags = _method_tags + _per_op_tags
-    # Store for pytest_runtest_makereport hook to work without -s
+    # Store for pytest_runtest_makereport / pytest_runtest_logreport hooks
     _RUNTIME_TAGS[method_name] = _all_tags
-    # Also write directly to stderr (visible with -s)
+    if input_args is not None:
+        shapes_str = _format_input_args_shapes(input_args)
+        if shapes_str:
+            _RUNTIME_SHAPES[method_name] = shapes_str
+    # Also write directly to stderr (visible with -s / --capture=no)
     os.write(2, f"[TAGS = {' '.join(_all_tags)}]\n".encode())
+    if method_name in _RUNTIME_SHAPES:
+        os.write(2, f"[INPUT SHAPES]\n{_RUNTIME_SHAPES[method_name]}\n".encode())
 
 
 # ---------------------------------------------------------------------------
@@ -551,6 +626,7 @@ def _merge_file_entries(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                 "path": path,
                 "unlisted_test_mode": entry.get("unlisted_test_mode", "xfail"),
                 "tests": list(entry.get("tests") or []),
+                "labels": list(entry.get("labels") or []),
             }
         else:
             existing = merged[path]
@@ -564,6 +640,13 @@ def _merge_file_entries(entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
                     f"ignoring '{incoming_mode}'.",
                     file=sys.stderr,
                 )
+
+            # Same path claimed by multiple source configs: union their
+            # labels (order-preserving) so the merged file entry is
+            # discoverable under every tier any contributing config declared.
+            for lbl in entry.get("labels") or []:
+                if lbl not in existing["labels"]:
+                    existing["labels"].append(lbl)
 
             for test_block in entry.get("tests") or []:
                 block_names = frozenset(
@@ -669,9 +752,18 @@ def merge_yaml_configs(
         suites.append(suite)
 
     # ---- Merge `files` entries ----------------------------------------
+    # Thread each source config's own test_suite_config.labels onto its file
+    # entries BEFORE merging. The merged document has no single top-level
+    # labels field that could represent per-file provenance once files from
+    # different configs are combined, so this is how a file's origin labels
+    # (e.g. "integration") survive the merge -- see FileEntry.labels.
     all_file_entries: List[Dict[str, Any]] = []
     for suite in suites:
-        all_file_entries.extend(suite.get("files") or [])
+        suite_labels = suite.get("labels") or []
+        for f in suite.get("files") or []:
+            f = dict(f)
+            f["labels"] = list(suite_labels)
+            all_file_entries.append(f)
 
     merged_files = _merge_file_entries(all_file_entries)
 

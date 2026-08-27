@@ -12,7 +12,7 @@ import torch
 
 DEFAULT_FLOATING_PRECISION: float = 1e-3
 
-_DYNAMIC_TAG_PREFIXES = ("op__", "dtype__", "module__", "platform__")
+_DYNAMIC_TAG_PREFIXES = ("op__", "dtype__", "module__", "platform__", "testtype__")
 
 MODE_MANDATORY_SUCCESS = "mandatory_success"
 MODE_XFAIL = "xfail"
@@ -118,6 +118,7 @@ DTYPE_NAMES_ORDERED = sorted(DTYPE_STR_MAP.keys(), key=len, reverse=True)
 # ------------------------------
 
 ENV_TEST_CONFIG = "PYTORCH_TEST_CONFIG"
+ENV_TEST_TYPE = "TORCH_SPYRE_TEST_TYPE"
 ENV_TORCH_ROOT = "TORCH_ROOT"
 ENV_TORCH_DEVICE_ROOT = "TORCH_DEVICE_ROOT"
 
