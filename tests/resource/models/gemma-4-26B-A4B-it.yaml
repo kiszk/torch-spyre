@@ -2279,14 +2279,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2417,14 +2417,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2661,14 +2661,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2692,14 +2692,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2723,14 +2723,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2754,14 +2754,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2785,14 +2785,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2816,14 +2816,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2847,14 +2847,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -2878,14 +2878,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3708,14 +3708,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3740,14 +3740,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3771,14 +3771,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3802,14 +3802,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3833,14 +3833,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3864,14 +3864,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3895,14 +3895,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3926,14 +3926,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3957,14 +3957,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -3988,14 +3988,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4019,14 +4019,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4050,14 +4050,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4081,14 +4081,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4112,14 +4112,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4143,14 +4143,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4174,14 +4174,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4205,14 +4205,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4236,14 +4236,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4267,14 +4267,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4298,14 +4298,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4329,14 +4329,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4360,14 +4360,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4391,14 +4391,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4422,14 +4422,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4453,14 +4453,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4484,14 +4484,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4515,14 +4515,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4546,14 +4546,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4577,14 +4577,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4608,14 +4608,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4639,14 +4639,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4670,14 +4670,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4701,14 +4701,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4732,14 +4732,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4763,14 +4763,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4794,14 +4794,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4825,14 +4825,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4856,14 +4856,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4887,14 +4887,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4918,14 +4918,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4949,14 +4949,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -4980,14 +4980,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5011,14 +5011,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5042,14 +5042,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5073,14 +5073,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5104,14 +5104,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5135,14 +5135,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5166,14 +5166,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5197,14 +5197,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 2816, 1408]
           stride: [3964928, 1, 2816]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
@@ -5228,14 +5228,14 @@ cases:
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
       - tensor:
           shape: [128, 704, 2816]
           stride: [1982464, 1, 704]
           storage_offset: 0
           dtype: torch.bfloat16
           device: cuda:0
-          init: rand
+          init: xavier
     description: 'site-packages/torch/nn/functional.py:7139 in grouped_mm, code: return torch._grouped_mm(mat_a, mat_b, offs=offs, bias=bias, out_dtype=out_dtype)'
     marks: bf16operation
     kwmap:
