@@ -122,6 +122,26 @@ jobs:
             config: gemma-4-12B-it.yaml
           - name: Qwen 2.5
             config: Qwen2.5-7B-Instruct.yaml
+          - name: all MiniLM L6 v2
+            config: all-MiniLM-L6-v2.yaml
+          - name: all mpnet base v2
+            config: all-mpnet-base-v2.yaml
+          - name: BERT base NER
+            config: bert-base-NER.yaml
+          - name: DistilBERT base uncased finetuned SST-2
+            config: distilbert-base-uncased-finetuned-sst-2-english.yaml
+          - name: RoBERTa large MNLI
+            config: roberta-large-mnli.yaml
+          - name: RoBERTa large NER English
+            config: roberta-large-ner-english.yaml
+          - name: Granite Embedding 278M Multilingual
+            config: granite-embedding-278m-multilingual.yaml
+          - name: Granite Multilingual Slate 153m Distrilled
+            config: granite-multilingual-slate-153m-distilled.yaml
+          - name: Granite Multilingual Slate 270m
+            config: granite-multilingual-slate-270m.yaml
+          - name: CLIP ViT Base Patch32
+            config: clip-ViT-B-32.yaml
 
     steps:
       # Sparse checkout into the GHA workspace so the local composite
